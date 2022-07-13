@@ -6,24 +6,57 @@ import (
 	"text/template"
 )
 
+var (
+	// FormatWithoutTrace is a template format for formatting errors without a
+	// stack trace.
+	//
+	// Format:
+	//   <error1>: <error2>: <errorN>
+	FormatWithoutTrace = `{{ if ge (len .) 1 }}{{ (index . 0).Msg }}{{ range (slice . 1) }}: {{ .Msg }}{{ end }}{{ end }}`
+
+	// FormatWithTrace is a template format for formatting errors with a partial
+	// stack trace for each wrapped error.
+	//
+	// Format:
+	//   <error1>:
+	//       <file1>:<line1> in <function1>
+	//       <file2>:<line2> in <function2>
+	//       <fileN>:<lineN> in <functionN>
+	//   <error2>:
+	//       <file1>:<line1> in <function1>
+	//       <file2>:<line2> in <function2>
+	//       <fileN>:<lineN> in <functionN>
+	//   <errorN>:
+	//       <file1>:<line1> in <function1>
+	//       <file2>:<line2> in <function2>
+	//       <fileN>:<lineN> in <functionN>
+	FormatWithTrace = `{{ range . }}{{ .Msg }}{{ if .Stack }}{{ range .Stack }}
+    {{ .File }}:{{ .Line }} in {{ .Name }}{{ end }}{{ end }}
+{{end}}`
+
+	// FormatWithCombinedTrace is a template format for formatting errors with
+	// a single combined stack trace.
+	//
+	// Format:
+	//   <error1>: <error2>: <errorN>
+	//       <file1>:<line1> in <function1>
+	//       <file2>:<line2> in <function2>
+	//       <fileN>:<lineN> in <functionN>
+	FormatWithCombinedTrace = `{{ if ge (len .) 1 }}{{ (index . 0).Msg }}{{ range (slice . 1) }}: {{ .Msg }}{{ end }}
+{{ with (index . 0) }}{{ if gt (len .Stack) 0 }}{{ range .Err.FullStack }}    {{ .File }}:{{ .Line }} in {{ .Name }}
+{{ end }}{{ end }}{{ end }}{{ end }}`
+)
+
 // ToString returns a default formatted string for a given error.
 func ToString(err error, withTrace bool) string {
 	if withTrace {
-		return ToCustomString(err, DefaultFormatWithTrace)
+		return ToCustomString(err, FormatWithTrace)
 	}
-	return ToCustomString(err, DefaultFormat)
+	return ToCustomString(err, FormatWithoutTrace)
 }
 
-// DefaultFormat is the default template for formatting errors.
-var DefaultFormat = `{{if ge (len .) 1 }}{{(index . 0).Msg}}{{range (slice . 1) }}: {{.Msg}}{{ end }}{{ end }}`
-
-// DefaultFormatWithTrace is the default template for formatting errors that include stack traces.
-var DefaultFormatWithTrace = `{{range .}}{{.Msg}}{{if .Stack}}{{range .Stack}}
-    {{.File}}:{{.Line}} in {{.Name}}{{end}}{{end}}
-{{end}}`
-
 // ToCustomString returns a custom formatted string for a given error. The
-// format is defined by the given template.
+// format is defined by the given Go template.
 func ToCustomString(err error, tplStr string) string {
 	tpl := template.Must(template.New("").Parse(tplStr))
 	strBld := strings.Builder{}
