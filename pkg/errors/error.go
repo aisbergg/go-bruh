@@ -86,17 +86,14 @@ type TraceableError struct {
 	stack stackPC
 }
 
-// Message returns the message contained in the error.
-func (e *TraceableError) Message() string {
+// Error returns the error message.
+func (e *TraceableError) Error() string {
 	return e.msg
 }
 
-// Error returns the string representation of the error.
-func (e *TraceableError) Error() string {
-	return fmt.Sprint(e)
-}
-
-// Format implements the fmt.Formatter interface.
+// Format implements the fmt.Formatter interface. Use fmt.Sprintf("%v", err) to
+// get a string representation of the error without an stack trace and
+// fmt.Sprintf("%+v", err) with a stack trace included.
 func (e *TraceableError) Format(s fmt.State, verb rune) {
 	var withTrace bool
 	switch verb {
