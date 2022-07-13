@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 )
 
 // New creates a new error with the given message.
@@ -165,9 +166,9 @@ func (e *TraceableError) StackFrames() Stack {
 	return e.FullStack()
 }
 
-// TypeName returns the type this error. e.g. *errors.stringError.
+// TypeName returns the type of this error. e.g. errors.TraceableError.
 func (e *TraceableError) TypeName() string {
-	return reflect.TypeOf(e).String()
+	return TypeName(e)
 }
 
 // Stack returns the stack trace of the error in the form of a program counter
@@ -217,4 +218,11 @@ func Cause(err error) error {
 		}
 		err = uerr
 	}
+}
+
+// TypeName returns the type of the error. e.g. errors.TraceableError.
+func TypeName(err error) string {
+	typeName := reflect.TypeOf(err).String()
+	typeName = strings.TrimPrefix(typeName, "*")
+	return typeName
 }
