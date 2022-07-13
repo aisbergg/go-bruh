@@ -91,7 +91,7 @@ func callers(skip uint) stackPC {
 	const depth = 64
 	var pcs [depth]uintptr
 	n := runtime.Callers(int(skip), pcs[:])
-	var st stackPC = pcs[0 : n-2]
+	var st stackPC = pcs[0:n]
 	return st
 }
 
@@ -118,16 +118,16 @@ func (s stackPC) RelativeTo(other stackPC) stackPC {
 }
 
 // get returns a human readable stack trace.
-func (s stackPC) get() Stack {
-	var stackFrames Stack
-
+func (s stackPC) get() (stack Stack) {
 	frames := runtime.CallersFrames(s)
 	for {
 		frame, more := frames.Next()
-		i := strings.LastIndex(frame.Function, "/")
-		name := frame.Function[i+1:]
-		stackFrames = append(stackFrames, StackFrame{
-			Name:           name,
+		// exclude runtime calls
+		if strings.Contains(frame.File, "runtime/") {
+			break
+		}
+		stack = append(stack, StackFrame{
+			Name:           frame.Function,
 			File:           frame.File,
 			Line:           frame.Line,
 			ProgramCounter: frame.PC,
@@ -136,8 +136,7 @@ func (s stackPC) get() Stack {
 			break
 		}
 	}
-
-	return stackFrames
+	return
 }
 
 // isGlobal determines if the stack trace represents a globally defined error.
