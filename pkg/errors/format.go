@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"text/template"
 )
@@ -45,6 +46,56 @@ var (
 	FormatWithCombinedTrace = `{{ if ge (len .) 1 }}{{ (index . 0).Msg }}{{ range (slice . 1) }}: {{ .Msg }}{{ end }}
 {{ with (index . 0) }}{{ if gt (len .Stack) 0 }}{{ range .Err.FullStack }}    {{ .File }}:{{ .Line }} in {{ .Name }}
 {{ end }}{{ end }}{{ end }}{{ end }}`
+
+	// FormatPythonTraceback is a template format for formatting errors similar
+	// to Python's tracebacks.
+	//
+	// Format:
+	//   Traceback (most recent call last):
+	//     File "<file3>", line <line3>, in <function3>
+	//     File "<file2>", line <line2>, in <function2>
+	//     File "<file1>", line <line1>, in <function1>
+	//   <typeName1>: <error1>
+	//
+	//   The above exception was the direct cause of the following exception:
+	//
+	//   Traceback (most recent call last):
+	//     File "<file3>", line <line3>, in <function3>
+	//     File "<file2>", line <line2>, in <function2>
+	//     File "<file1>", line <line1>, in <function1>
+	//   <typeName2>: <error2>
+	FormatPythonTraceback = `{{ $l := len . }}{{ range $i, $e := (reversed .) }}{{ $stack := reversed .Stack }}
+{{ if gt (len $stack) 0 }}Traceback (most recent call last):{{ range $stack }}
+  File "{{ .File }}", line {{ .Line }}, in {{ .Name }}{{ end }}{{ end }}
+{{ .TypeName }}: {{ .Msg }}{{ if not (last $i $l) }}
+
+The above exception was the direct cause of the following exception:
+{{ end }}{{ end }}
+`
+
+	templateFuncs = template.FuncMap{
+		"inc": func(i int) int {
+			return i + 1
+		},
+		"dec": func(i int) int {
+			return i + 1
+		},
+		"last": func(i, length int) bool {
+			return i == length-1
+		},
+		"reversed": func(s interface{}) []interface{} {
+			sv := reflect.ValueOf(s)
+			if sv.Kind() != reflect.Slice {
+				return nil
+			}
+			// create a new reversed list
+			reversed := make([]interface{}, 0, sv.Len())
+			for i := sv.Len() - 1; i >= 0; i-- {
+				reversed = append(reversed, sv.Index(i).Interface())
+			}
+			return reversed
+		},
+	}
 )
 
 // ToString returns a default formatted string for a given error.
@@ -58,12 +109,12 @@ func ToString(err error, withTrace bool) string {
 // ToCustomString returns a custom formatted string for a given error. The
 // format is defined by the given Go template.
 func ToCustomString(err error, tplStr string) string {
-	tpl := template.Must(template.New("").Parse(tplStr))
+	tpl := template.Must(template.New("").Funcs(templateFuncs).Parse(tplStr))
 	strBld := strings.Builder{}
 	upkErr := Unpack(err, true)
 	terr := tpl.Execute(&strBld, upkErr)
 	if terr != nil {
-		panic(err)
+		panic(terr)
 	}
 	return strings.TrimSpace(strBld.String())
 }
