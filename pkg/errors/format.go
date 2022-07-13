@@ -56,19 +56,25 @@ func Unpack(err error, unwrapExternal bool) UnpackedError {
 		// check if it behaves like a base error
 		if e, ok := err.(interface {
 			Stack() Stack
-			Message() string
+			FullStack() Stack
 		}); ok {
-			fullStack := e.Stack()
+			stack := e.Stack()
 			upkErr = append(upkErr, UnpackedElement{
+				Err:          err,
+				Msg:          err.Error(),
+				Stack:        stack,
 				PartialStack: stack.RelativeTo(prvStack),
+				FullStack:    e.FullStack(),
+				TypeName:     TypeName(err),
 			})
-			prvStack = fullStack
+			prvStack = stack
 
 		} else {
 			// continue unwrapping external errors
 			upkErr = append(upkErr, UnpackedElement{
-				Err: err,
-				Msg: err.Error(),
+				Err:      err,
+				Msg:      err.Error(),
+				TypeName: TypeName(err),
 			})
 			if !unwrapExternal {
 				break
@@ -96,9 +102,18 @@ func formatExternalStr(err error, withTrace bool) string {
 
 // UnpackedElement represents a single error frame and the accompanying message.
 type UnpackedElement struct {
-	Err       error
-	Msg       string
-	Stack     Stack
+	// Err is the error instance.
+	Err error
+	// Msg is the message contained in the error.
+	Msg string
+	// TypeName is the type name of the error.
+	TypeName string
+	// Stack is the error stack for this particular error instance.
+	Stack Stack
+	// PartialStack is the error stack with parts cut off that are already in
+	// the previous error stack.
+	PartialStack Stack
+	// FullStack is the combined error stack of all errors in err's chain.
 	FullStack Stack
 }
 
@@ -106,10 +121,10 @@ type UnpackedElement struct {
 func (ue *UnpackedElement) formatJSON(withTrace bool) map[string]interface{} {
 	wrapMap := make(map[string]interface{})
 	wrapMap["message"] = fmt.Sprint(ue.Msg)
-	stackList := make([]interface{}, 0, len(ue.Stack))
+	stackList := make([]interface{}, 0, len(ue.PartialStack))
 
 	if withTrace {
-		for _, frame := range ue.Stack {
+		for _, frame := range ue.PartialStack {
 			stackMap := make(map[string]interface{})
 			stackMap["function"] = frame.Name
 			stackMap["file"] = frame.File
