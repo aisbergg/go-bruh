@@ -47,36 +47,40 @@ func ErrorfSkip(skip uint, format string, args ...interface{}) *TraceableError {
 // Wrap wraps the given error by creating a new error with the specified
 // message.
 func Wrap(err error, msg string) *TraceableError {
-	return wrap(err, 0, fmt.Sprint(msg))
+	return WrapSkip(err, 1, msg)
 }
 
 // WrapSkip wraps the given error by creating a new error with the specified
 // message and skips the specified number of callers in the stack trace.
 func WrapSkip(err error, skip uint, msg string) *TraceableError {
-	return wrap(err, skip, fmt.Sprint(msg))
-}
+	// skips this method, stack.callers, runtime.Callers and user defined number
+	// of other callers
+	stack := callers(3 + skip)
 
-// Wrapf wraps the given error by creating a new error with a formatted message.
-func Wrapf(err error, format string, args ...interface{}) *TraceableError {
-	return wrap(err, 0, fmt.Sprintf(format, args...))
-}
-
-// WrapfSkip wraps the given error by creating a new error with a formatted
-// message and skips the specified number of callers in the stack trace.
-func WrapfSkip(err error, skip uint, format string, args ...interface{}) *TraceableError {
-	return wrap(err, skip, fmt.Sprintf(format, args...))
-}
-
-func wrap(err error, skip uint, msg string) *TraceableError {
-	if err == nil {
-		return nil
+	// strip stack for globally defined errors
+	if stack.isGlobal() {
+		return &TraceableError{
+			msg: msg,
+			err: err,
+		}
 	}
 
 	return &TraceableError{
 		msg:   msg,
 		err:   err,
-		stack: callers(4 + skip),
+		stack: stack,
 	}
+}
+
+// Wrapf wraps the given error by creating a new error with a formatted message.
+func Wrapf(err error, format string, args ...interface{}) *TraceableError {
+	return WrapSkip(err, 1, fmt.Sprintf(format, args...))
+}
+
+// WrapfSkip wraps the given error by creating a new error with a formatted
+// message and skips the specified number of callers in the stack trace.
+func WrapfSkip(err error, skip uint, format string, args ...interface{}) *TraceableError {
+	return WrapSkip(err, skip+1, fmt.Sprintf(format, args...))
 }
 
 // TraceableError is an easily wrappable error with stack trace.
