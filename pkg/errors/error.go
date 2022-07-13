@@ -134,8 +134,7 @@ func (e *TraceableError) Cause() error {
 	return Cause(e)
 }
 
-// Stack returns the stack trace for thins error instance in form of a list of
-// StackFrames.
+// Stack returns the stack trace up to this error.
 func (e *TraceableError) Stack() Stack {
 	return e.stack.toStack()
 }
@@ -176,8 +175,8 @@ func (e *TraceableError) TypeName() string {
 
 // stackPC returns a copy of the program counters of function invocations.
 func (e *TraceableError) stackPC() stackPC {
-	var stkCpy stackPC
-	copy(e.stack, stkCpy)
+	stkCpy := make(stackPC, len(e.stack))
+	copy(stkCpy, e.stack)
 	return stkCpy
 }
 
