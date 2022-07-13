@@ -49,31 +49,6 @@ type StackFrame struct {
 	ProgramCounter uintptr
 }
 
-// framePC is a single program counter of a stack framePC.
-type framePC uintptr
-
-// pc returns the program counter for a frame.
-func (f framePC) pc() uintptr {
-	return uintptr(f) - 1
-}
-
-// get returns a human readable stack frame.
-func (f framePC) get() StackFrame {
-	pc := f.pc()
-	frames := runtime.CallersFrames([]uintptr{pc})
-	frame, _ := frames.Next()
-
-	i := strings.LastIndex(frame.Function, "/")
-	name := frame.Function[i+1:]
-
-	return StackFrame{
-		Name:           name,
-		File:           frame.File,
-		Line:           frame.Line,
-		ProgramCounter: pc,
-	}
-}
-
 // callers returns a stack trace. the argument skip is the number of stack
 // frames to skip before recording in pc, with 0 identifying the frame for
 // Callers itself and 1 identifying the caller of Callers.
