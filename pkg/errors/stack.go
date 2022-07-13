@@ -12,7 +12,8 @@ type Stack []StackFrame
 func (s Stack) String() string {
 	formatted := make([]string, 0, len(s))
 	for _, f := range s {
-		formatted = append(formatted, f.String())
+		ftdFrm := fmt.Sprintf("%s\n        %s:%d pc=0x%x", f.Name, f.File, f.Line, f.ProgramCounter)
+		formatted = append(formatted, ftdFrm)
 	}
 	return strings.Join(formatted, "\n")
 }
@@ -46,17 +47,6 @@ type StackFrame struct {
 	Line int
 	// ProgramCounter is the underlying program counter for the function.
 	ProgramCounter uintptr
-}
-
-// String returns a string representation of the StackFrame formatted similar to
-// Go's runtime stack.
-func (f *StackFrame) String() string {
-	return fmt.Sprintf("%s\n        %s:%d pc=0x%x", f.Name, f.File, f.Line, f.ProgramCounter)
-}
-
-// format returns a formatted stack frame.
-func (f *StackFrame) format(sep string) string {
-	return fmt.Sprintf("%v%v%v%v%v", f.Name, sep, f.File, sep, f.Line)
 }
 
 // framePC is a single program counter of a stack framePC.
