@@ -64,7 +64,7 @@ var (
 	//     File "<file2>", line <line2>, in <function2>
 	//     File "<file1>", line <line1>, in <function1>
 	//   <typeName2>: <error2>
-	FormatPythonTraceback = `{{ $l := len . }}{{ range $i, $e := (reversed .) }}{{ $stack := reversed .Stack }}
+	FormatPythonTraceback = `{{ $l := len . }}{{ range $i, $e := (reversed .) }}{{ $stack := reversed .PartialStack }}
 {{ if gt (len $stack) 0 }}Traceback (most recent call last):{{ range $stack }}
   File "{{ .File }}", line {{ .Line }}, in {{ .Name }}{{ end }}{{ end }}
 {{ .TypeName }}: {{ .Msg }}{{ if not (last $i $l) }}
