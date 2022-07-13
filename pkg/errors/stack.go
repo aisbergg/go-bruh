@@ -17,17 +17,23 @@ func (s Stack) String() string {
 	return strings.Join(formatted, "\n")
 }
 
-// format returns an array of formatted stack frames.
-func (s Stack) format(sep string, invert bool) []string {
-	var str []string
-	for _, f := range s {
-		if invert {
-			str = append(str, f.format(sep))
-		} else {
-			str = append([]string{f.format(sep)}, str...)
+// RelativeTo returns new version of this stack relative to the other stack.
+func (s Stack) RelativeTo(other Stack) Stack {
+	othInd := len(other) - 1
+	curInd := len(s) - 1
+
+	for {
+		if othInd < 0 || curInd < 0 {
+			break
 		}
+		if other[othInd] != s[curInd] {
+			break
+		}
+		othInd--
+		curInd--
 	}
-	return str
+
+	return s[:curInd+1]
 }
 
 // StackFrame stores a frame's runtime information in a human readable format.
@@ -92,22 +98,23 @@ func callers(skip uint) stackPC {
 // stackPC is an array of program counters.
 type stackPC []uintptr
 
-func relativeStack(prvStack, nxtStack Stack) Stack {
-	prvInd := len(prvStack) - 1
-	curInd := len(nxtStack) - 1
+// RelativeTo returns new version of this stack relative to the other stack.
+func (s stackPC) RelativeTo(other stackPC) stackPC {
+	othInd := len(other) - 1
+	curInd := len(s) - 1
 
 	for {
-		if prvInd < 0 || curInd < 0 {
+		if othInd < 0 || curInd < 0 {
 			break
 		}
-		if prvStack[prvInd] != nxtStack[curInd] {
+		if other[othInd] != s[curInd] {
 			break
 		}
-		prvInd--
+		othInd--
 		curInd--
 	}
 
-	return nxtStack[:curInd+1]
+	return s[:curInd+1]
 }
 
 // get returns a human readable stack trace.

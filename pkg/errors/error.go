@@ -130,15 +130,39 @@ func (e *TraceableError) Cause() error {
 	return Cause(e)
 }
 
-// Stack returns the stack trace in form of a list of StackFrames.
+// Stack returns the stack trace for thins error instance in form of a list of
+// StackFrames.
 func (e *TraceableError) Stack() Stack {
 	return e.stack.get()
 }
 
-// StackFrames is an alias for Stack. getsentry/sentry-go looks for this
+// FullStack returns a combined stack trace of all errors in err's chain.
+func (e *TraceableError) FullStack() Stack {
+	cbdStack := e.stack
+	var uerr error = e
+	for {
+		uerr = Unwrap(uerr)
+		if uerr == nil {
+			break
+		}
+
+		terr, ok := uerr.(interface{ stackPC() stackPC })
+		if !ok {
+			break
+		}
+
+		nxtStack := terr.stackPC()
+		nxtStack = nxtStack.RelativeTo(cbdStack)
+		cbdStack = append(nxtStack, cbdStack...)
+	}
+
+	return cbdStack.get()
+}
+
+// StackFrames is an alias for FullStack. getsentry/sentry-go looks for this
 // particularly named method.
 func (e *TraceableError) StackFrames() Stack {
-	return e.Stack()
+	return e.FullStack()
 }
 
 // TypeName returns the type this error. e.g. *errors.stringError.

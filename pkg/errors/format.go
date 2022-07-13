@@ -60,10 +60,7 @@ func Unpack(err error, unwrapExternal bool) UnpackedError {
 		}); ok {
 			fullStack := e.Stack()
 			upkErr = append(upkErr, UnpackedElement{
-				Err:       err,
-				Msg:       e.Message(),
-				Stack:     relativeStack(prvStack, fullStack),
-				FullStack: fullStack,
+				PartialStack: stack.RelativeTo(prvStack),
 			})
 			prvStack = fullStack
 
