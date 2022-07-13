@@ -138,7 +138,7 @@ func (e *TraceableError) Stack() Stack {
 
 // FullStack returns a combined stack trace of all errors in err's chain.
 func (e *TraceableError) FullStack() Stack {
-	cbdStack := e.stack
+	cbdStk := e.stackPC() // copy of the stack
 	var uerr error = e
 	for {
 		uerr = Unwrap(uerr)
@@ -151,12 +151,12 @@ func (e *TraceableError) FullStack() Stack {
 			break
 		}
 
-		nxtStack := terr.stackPC()
-		nxtStack = nxtStack.RelativeTo(cbdStack)
-		cbdStack = append(nxtStack, cbdStack...)
+		nxtStk := terr.stackPC()
+		nxtStk = nxtStk.RelativeTo(cbdStk)
+		cbdStk = append(nxtStk, cbdStk...)
 	}
 
-	return cbdStack.toStack()
+	return cbdStk.toStack()
 }
 
 // StackFrames is an alias for FullStack. getsentry/sentry-go looks for this
@@ -170,10 +170,11 @@ func (e *TraceableError) TypeName() string {
 	return TypeName(e)
 }
 
-// Stack returns the stack trace of the error in the form of a program counter
-// slice.
+// stackPC returns a copy of the program counters of function invocations.
 func (e *TraceableError) stackPC() stackPC {
-	return e.stack
+	var stkCpy stackPC
+	copy(e.stack, stkCpy)
+	return stkCpy
 }
 
 // -----------------------------------------------------------------------------

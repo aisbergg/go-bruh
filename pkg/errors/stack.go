@@ -78,8 +78,7 @@ func (f framePC) get() StackFrame {
 // frames to skip before recording in pc, with 0 identifying the frame for
 // Callers itself and 1 identifying the caller of Callers.
 func callers(skip uint) stackPC {
-	const depth = 64
-	var pcs [depth]uintptr
+	pcs := make([]uintptr, 64)
 	n := runtime.Callers(int(skip), pcs[:])
 	var st stackPC = pcs[0:n]
 	return st
