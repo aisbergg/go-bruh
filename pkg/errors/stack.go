@@ -117,8 +117,11 @@ func (s stackPC) RelativeTo(other stackPC) stackPC {
 	return s[:curInd+1]
 }
 
-// get returns a human readable stack trace.
-func (s stackPC) get() (stack Stack) {
+// toStack returns a Stack object with information details about the PCs.
+func (s stackPC) toStack() (stack Stack) {
+	if len(s) == 0 {
+		return
+	}
 	frames := runtime.CallersFrames(s)
 	for {
 		frame, more := frames.Next()
@@ -141,10 +144,14 @@ func (s stackPC) get() (stack Stack) {
 
 // isGlobal determines if the stack trace represents a globally defined error.
 func (s stackPC) isGlobal() bool {
-	frames := s.get()
-	for _, f := range frames {
-		if strings.ToLower(f.Name) == "runtime.doinit" {
+	frames := runtime.CallersFrames(s)
+	for {
+		frame, more := frames.Next()
+		if frame.Function == "runtime.doInit" {
 			return true
+		}
+		if !more {
+			break
 		}
 	}
 	return false

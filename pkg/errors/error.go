@@ -133,7 +133,7 @@ func (e *TraceableError) Cause() error {
 // Stack returns the stack trace for thins error instance in form of a list of
 // StackFrames.
 func (e *TraceableError) Stack() Stack {
-	return e.stack.get()
+	return e.stack.toStack()
 }
 
 // FullStack returns a combined stack trace of all errors in err's chain.
@@ -156,7 +156,7 @@ func (e *TraceableError) FullStack() Stack {
 		cbdStack = append(nxtStack, cbdStack...)
 	}
 
-	return cbdStack.get()
+	return cbdStack.toStack()
 }
 
 // StackFrames is an alias for FullStack. getsentry/sentry-go looks for this
