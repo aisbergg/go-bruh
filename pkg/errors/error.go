@@ -10,7 +10,7 @@ import (
 
 // New creates a new error with the given message.
 func New(msg string) *TraceableError {
-	return NewSkip(0, msg)
+	return NewSkip(1, msg)
 }
 
 // NewSkip creates a new error with the given message and skips the
@@ -35,14 +35,13 @@ func NewSkip(skip uint, msg string) *TraceableError {
 
 // Errorf creates a new error with a formatted message.
 func Errorf(format string, args ...interface{}) *TraceableError {
-	return NewSkip(0, fmt.Sprintf(format, args...))
-
+	return NewSkip(1, fmt.Sprintf(format, args...))
 }
 
 // ErrorfSkip creates a new error with a formatted message and skips the
 // specified number of callers in the stack trace.
 func ErrorfSkip(skip uint, format string, args ...interface{}) *TraceableError {
-	return NewSkip(skip, fmt.Sprintf(format, args...))
+	return NewSkip(skip+1, fmt.Sprintf(format, args...))
 }
 
 // Wrap wraps the given error by creating a new error with the specified
