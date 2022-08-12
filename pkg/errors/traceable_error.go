@@ -8,13 +8,13 @@ import (
 	"strings"
 )
 
-// New creates a new error with the given message.
+// New creates a new TraceableError error with the given message.
 func New(msg string) *TraceableError {
 	return NewSkip(1, msg)
 }
 
-// NewSkip creates a new error with the given message and skips the
-// specified number of callers in the stack trace.
+// NewSkip creates a new TraceableError error with the given message and skips
+// the specified number of callers in the stack trace.
 func NewSkip(skip uint, msg string) *TraceableError {
 	// skips this method, stack.callers, runtime.Callers and user defined number
 	// of other callers
@@ -33,25 +33,26 @@ func NewSkip(skip uint, msg string) *TraceableError {
 	}
 }
 
-// Errorf creates a new error with a formatted message.
+// Errorf creates a new TraceableError error with a formatted message.
 func Errorf(format string, args ...interface{}) *TraceableError {
 	return NewSkip(1, fmt.Sprintf(format, args...))
 }
 
-// ErrorfSkip creates a new error with a formatted message and skips the
-// specified number of callers in the stack trace.
+// ErrorfSkip creates a new TraceableError error with a formatted message and
+// skips the specified number of callers in the stack trace.
 func ErrorfSkip(skip uint, format string, args ...interface{}) *TraceableError {
 	return NewSkip(skip+1, fmt.Sprintf(format, args...))
 }
 
-// Wrap wraps the given error by creating a new error with the specified
-// message.
+// Wrap wraps the given error by creating a new TraceableError error with the
+// specified message.
 func Wrap(err error, msg string) *TraceableError {
 	return WrapSkip(err, 1, msg)
 }
 
-// WrapSkip wraps the given error by creating a new error with the specified
-// message and skips the specified number of callers in the stack trace.
+// WrapSkip wraps the given error by creating a new TraceableError error with
+// the specified message and skips the specified number of callers in the stack
+// trace.
 func WrapSkip(err error, skip uint, msg string) *TraceableError {
 	// skips this method, stack.callers, runtime.Callers and user defined number
 	// of other callers
@@ -72,13 +73,15 @@ func WrapSkip(err error, skip uint, msg string) *TraceableError {
 	}
 }
 
-// Wrapf wraps the given error by creating a new error with a formatted message.
+// Wrapf wraps the given error by creating a new TraceableError error with a
+// formatted message.
 func Wrapf(err error, format string, args ...interface{}) *TraceableError {
 	return WrapSkip(err, 1, fmt.Sprintf(format, args...))
 }
 
-// WrapfSkip wraps the given error by creating a new error with a formatted
-// message and skips the specified number of callers in the stack trace.
+// WrapfSkip wraps the given error by creating a new TraceableError error with a
+// formatted message and skips the specified number of callers in the stack
+// trace.
 func WrapfSkip(err error, skip uint, format string, args ...interface{}) *TraceableError {
 	return WrapSkip(err, skip+1, fmt.Sprintf(format, args...))
 }
