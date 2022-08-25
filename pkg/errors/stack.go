@@ -37,6 +37,22 @@ func (s Stack) RelativeTo(other Stack) Stack {
 	return s[:curInd+1]
 }
 
+// First returns the first x stack frames in the stack.
+func (s Stack) First(x int) Stack {
+	if len(s) <= x {
+		return s
+	}
+	return s[:x]
+}
+
+// Last returns the last x stack frames in the stack.
+func (s Stack) Last(x int) Stack {
+	if len(s) <= x {
+		return s
+	}
+	return s[len(s)-x:]
+}
+
 // StackFrame stores a frame's runtime information in a human readable format.
 type StackFrame struct {
 	// Name of the function.
