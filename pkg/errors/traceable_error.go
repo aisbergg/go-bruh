@@ -119,18 +119,6 @@ func (e *TraceableError) Unwrap() error {
 	return e.err
 }
 
-// Is reports whether any error in err's chain matches target.
-func (e *TraceableError) Is(target error) bool {
-	return Is(e, target)
-}
-
-// As finds the first error in err's chain that matches target, and if one is
-// found, sets target to that error value and returns true. Otherwise, it
-// returns false.
-func (e *TraceableError) As(target interface{}) bool {
-	return As(e, target)
-}
-
 // Cause returns the root cause of the error, which is defined as the first
 // error in the chain.
 func (e *TraceableError) Cause() error {
