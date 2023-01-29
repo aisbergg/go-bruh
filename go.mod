@@ -1,3 +1,3 @@
-module github.com/aisbergg/go-errors
+module github.com/aisbergg/go-bruh
 
 go 1.18

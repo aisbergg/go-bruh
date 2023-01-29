@@ -1,4 +1,4 @@
-package errors
+package bruh
 
 // Contexter is an error that includes additional context in form of a map.
 type Contexter interface {
