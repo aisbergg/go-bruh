@@ -69,7 +69,7 @@ type StackFrame struct {
 // frames to skip before recording in pc, with 0 identifying the frame for
 // Callers itself and 1 identifying the caller of Callers.
 func callers(skip uint) stackPC {
-	pcs := make([]uintptr, 64)
+	pcs := make([]uintptr, 32)
 	n := runtime.Callers(int(skip), pcs[:])
 	var st stackPC = pcs[0:n]
 	return st
@@ -78,8 +78,8 @@ func callers(skip uint) stackPC {
 // stackPC is an array of program counters.
 type stackPC []uintptr
 
-// RelativeTo returns new version of this stack relative to the other stack.
-func (s stackPC) RelativeTo(other stackPC) stackPC {
+// relativeTo returns new version of this stack relative to the other stack.
+func (s stackPC) relativeTo(other stackPC) stackPC {
 	othInd := len(other) - 1
 	curInd := len(s) - 1
 
