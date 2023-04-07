@@ -5,17 +5,16 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"strings"
 )
 
 // New creates a new TraceableError error with the given message.
-func New(msg string) *TraceableError {
+func New(msg string) error {
 	return NewSkip(1, msg)
 }
 
 // NewSkip creates a new TraceableError error with the given message and skips
 // the specified number of callers in the stack trace.
-func NewSkip(skip uint, msg string) *TraceableError {
+func NewSkip(skip uint, msg string) error {
 	// skips this method, stack.callers, runtime.Callers and user defined number
 	// of other callers
 	stack := callers(3 + skip)
@@ -34,26 +33,30 @@ func NewSkip(skip uint, msg string) *TraceableError {
 }
 
 // Errorf creates a new TraceableError error with a formatted message.
-func Errorf(format string, args ...interface{}) *TraceableError {
+func Errorf(format string, args ...interface{}) error {
 	return NewSkip(1, fmt.Sprintf(format, args...))
 }
 
 // ErrorfSkip creates a new TraceableError error with a formatted message and
 // skips the specified number of callers in the stack trace.
-func ErrorfSkip(skip uint, format string, args ...interface{}) *TraceableError {
+func ErrorfSkip(skip uint, format string, args ...interface{}) error {
 	return NewSkip(skip+1, fmt.Sprintf(format, args...))
 }
 
 // Wrap wraps the given error by creating a new TraceableError error with the
 // specified message.
-func Wrap(err error, msg string) *TraceableError {
+func Wrap(err error, msg string) error {
 	return WrapSkip(err, 1, msg)
 }
 
 // WrapSkip wraps the given error by creating a new TraceableError error with
 // the specified message and skips the specified number of callers in the stack
-// trace.
-func WrapSkip(err error, skip uint, msg string) *TraceableError {
+// trace. Nil is returned in case err is nil.
+func WrapSkip(err error, skip uint, msg string) error {
+	if err == nil {
+		return nil
+	}
+
 	// skips this method, stack.callers, runtime.Callers and user defined number
 	// of other callers
 	stack := callers(3 + skip)
@@ -75,14 +78,14 @@ func WrapSkip(err error, skip uint, msg string) *TraceableError {
 
 // Wrapf wraps the given error by creating a new TraceableError error with a
 // formatted message.
-func Wrapf(err error, format string, args ...interface{}) *TraceableError {
+func Wrapf(err error, format string, args ...interface{}) error {
 	return WrapSkip(err, 1, fmt.Sprintf(format, args...))
 }
 
 // WrapfSkip wraps the given error by creating a new TraceableError error with a
 // formatted message and skips the specified number of callers in the stack
 // trace.
-func WrapfSkip(err error, skip uint, format string, args ...interface{}) *TraceableError {
+func WrapfSkip(err error, skip uint, format string, args ...interface{}) error {
 	return WrapSkip(err, skip+1, fmt.Sprintf(format, args...))
 }
 
@@ -93,9 +96,15 @@ type TraceableError struct {
 	stack stackPC
 }
 
-// Error returns the error message.
-func (e *TraceableError) Error() string {
+// Message returns the single, unformatted message of this error.
+func (e *TraceableError) Message() string {
 	return e.msg
+}
+
+// Error returns the formatted error message including the messages of wrapped
+// errors.
+func (e *TraceableError) Error() string {
+	return ToString(e, false)
 }
 
 // Format implements the fmt.Formatter interface. Use fmt.Sprintf("%v", err) to
@@ -191,22 +200,6 @@ func Unwrap(err error) error {
 	return errors.Unwrap(err)
 }
 
-// Is reports whether any error in err's chain matches target.
-//
-// See Go's errors.Is for more information.
-func Is(err, target error) bool {
-	return errors.Is(err, target)
-}
-
-// As finds the first error in err's chain that matches target, and if one is
-// found, sets target to that error value and returns true. Otherwise, it
-// returns false.
-//
-// See Go's errors.As for more information.
-func As(err error, target any) bool {
-	return errors.As(err, target)
-}
-
 // Cause returns the root cause of the error, which is defined as the first
 // error in the chain. The original error is returned if it does not implement
 // `Unwrap() error` and nil is returned if the error is nil.
@@ -220,9 +213,7 @@ func Cause(err error) error {
 	}
 }
 
-// TypeName returns the type of the error. e.g. errors.TraceableError.
+// TypeName returns the type of the error. e.g. *bruh.TraceableError.
 func TypeName(err error) string {
-	typeName := reflect.TypeOf(err).String()
-	typeName = strings.TrimPrefix(typeName, "*")
-	return typeName
+	return reflect.TypeOf(err).String()
 }
