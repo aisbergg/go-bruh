@@ -132,22 +132,28 @@ func (e *TraceableError) Stack() Stack {
 
 // FullStack returns a combined stack trace of all errors in err's chain.
 func (e *TraceableError) FullStack() Stack {
-	cbdStk := e.stackPC() // copy of the stack
 	var uerr error = e
+
+	// unwrap error stack
+	errs := make([]interface{ stackPC() stackPC }, 0, 30)
+	errs = append(errs, e)
 	for {
 		uerr = Unwrap(uerr)
 		if uerr == nil {
 			break
 		}
-
 		terr, ok := uerr.(interface{ stackPC() stackPC })
 		if !ok {
 			break
 		}
+		errs = append(errs, terr)
+	}
 
-		nxtStk := terr.stackPC()
-		nxtStk = nxtStk.RelativeTo(cbdStk)
-		cbdStk = append(nxtStk, cbdStk...)
+	cbdStk := errs[len(errs)-1].stackPC()
+	for i := len(errs) - 2; i >= 0; i-- {
+		curStk := errs[i].stackPC()
+		relStk := cbdStk.relativeTo(curStk)
+		cbdStk = append(relStk, curStk...)
 	}
 
 	return cbdStk.toStack()
