@@ -13,7 +13,7 @@
     <img src="assets/logo.svg" alt="Logo" width="160" height="160">
   </a>
 
-  <h2 align="center"><b>bruh</b></h2>
+  <h2 align="center"><b>bruh - Error Handling</b></h2>
 
   <p align="center">
     Having a bruh moment? No problem! Handle errors like a pro with <i>bruh</i> - the Go error handling library that simplifies error management and beautifies stack traces.
@@ -30,7 +30,7 @@
 <details>
   <summary>Table of Contents</summary>
 
-- [About The Project](#about-the-project)
+- [About](#about)
 - [Installation](#installation)
 - [Synopsis](#synopsis)
   - [Creating Errors](#creating-errors)
@@ -48,8 +48,7 @@
 
 
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+## About
 
 Having a bruh moment? Don't worry, _bruh_ is here to help! _bruh_ is a Go error handling library that makes it easy to deal with errors and print pretty stack traces. Simply create, wrap, and format your errors with all the details you need. Since it is designed as a drop-in replacement for Go's standard library `errors` package, you don't even have to worry about making major changes to your code in order to get it working.
 
