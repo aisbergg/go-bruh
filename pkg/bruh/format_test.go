@@ -242,7 +242,7 @@ external error`,
 		t.Run(desc, func(t *testing.T) {
 			expTpl := template.Must(template.New("").Parse(tt.exp))
 			strBld := strings.Builder{}
-			if err := expTpl.Execute(&strBld, map[string]interface{}{
+			if err := expTpl.Execute(&strBld, map[string]any{
 				"file":        file,
 				"testingFile": testingFile,
 				"testingLine": testingLine,
@@ -321,7 +321,7 @@ func TestFormatWithCombinedTrace(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 			expTpl := template.Must(template.New("").Parse(tt.exp))
 			strBld := strings.Builder{}
-			if err := expTpl.Execute(&strBld, map[string]interface{}{
+			if err := expTpl.Execute(&strBld, map[string]any{
 				"file":        file,
 				"testingFile": testingFile,
 				"testingLine": testingLine,

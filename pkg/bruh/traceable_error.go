@@ -33,13 +33,13 @@ func NewSkip(skip uint, msg string) error {
 }
 
 // Errorf creates a new TraceableError error with a formatted message.
-func Errorf(format string, args ...interface{}) error {
+func Errorf(format string, args ...any) error {
 	return NewSkip(1, fmt.Sprintf(format, args...))
 }
 
 // ErrorfSkip creates a new TraceableError error with a formatted message and
 // skips the specified number of callers in the stack trace.
-func ErrorfSkip(skip uint, format string, args ...interface{}) error {
+func ErrorfSkip(skip uint, format string, args ...any) error {
 	return NewSkip(skip+1, fmt.Sprintf(format, args...))
 }
 
@@ -78,14 +78,14 @@ func WrapSkip(err error, skip uint, msg string) error {
 
 // Wrapf wraps the given error by creating a new TraceableError error with a
 // formatted message.
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(err error, format string, args ...any) error {
 	return WrapSkip(err, 1, fmt.Sprintf(format, args...))
 }
 
 // WrapfSkip wraps the given error by creating a new TraceableError error with a
 // formatted message and skips the specified number of callers in the stack
 // trace.
-func WrapfSkip(err error, skip uint, format string, args ...interface{}) error {
+func WrapfSkip(err error, skip uint, format string, args ...any) error {
 	return WrapSkip(err, skip+1, fmt.Sprintf(format, args...))
 }
 

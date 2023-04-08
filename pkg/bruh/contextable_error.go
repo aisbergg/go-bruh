@@ -3,14 +3,14 @@ package bruh
 // Contexter is an error that includes additional context in form of a map.
 type Contexter interface {
 	error
-	Context() map[string]interface{}
+	Context() map[string]any
 }
 
 // ContextAdder is an error that can add context to itself.
 type ContextAdder interface {
 	error
-	Add(key string, value interface{}) ContextAdder
-	AddAll(context map[string]interface{}) ContextAdder
+	Add(key string, value any) ContextAdder
+	AddAll(context map[string]any) ContextAdder
 }
 
 var _ Contexter = (*ContextableError)(nil)
@@ -18,14 +18,14 @@ var _ Contexter = (*ContextableError)(nil)
 // ContextableError is an error that is temporary and can be retried.
 type ContextableError struct {
 	TraceableError
-	context map[string]interface{}
+	context map[string]any
 }
 
 // CENew creates a new ContextableError error with the given message.
 func CENew(msg string) error {
 	return &ContextableError{
 		TraceableError: *NewSkip(1, msg).(*TraceableError),
-		context:        make(map[string]interface{}),
+		context:        make(map[string]any),
 	}
 }
 
@@ -34,24 +34,24 @@ func CENew(msg string) error {
 func CENewSkip(skip uint, msg string) error {
 	return &ContextableError{
 		TraceableError: *NewSkip(skip+1, msg).(*TraceableError),
-		context:        make(map[string]interface{}),
+		context:        make(map[string]any),
 	}
 }
 
 // CEErrorf creates a new ContextableError error with a formatted message.
-func CEErrorf(format string, args ...interface{}) error {
+func CEErrorf(format string, args ...any) error {
 	return &ContextableError{
 		TraceableError: *ErrorfSkip(1, format, args...).(*TraceableError),
-		context:        make(map[string]interface{}),
+		context:        make(map[string]any),
 	}
 }
 
 // CEErrorfSkip creates a new ContextableError error with a formatted message
 // and skips the specified number of callers in the stack trace.
-func CEErrorfSkip(skip uint, format string, args ...interface{}) error {
+func CEErrorfSkip(skip uint, format string, args ...any) error {
 	return &ContextableError{
 		TraceableError: *ErrorfSkip(skip+1, format, args...).(*TraceableError),
-		context:        make(map[string]interface{}),
+		context:        make(map[string]any),
 	}
 }
 
@@ -63,7 +63,7 @@ func CEWrap(err error, msg string) error {
 	}
 	return &ContextableError{
 		TraceableError: *WrapSkip(err, 1, msg).(*TraceableError),
-		context:        make(map[string]interface{}),
+		context:        make(map[string]any),
 	}
 }
 
@@ -76,37 +76,37 @@ func CEWrapSkip(err error, skip uint, msg string) error {
 	}
 	return &ContextableError{
 		TraceableError: *WrapSkip(err, skip+1, msg).(*TraceableError),
-		context:        make(map[string]interface{}),
+		context:        make(map[string]any),
 	}
 }
 
 // CEWrapf wraps the given error by creating a new ContextableError error with a
 // formatted message.
-func CEWrapf(err error, format string, args ...interface{}) error {
+func CEWrapf(err error, format string, args ...any) error {
 	if err == nil {
 		return nil
 	}
 	return &ContextableError{
 		TraceableError: *WrapfSkip(err, 1, format, args...).(*TraceableError),
-		context:        make(map[string]interface{}),
+		context:        make(map[string]any),
 	}
 }
 
 // CEWrapfSkip wraps the given error by creating a new ContextableError error
 // with a formatted message and skips the specified number of callers in the
 // stack trace.
-func CEWrapfSkip(err error, skip uint, format string, args ...interface{}) error {
+func CEWrapfSkip(err error, skip uint, format string, args ...any) error {
 	if err == nil {
 		return nil
 	}
 	return &ContextableError{
 		TraceableError: *WrapfSkip(err, skip+1, format, args...).(*TraceableError),
-		context:        make(map[string]interface{}),
+		context:        make(map[string]any),
 	}
 }
 
 // Add adds a key-value pair to the error context. If the key already exists, it will be overwritten. If the value is nil, the key will be removed.
-func (e *ContextableError) Add(key string, value interface{}) error {
+func (e *ContextableError) Add(key string, value any) error {
 	if value == nil {
 		delete(e.context, key)
 		return e
@@ -116,7 +116,7 @@ func (e *ContextableError) Add(key string, value interface{}) error {
 }
 
 // AddAll adds all key-value pairs to the error context.
-func (e *ContextableError) AddAll(context map[string]interface{}) error {
+func (e *ContextableError) AddAll(context map[string]any) error {
 	for key, value := range context {
 		e.Add(key, value)
 	}
@@ -124,12 +124,12 @@ func (e *ContextableError) AddAll(context map[string]interface{}) error {
 }
 
 // Context returns the context for the error.
-func (e *ContextableError) Context() map[string]interface{} {
+func (e *ContextableError) Context() map[string]any {
 	return e.context
 }
 
 // FullContext returns the context of the whole error chain.
-func (e *ContextableError) FullContext() map[string]interface{} {
+func (e *ContextableError) FullContext() map[string]any {
 	return GetFullContext(e)
 }
 
@@ -141,7 +141,7 @@ func (e *ContextableError) FullContext() map[string]interface{} {
 
 // GetContext returns the attached context of the given error. If the error does
 // not have any context, nil is returned.
-func GetContext(err error) map[string]interface{} {
+func GetContext(err error) map[string]any {
 	if e, ok := err.(Contexter); ok {
 		return e.Context()
 	}
@@ -150,9 +150,9 @@ func GetContext(err error) map[string]interface{} {
 
 // GetFullContext returns the attached context of the whole error chain. If the
 // error does not have any context, nil is returned.
-func GetFullContext(err error) map[string]interface{} {
+func GetFullContext(err error) map[string]any {
 	if err == nil {
-		return make(map[string]interface{})
+		return make(map[string]any)
 	}
 	ctx := GetFullContext(Unwrap(err))
 	if e, ok := err.(Contexter); ok {
