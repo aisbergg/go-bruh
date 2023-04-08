@@ -13,7 +13,7 @@
     <img src="assets/logo.svg" alt="Logo" width="160" height="160">
   </a>
 
-  <h2 align="center"><b>😩 bruh</b></h2>
+  <h2 align="center"><b>bruh</b></h2>
 
   <p align="center">
     Having a bruh moment? No problem! Handle errors like a pro with <i>bruh</i> - the Go error handling library that simplifies error management and beautifies stack traces.
@@ -78,12 +78,186 @@ go get github.com/aisbergg/go-bruh
 
 ### Creating Errors
 
+Creating new errors with stack traces is done by calling [`bruh.New(msg string)`](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh#New) or [`Errorf(format string, args ...any)`](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh#Errorf):
+
+```golang
+// create a global error
+var ErrInternalServer = bruh.New("error internal server")
+
+func Get(url string) (*http.Response, error) {
+	res, err := http.Get(url)
+	if err != nil {
+		// create a local error
+		return nil, bruh.New("request failed")
+	}
+	if res.StatusCode != http.StatusOK {
+		// create a local error using a format
+		return nil, bruh.Errorf("request failed with status code %d", res.StatusCode)
+	}
+	return res, nil
+}
+```
+
 ### Wrapping Errors
+
+Wrapping errors is not different than creating entirely new errors. You can use [`Wrap(err error, msg string)`](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh#Wrap) or [`Wrapf(err error, format string, args ...any)`](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh#Wrapf) for this:
+
+```golang
+func main() {
+	url := "https://example.com"
+	_, err := Get(url)
+	if err != nil {
+		err = bruh.Wrapf(err, "failed to fetch %s", url)
+		panic(err)
+	}
+}
+
+func Get(url string) (*http.Response, error) {
+	res, err := http.Get(url)
+	if err != nil {
+		// wrap previous error
+		return nil, bruh.Wrap(err, "request failed")
+	}
+	return res, nil
+}
+
+```
 
 ### Formatting Errors
 
+Errors can be formatted using the built-in formats or customized by creating a custom formatter. No matter what format you use, the basic usage is as such:
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/aisbergg/go-bruh/pkg/bruh"
+)
+
+func main() {
+	err := foo()
+
+	// only message
+	ftdErr := fmt.Sprintf("%v", err)
+
+	// with trace
+	ftdErr = fmt.Sprintf("%+v", err)
+
+	// with custom formatter
+	ftdErr = bruh.ToCustomString(err, bruh.FormatWithCombinedTrace)
+
+	fmt.Println(ftdErr)
+}
+
+// external error
+var extErr = fmt.Errorf("external")
+
+func foo() error {
+	return bruh.Wrapf(bar(), "foo")
+}
+
+func bar() error {
+	return bruh.Wrapf(extErr, "bar")
+}
+```
+
+Following formats are built-in:
+
+- `bruh.FormatWithTrace`: FormatWithTrace is an error formatter that produces a trace containing a partial stack trace for each wrapped error. E.g.:
+    ```plaintext
+    <error1>:
+        <file1>:<line1> in <function1>
+        <file2>:<line2> in <function2>
+        <fileN>:<lineN> in <functionN>
+    <error2>:
+        <file1>:<line1> in <function1>
+        <file2>:<line2> in <function2>
+        <fileN>:<lineN> in <functionN>
+    <errorN>:
+        <file1>:<line1> in <function1>
+        <file2>:<line2> in <function2>
+        <fileN>:<lineN> in <functionN>
+    ```
+
+- `bruh.FormatWithCombinedTrace`: FormatWithCombinedTrace is an error formatter that produces a single combined stack trace. E.g.:
+    ```plaintext
+    <error1>: <error2>: <errorN>
+        <file1>:<line1> in <function1>
+        <file2>:<line2> in <function2>
+        <fileN>:<lineN> in <functionN>
+    ```
+
+- `bruh.FormatPythonTraceback`: FormatPythonTraceback is an error formatter that produces error traces similar to Python's tracebacks. E.g.:
+    ```plaintext
+    Traceback (most recent call last):
+    File "<file3>", line <line3>, in <function3>
+    File "<file2>", line <line2>, in <function2>
+    File "<file1>", line <line1>, in <function1>
+    <typeName1>: <error1>
+
+    The above exception was the direct cause of the following exception:
+
+    Traceback (most recent call last):
+    File "<file3>", line <line3>, in <function3>
+    File "<file2>", line <line2>, in <function2>
+    File "<file1>", line <line1>, in <function1>
+    <typeName2>: <error2>
+    ```
+
+The formatting can be customized by creating a formatter. Check the [json example](examples/formatting/json.go) on how create your very own formatter.
+
 ### Creating Custom Errors
 
+Custom errors can be created based on the bruh standard error. The custom error will inherit the properties of the bruh error, such as the trace backs. Here is a short example:
+
+> Note: You can find a more detailed example in the [examples directory](examples/customizing/timestamped_error.go)
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/aisbergg/go-bruh/pkg/bruh"
+)
+
+func main() {
+	err := fmt.Errorf("external error")
+	err = TEWrapf(err, "%s, what a day", "bruh")
+	if terr, ok := err.(*TimestampedError); ok {
+		fmt.Printf("%s: %s\n", terr.Timestamp().Format(time.RFC3339), terr.Error())
+	}
+}
+
+// TimestampedError represents the custom error. It embeds bruh.TraceableError
+// and "inherits" is properties. This way, you can create your own custom types
+// and add more properties as needed.
+type TimestampedError struct {
+	bruh.TraceableError
+	timestamp time.Time
+}
+
+// TEWrapf creates the custom error. As you can see, it initializes the
+// underlying bruh error using the `WrapfSkip` function. For each of the
+// standard error creation function, there is a `Skip` equivalent. These
+// initialize the bruh error and make sure, that this very function does not
+// appear in the stack trace.
+func TEWrapf(err error, format string, args ...interface{}) error {
+	return &TimestampedError{
+		// skip is required to skip the current function and thus exclude this
+		// function from the stack trace
+		TraceableError: *bruh.WrapfSkip(err, 1, format, args...).(*bruh.TraceableError),
+		timestamp:      time.Now(),
+	}
+}
+
+func (te *TimestampedError) Timestamp() time.Time {
+	return te.timestamp
+}
+```
 
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
 
@@ -94,7 +268,7 @@ Inside the `benchmark` directory reside some comparable benchmarks that allow so
 
 ```sh
 cd benchmark
-go get .
+go mod download
 go test -run '^$' -bench=. -benchmem ./bench_test.go
 ```
 
@@ -142,7 +316,7 @@ BenchmarkFormatWithTrace/bruh_100_layers-12                        10000        
 - [ ] Add more Tests
 - [ ] Add pre-commit hooks
 - [ ] Add some automation
-- [ ] Write more documentation
+- [x] Write more documentation
 
 See the [open issues](https://github.com/aisbergg/go-bruh/issues) for a full list of proposed features (and known issues).
 
@@ -190,4 +364,3 @@ _bruh_ was originally inspired by [eris](https://github.com/rotisserie/eris). I 
 The logo is a derivative of the [logo](https://github.com/rfyiamcool/golang_logo/blob/master/svg/golang_3.svg) by [rfyiamcool](https://github.com/rfyiamcool). Sorry rfyiamcool that I butchered your gopher.
 
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
-s
