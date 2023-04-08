@@ -1,0 +1,21 @@
+ignoreGeneratedHeader = false
+severity = "warning"
+confidence = 0.8
+errorCode = 0
+warningCode = 0
+enableAllRules = true
+
+[rule.exported]
+  Disabled = true
+[rule.blank-imports]
+  Disabled = true
+[rule.file-header]
+  Disabled = true
+[rule.max-public-structs]
+  Disabled = true
+[rule.line-length-limit]
+  Disabled = true
+[rule.function-length]
+  Disabled = true
+[rule.banned-characters]
+  Disabled = true
