@@ -158,16 +158,16 @@ func TestFormatWithoutTrace(t *testing.T) {
 		},
 		"empty wrapped external error": {
 			input: Wrap(errors.New(""), "additional context"),
-			exp:   "additional context: ",
+			exp:   "additional context",
 		},
 		"empty wrapped error": {
 			input: Wrap(New(""), "additional context"),
-			exp:   "additional context: ",
+			exp:   "additional context",
 		},
 	}
 	for desc, tt := range tests {
 		t.Run(desc, func(t *testing.T) {
-			assert.Equal(tt.exp, ToCustomString(tt.input, FormatWithoutTrace))
+			assert.Equal(tt.exp, ToCustomString(tt.input, nil))
 		})
 	}
 }

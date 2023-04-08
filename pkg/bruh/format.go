@@ -22,32 +22,8 @@ func ToCustomString(err error, f Formatter) string {
 
 	// Format error without a stack trace by simply combining all error
 	// messages. (fast path)
-	//
-	// Format:
-	//
-	//	<error1>: <error2>: <errorN>
 	if f == nil {
-		strBld := strings.Builder{}
-		// pre-allocate a large buffer to avoid reallocations
-		strBld.Grow(1024)
-		if e, ok := err.(interface{ Message() string }); ok {
-			strBld.WriteString(e.Message())
-		} else {
-			strBld.WriteString(err.Error())
-			return strBld.String()
-		}
-		err = Unwrap(err)
-		for err != nil {
-			if e, ok := err.(interface{ Message() string }); ok {
-				strBld.WriteString(": ")
-				strBld.WriteString(e.Message())
-			} else {
-				strBld.WriteString(err.Error())
-				break
-			}
-			err = Unwrap(err)
-		}
-		return strBld.String()
+		return formatWithoutTrace(err)
 	}
 
 	// unpack error and apply formatter
@@ -71,6 +47,43 @@ func FormatWithoutTrace(upkErr UnpackedError) string {
 	for i := 1; i < len(upkErr); i++ {
 		strBld.WriteString(": ")
 		strBld.WriteString(upkErr[i].Msg)
+	}
+	return strBld.String()
+}
+
+// formatWithoutTrace formats an error without a stack trace by simply combining
+// all error messages.
+//
+// Format:
+//
+//	<error1>: <error2>: <errorN>
+func formatWithoutTrace(err error) string {
+	strBld := strings.Builder{}
+	// pre-allocate a large buffer to avoid reallocations
+	strBld.Grow(1024)
+	if e, ok := err.(interface{ Message() string }); ok {
+		strBld.WriteString(e.Message())
+	} else {
+		strBld.WriteString(err.Error())
+		return strBld.String()
+	}
+	err = Unwrap(err)
+	for err != nil {
+		if e, ok := err.(interface{ Message() string }); ok {
+			msg := e.Message()
+			if msg != "" {
+				strBld.WriteString(": ")
+				strBld.WriteString(msg)
+			}
+		} else {
+			msg := err.Error()
+			if msg != "" {
+				strBld.WriteString(": ")
+				strBld.WriteString(msg)
+			}
+			break
+		}
+		err = Unwrap(err)
 	}
 	return strBld.String()
 }
