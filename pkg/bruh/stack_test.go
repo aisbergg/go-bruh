@@ -86,9 +86,9 @@ func TestFullStack(t *testing.T) {
 
 	err := ProcessFile("example.json", false, false)
 	uerr := Unpack(err, true)
-	validateStack(t, expectedFullStack0, uerr[0].FullStack)
-	validateStack(t, expectedFullStack1, uerr[1].FullStack)
-	validateStack(t, expectedFullStack2, uerr[2].FullStack)
+	validateStack(t, expectedFullStack0, uerr[0].Err.(*TraceableError).FullStack())
+	validateStack(t, expectedFullStack1, uerr[1].Err.(*TraceableError).FullStack())
+	validateStack(t, expectedFullStack2, uerr[2].Err.(*TraceableError).FullStack())
 }
 
 func TestPartialStack(t *testing.T) {
@@ -262,9 +262,9 @@ func TestGoRoutines(t *testing.T) {
 
 			err := ProcessFile("example.json", false, false)
 			uerr := Unpack(err, true)
-			validateStack(t, expectedFullStack0, uerr[0].FullStack)
-			validateStack(t, expectedFullStack1, uerr[1].FullStack)
-			validateStack(t, expectedFullStack2, uerr[2].FullStack)
+			validateStack(t, expectedFullStack0, uerr[0].Err.(*TraceableError).FullStack())
+			validateStack(t, expectedFullStack1, uerr[1].Err.(*TraceableError).FullStack())
+			validateStack(t, expectedFullStack2, uerr[2].Err.(*TraceableError).FullStack())
 		}(i)
 	}
 	wg.Wait()
