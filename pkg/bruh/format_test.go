@@ -127,7 +127,6 @@ func isUnpackedErrorEqual(a []UnpackedElement, b []UnpackedElement) bool {
 }
 
 func TestFormatWithoutTrace(t *testing.T) {
-	assert := testutils.NewAssert(t)
 	tests := map[string]struct {
 		input error
 		exp   string
@@ -167,13 +166,13 @@ func TestFormatWithoutTrace(t *testing.T) {
 	}
 	for desc, tt := range tests {
 		t.Run(desc, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
 			assert.Equal(tt.exp, ToCustomString(tt.input, nil))
 		})
 	}
 }
 
 func TestFormatWithTrace(t *testing.T) {
-	assert := testutils.NewAssert(t)
 	tests := map[string]struct {
 		input error
 		exp   string
@@ -185,25 +184,23 @@ func TestFormatWithTrace(t *testing.T) {
 		"basic root error": {
 			input: New("root error"),
 			exp: `root error
-    {{.file}}:186 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
+    {{.file}}:185 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
 		},
 		"basic wrapped error": {
 			input: Wrap(Wrap(New("root error"), "additional context"), "even more context"),
 			exp: `even more context
-    {{.file}}:192 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
+    {{.file}}:191 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner
 additional context
-    {{.file}}:192 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner
+    {{.file}}:191 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
 root error
-    {{.file}}:192 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
+    {{.file}}:191 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace`,
 		},
 		"external wrapped error": {
 			input: Wrap(errors.New("external error"), "additional context"),
 			exp: `additional context
-    {{.file}}:204 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
+    {{.file}}:201 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner
 external error`,
 		},
@@ -214,24 +211,23 @@ external error`,
 		"empty error": {
 			input: New(""),
 			exp: `""
-    {{.file}}:215 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
+    {{.file}}:212 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
 		},
 		"empty wrapped external error": {
 			input: Wrap(errors.New(""), "additional context"),
 			exp: `additional context
-    {{.file}}:221 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
+    {{.file}}:218 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner
 ""`,
 		},
 		"empty wrapped error": {
 			input: Wrap(New(""), "additional context"),
 			exp: `additional context
-    {{.file}}:228 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
+    {{.file}}:225 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner
 ""
-    {{.file}}:228 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
+    {{.file}}:225 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace`,
 		},
 	}
 	_, testingFile, testingLine, _ := runtime.Caller(1)
@@ -240,6 +236,7 @@ external error`,
 	print(file)
 	for desc, tt := range tests {
 		t.Run(desc, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
 			expTpl := template.Must(template.New("").Parse(tt.exp))
 			strBld := strings.Builder{}
 			if err := expTpl.Execute(&strBld, map[string]any{
@@ -260,7 +257,6 @@ external error`,
 }
 
 func TestFormatWithCombinedTrace(t *testing.T) {
-	assert := testutils.NewAssert(t)
 	tests := map[string]struct {
 		input error
 		exp   string
@@ -272,21 +268,21 @@ func TestFormatWithCombinedTrace(t *testing.T) {
 		"basic root error": {
 			input: New("root error"),
 			exp: `root error
-    {{.file}}:273 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:269 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
 		},
 		"basic wrapped error": {
 			input: Wrap(Wrap(New("root error"), "additional context"), "even more context"),
 			exp: `even more context: additional context: root error
-    {{.file}}:279 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.file}}:279 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.file}}:279 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:275 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:275 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:275 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
 		},
 		"external wrapped error": {
 			input: Wrap(errors.New("external error"), "additional context"),
 			exp: `additional context: external error
-    {{.file}}:287 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:283 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
 		},
 		"external error": {
@@ -296,20 +292,20 @@ func TestFormatWithCombinedTrace(t *testing.T) {
 		"empty error": {
 			input: New(""),
 			exp: `""
-    {{.file}}:297 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:293 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
 		},
 		"empty wrapped external error": {
 			input: Wrap(errors.New(""), "additional context"),
 			exp: `additional context:` + ` ` + `
-    {{.file}}:303 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:299 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
 		},
 		"empty wrapped error": {
 			input: Wrap(New(""), "additional context"),
 			exp: `additional context:` + ` ` + `
-    {{.file}}:309 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.file}}:309 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:305 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
+    {{.file}}:305 in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
     {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
 		},
 	}
@@ -319,6 +315,7 @@ func TestFormatWithCombinedTrace(t *testing.T) {
 	print(file)
 	for desc, tt := range tests {
 		t.Run(desc, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
 			expTpl := template.Must(template.New("").Parse(tt.exp))
 			strBld := strings.Builder{}
 			if err := expTpl.Execute(&strBld, map[string]any{

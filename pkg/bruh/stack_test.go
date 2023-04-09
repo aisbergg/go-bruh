@@ -269,7 +269,3 @@ func TestGoRoutines(t *testing.T) {
 	}
 	wg.Wait()
 }
-
-func dummyStack() error {
-	return New("unexpected EOF")
-}

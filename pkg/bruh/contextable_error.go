@@ -118,7 +118,7 @@ func (e *ContextableError) Add(key string, value any) error {
 // AddAll adds all key-value pairs to the error context.
 func (e *ContextableError) AddAll(context map[string]any) error {
 	for key, value := range context {
-		e.Add(key, value)
+		_ = e.Add(key, value)
 	}
 	return e
 }

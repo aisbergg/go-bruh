@@ -3,8 +3,6 @@ package bruh
 import (
 	"errors"
 	"fmt"
-	"runtime"
-	"strings"
 	"testing"
 )
 
@@ -46,33 +44,33 @@ type withEmptyLayer struct {
 func (e withEmptyLayer) Error() string { return e.err.Error() }
 func (e withEmptyLayer) Unwrap() error { return e.err }
 
-type customTraceableError struct {
-	TraceableError
-	code int
-}
+// type customTraceableError struct {
+// 	TraceableError
+// 	code int
+// }
 
-func newCustomTraceableError(msg string, code int) error {
-	return &customTraceableError{
-		TraceableError: *NewSkip(1, msg).(*TraceableError),
-		code:           code,
-	}
-}
-func (e *customTraceableError) Code() int { return e.code }
+// func newCustomTraceableError(msg string, code int) error {
+// 	return &customTraceableError{
+// 		TraceableError: *NewSkip(1, msg).(*TraceableError),
+// 		code:           code,
+// 	}
+// }
+// func (e *customTraceableError) Code() int { return e.code }
 
-type customContextableError struct {
-	ContextableError
-	code int
-}
+// type customContextableError struct {
+// 	ContextableError
+// 	code int
+// }
 
-func newCustomContextableError(msg string, code int) error {
-	err := &customContextableError{
-		ContextableError: *CENewSkip(1, msg).(*ContextableError),
-		code:             code,
-	}
-	err.context["code"] = code
-	return err
-}
-func (e *customContextableError) Code() int { return e.code }
+// func newCustomContextableError(msg string, code int) error {
+// 	err := &customContextableError{
+// 		ContextableError: *CENewSkip(1, msg).(*ContextableError),
+// 		code:             code,
+// 	}
+// 	err.context["code"] = code
+// 	return err
+// }
+// func (e *customContextableError) Code() int { return e.code }
 
 func setupTestCase(wrapf bool, cause error, input []string) error {
 	err := cause
@@ -409,29 +407,29 @@ func TestErrorFormatting(t *testing.T) {
 	}
 }
 
-func getFrames(pc []uintptr) []StackFrame {
-	var stackFrames []StackFrame
-	if len(pc) == 0 {
-		return stackFrames
-	}
+// func getFrames(pc []uintptr) []StackFrame {
+// 	var stackFrames []StackFrame
+// 	if len(pc) == 0 {
+// 		return stackFrames
+// 	}
 
-	frames := runtime.CallersFrames(pc)
-	for {
-		frame, more := frames.Next()
-		i := strings.LastIndex(frame.Function, "/")
-		name := frame.Function[i+1:]
-		stackFrames = append(stackFrames, StackFrame{
-			Name: name,
-			File: frame.File,
-			Line: frame.Line,
-		})
-		if !more {
-			break
-		}
-	}
+// 	frames := runtime.CallersFrames(pc)
+// 	for {
+// 		frame, more := frames.Next()
+// 		i := strings.LastIndex(frame.Function, "/")
+// 		name := frame.Function[i+1:]
+// 		stackFrames = append(stackFrames, StackFrame{
+// 			Name: name,
+// 			File: frame.File,
+// 			Line: frame.Line,
+// 		})
+// 		if !more {
+// 			break
+// 		}
+// 	}
 
-	return stackFrames
-}
+// 	return stackFrames
+// }
 
 // func getFrameFromLink(link UnpackedElement) Stack {
 // 	var stackFrames []StackFrame
