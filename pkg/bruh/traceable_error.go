@@ -119,7 +119,7 @@ func (e *TraceableError) Format(s fmt.State, verb rune) {
 		}
 	}
 	str := ToString(e, withTrace)
-	io.WriteString(s, str)
+	_, _ = io.WriteString(s, str)
 }
 
 // Unwrap returns the result of calling the Unwrap method on err, if err's type

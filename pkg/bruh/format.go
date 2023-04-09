@@ -112,7 +112,7 @@ func FormatWithTrace(upkErr UnpackedError) string {
 	// location: 160 per error
 	guessCap := len(upkErr) * 80
 	for _, upkElm := range upkErr {
-		guessCap += len(upkElm.Stack) * 160
+		guessCap += len(upkElm.PartialStack) * 160
 	}
 	strBld.Grow(guessCap)
 
@@ -122,18 +122,18 @@ func FormatWithTrace(upkErr UnpackedError) string {
 		} else {
 			strBld.WriteString(upkElm.Msg)
 		}
-		if upkElm.Stack == nil {
+		if upkElm.PartialStack == nil {
 			continue
 		}
 		strBld.WriteRune('\n')
-		for j, s := range upkElm.Stack {
+		for j, s := range upkElm.PartialStack {
 			strBld.WriteString("    ")
 			strBld.WriteString(s.File)
 			strBld.WriteRune(':')
 			strBld.WriteString(strconv.Itoa(s.Line))
 			strBld.WriteString(" in ")
 			strBld.WriteString(s.Name)
-			if j < len(upkElm.Stack)-1 {
+			if j < len(upkElm.PartialStack)-1 {
 				strBld.WriteRune('\n')
 			}
 		}
