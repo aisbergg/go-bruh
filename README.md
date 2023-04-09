@@ -1,9 +1,9 @@
 <a name="readme-top"></a>
 
-[![GoDoc](https://pkg.go.dev/badge/github.com/aisbergg/go-bruh)](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh) 
-[![GoReport](https://goreportcard.com/badge/github.com/aisbergg/go-bruh)](https://goreportcard.com/report/github.com/aisbergg/go-bruh) 
+[![GoDoc](https://pkg.go.dev/badge/github.com/aisbergg/go-bruh)](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh)
+[![GoReport](https://goreportcard.com/badge/github.com/aisbergg/go-bruh)](https://goreportcard.com/report/github.com/aisbergg/go-bruh)
 [![Coverage Status](https://codecov.io/gh/aisbergg/go-bruh/branch/main/graph/badge.svg)](https://codecov.io/gh/aisbergg/go-bruh)
-[![License](https://img.shields.io/github/license/aisbergg/go-bruh)](https://pkg.go.dev/github.com/aisbergg/go-bruh) 
+[![License](https://img.shields.io/github/license/aisbergg/go-bruh)](https://pkg.go.dev/github.com/aisbergg/go-bruh)
 [![LinkedIn](https://img.shields.io/badge/-LinkedIn-green.svg?logo=linkedin&colorB=555)](https://www.linkedin.com/in/andre-lehmann-97408221a/)
 
 <br />
@@ -191,17 +191,17 @@ Following formats are built-in:
 - `bruh.FormatPythonTraceback`: FormatPythonTraceback is an error formatter that produces error traces similar to Python's tracebacks. E.g.:
     ```plaintext
     Traceback (most recent call last):
-    File "<file3>", line <line3>, in <function3>
-    File "<file2>", line <line2>, in <function2>
-    File "<file1>", line <line1>, in <function1>
+      File "<file3>", line <line3>, in <function3>
+      File "<file2>", line <line2>, in <function2>
+      File "<file1>", line <line1>, in <function1>
     <typeName1>: <error1>
 
     The above exception was the direct cause of the following exception:
 
     Traceback (most recent call last):
-    File "<file3>", line <line3>, in <function3>
-    File "<file2>", line <line2>, in <function2>
-    File "<file1>", line <line1>, in <function1>
+      File "<file3>", line <line3>, in <function3>
+      File "<file2>", line <line2>, in <function2>
+      File "<file1>", line <line1>, in <function1>
     <typeName2>: <error2>
     ```
 
@@ -313,7 +313,7 @@ BenchmarkFormatWithTrace/bruh_100_layers-12                        10000        
 ## Roadmap
 
 - [ ] Add more Tests
-- [ ] Add pre-commit hooks
+- [x] Add pre-commit hooks
 - [ ] Add some automation
 - [x] Write more documentation
 
@@ -328,11 +328,22 @@ See the [open issues](https://github.com/aisbergg/go-bruh/issues) for a full lis
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue and tell me what you have in mind.
 Don't forget to give the project a star 🌟! Thanks again!
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'feat: add AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+If you want to contribute code, then do following:
+
+1. Fork the Project and clone the Repository
+2. Install `pre-commit` Hooks
+    ```sh
+    # install requirements
+    pip3 install -u pre-commit
+    bash tools/install.sh
+
+    # enable hooks for this repo
+    pre-commit install
+    ```
+4. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+5. Commit your Changes (`git commit -m 'feat: add AmazingFeature'`)
+6. Push to the Branch (`git push origin feature/AmazingFeature`)
+7. Open a Pull Request
 
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
 
