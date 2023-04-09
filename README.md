@@ -261,6 +261,7 @@ func (te *TimestampedError) Timestamp() time.Time {
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
 
 
+
 ## Benchmark
 
 Inside the `benchmark` directory reside some comparable benchmarks that allow some performance comparison of bruh with other error handling libraries. The benchmarks can be executed as follows:
@@ -309,6 +310,10 @@ BenchmarkFormatWithTrace/pkg_errors_100_layers-12                   3628        
 BenchmarkFormatWithTrace/eris_100_layers-12                         8454            133356 ns/op         1079221 B/op       1240 allocs/op
 BenchmarkFormatWithTrace/bruh_100_layers-12                        10000            107189 ns/op          150202 B/op        711 allocs/op
 ```
+
+<p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
+
+
 
 ## Roadmap
 
