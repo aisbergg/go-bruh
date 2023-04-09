@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-shebang-scripts-are-executable
+      - id: check-merge-conflict
+
+  - repo: https://github.com/aisbergg/go-pre-commit
+    rev: 1a433f0c60a6529d34b740e9d26185a1d15c79ff
+    hooks:
+      - id: go-fmt-goimports
+      - id: gofumpt
+      - id: revive
+      - id: go-vet
+        exclude: "^(benchmarks|examples)/"
+      # - id: golangci-lint
+      - id: staticcheck
+        exclude: "^(benchmarks|examples)/"
+      - id: errcheck
+        exclude: "^(benchmarks|examples)/"
+      - id: go-test
+        exclude: "^(benchmarks|examples)/"
