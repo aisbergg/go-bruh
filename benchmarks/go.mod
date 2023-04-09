@@ -1,4 +1,4 @@
-module github.com/aisbergg/go-bruh/benchmark
+module github.com/aisbergg/go-bruh/benchmarks
 
 go 1.18
 

@@ -266,7 +266,7 @@ func (te *TimestampedError) Timestamp() time.Time {
 Inside the `benchmark` directory reside some comparable benchmarks that allow some performance comparison of bruh with other error handling libraries. The benchmarks can be executed as follows:
 
 ```sh
-cd benchmark
+cd benchmarks
 go mod download
 go test -run '^$' -bench=. -benchmem ./bench_test.go
 ```
@@ -274,7 +274,7 @@ go test -run '^$' -bench=. -benchmem ./bench_test.go
 Here are my results:
 
 ```
-cpu: AMD Ryzen 5 5600X 6-Core Processor             
+cpu: AMD Ryzen 5 5600X 6-Core Processor
 BenchmarkWrap/std_errors_1_layers-12             7593969               159.7 ns/op            72 B/op          3 allocs/op
 BenchmarkWrap/pkg_errors_1_layers-12             1000000              1123 ns/op             648 B/op          8 allocs/op
 BenchmarkWrap/eris_1_layers-12                    486070              2476 ns/op            2072 B/op         18 allocs/op

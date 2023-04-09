@@ -1,4 +1,4 @@
-package bench_test
+package benchmarks_test
 
 import (
 	goerrors "errors"
