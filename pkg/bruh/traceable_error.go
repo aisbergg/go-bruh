@@ -7,13 +7,13 @@ import (
 	"reflect"
 )
 
-// New creates a new TraceableError error with the given message.
+// New creates a new [TraceableError] with the given message.
 func New(msg string) error {
 	return NewSkip(1, msg)
 }
 
-// NewSkip creates a new TraceableError error with the given message and skips
-// the specified number of callers in the stack trace.
+// NewSkip creates a new [TraceableError] with the given message and skips the
+// specified number of callers in the stack trace.
 func NewSkip(skip uint, msg string) error {
 	// skips this method, stack.callers, runtime.Callers and user defined number
 	// of other callers
@@ -32,25 +32,25 @@ func NewSkip(skip uint, msg string) error {
 	}
 }
 
-// Errorf creates a new TraceableError error with a formatted message.
+// Errorf creates a new [TraceableError] with a formatted message.
 func Errorf(format string, args ...any) error {
 	return NewSkip(1, fmt.Sprintf(format, args...))
 }
 
-// ErrorfSkip creates a new TraceableError error with a formatted message and
-// skips the specified number of callers in the stack trace.
+// ErrorfSkip creates a new [TraceableError] with a formatted message and skips
+// the specified number of callers in the stack trace.
 func ErrorfSkip(skip uint, format string, args ...any) error {
 	return NewSkip(skip+1, fmt.Sprintf(format, args...))
 }
 
-// Wrap wraps the given error by creating a new TraceableError error with the
+// Wrap wraps the given error by creating a new [TraceableError] with the
 // specified message.
 func Wrap(err error, msg string) error {
 	return WrapSkip(err, 1, msg)
 }
 
-// WrapSkip wraps the given error by creating a new TraceableError error with
-// the specified message and skips the specified number of callers in the stack
+// WrapSkip wraps the given error by creating a new [TraceableError] with the
+// specified message and skips the specified number of callers in the stack
 // trace. Nil is returned in case err is nil.
 func WrapSkip(err error, skip uint, msg string) error {
 	if err == nil {
@@ -76,20 +76,20 @@ func WrapSkip(err error, skip uint, msg string) error {
 	}
 }
 
-// Wrapf wraps the given error by creating a new TraceableError error with a
+// Wrapf wraps the given error by creating a new [TraceableError] with a
 // formatted message.
 func Wrapf(err error, format string, args ...any) error {
 	return WrapSkip(err, 1, fmt.Sprintf(format, args...))
 }
 
-// WrapfSkip wraps the given error by creating a new TraceableError error with a
+// WrapfSkip wraps the given error by creating a new [TraceableError] with a
 // formatted message and skips the specified number of callers in the stack
 // trace.
 func WrapfSkip(err error, skip uint, format string, args ...any) error {
 	return WrapSkip(err, skip+1, fmt.Sprintf(format, args...))
 }
 
-// TraceableError is an easily wrappable error with stack trace.
+// TraceableError is an easily wrappable error with a stack trace.
 type TraceableError struct {
 	msg   string
 	err   error
@@ -168,8 +168,10 @@ func (e *TraceableError) FullStack() Stack {
 	return cbdStk.toStack()
 }
 
-// StackFrames is an alias for FullStack. getsentry/sentry-go looks for this
-// particularly named method.
+// StackFrames is an alias for [*TraceableError.FullStack]. [Sentry] looks for
+// this particularly named method.
+//
+// [Sentry]: https://github.com/getsentry/sentry-go
 func (e *TraceableError) StackFrames() Stack {
 	return e.FullStack()
 }
@@ -193,7 +195,8 @@ func (e *TraceableError) stackPC() stackPC {
 // -----------------------------------------------------------------------------
 
 // Unwrap returns the result of calling the Unwrap method on err, if err's type
-// contains an Unwrap method returning error. Otherwise, Unwrap returns nil.
+// contains an [errors.Unwrap] method returning error. Otherwise, Unwrap returns
+// nil.
 //
 // See Go's errors.Unwrap for more information.
 func Unwrap(err error) error {
@@ -202,7 +205,7 @@ func Unwrap(err error) error {
 
 // Cause returns the root cause of the error, which is defined as the first
 // error in the chain. The original error is returned if it does not implement
-// `Unwrap() error` and nil is returned if the error is nil.
+// [errors.Unwrap] and nil is returned if the error is nil.
 func Cause(err error) error {
 	for {
 		uerr := Unwrap(err)
@@ -213,7 +216,7 @@ func Cause(err error) error {
 	}
 }
 
-// TypeName returns the type of the error. e.g. *bruh.TraceableError.
+// TypeName returns the type of the error. e.g. `*bruh.TraceableError`.
 func TypeName(err error) string {
 	return reflect.TypeOf(err).String()
 }

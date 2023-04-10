@@ -231,7 +231,7 @@ func FormatPythonTraceback(upkErr UnpackedError) string {
 	return strBld.String()
 }
 
-// Unpack returns a human-readable UnpackedError type for a given error.
+// Unpack returns a human-readable [UnpackedError] type for a given error.
 func Unpack(err error, unwrapExternal bool) UnpackedError {
 	upkErr := make([]UnpackedElement, 0, 32)
 	prvStack := Stack{}
@@ -269,7 +269,7 @@ func Unpack(err error, unwrapExternal bool) UnpackedError {
 }
 
 // UnpackedError represents an unpacked error which is quite useful for
-// formatting purposes and other error processing. Use Unpack() to unpack any
+// formatting purposes and other error processing. Use [Unpack] to unpack any
 // kind of error that supports it.
 type UnpackedError []UnpackedElement
 
