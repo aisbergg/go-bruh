@@ -1,7 +1,6 @@
 package benchmarks_test
 
 import (
-	goerrors "errors"
 	"fmt"
 	"testing"
 
@@ -21,16 +20,8 @@ var (
 	}
 )
 
-func wrapStdErrors(layers int) error {
-	err := goerrors.New("std errors")
-	for i := 0; i < layers; i++ {
-		err = fmt.Errorf("wrap %v: %w", i, err)
-	}
-	return err
-}
-
 func wrapPkgErrors(layers int) error {
-	err := pkgerrors.New("std errors")
+	err := pkgerrors.New("error")
 	for i := 0; i < layers; i++ {
 		err = pkgerrors.Wrapf(err, "wrap %v", i)
 	}
@@ -38,7 +29,7 @@ func wrapPkgErrors(layers int) error {
 }
 
 func wrapEris(layers int) error {
-	err := eris.New("std errors")
+	err := eris.New("error")
 	for i := 0; i < layers; i++ {
 		err = eris.Wrapf(err, "wrap %v", i)
 	}
@@ -46,7 +37,7 @@ func wrapEris(layers int) error {
 }
 
 func wrapBruh(layers int) error {
-	err := bruh.New("std errors")
+	err := bruh.New("error")
 	for i := 0; i < layers; i++ {
 		err = bruh.Wrapf(err, "wrap %v", i)
 	}
@@ -55,15 +46,6 @@ func wrapBruh(layers int) error {
 
 func BenchmarkWrap(b *testing.B) {
 	for _, tc := range cases {
-		b.Run(fmt.Sprintf("std errors %v layers", tc.layers), func(b *testing.B) {
-			var err error
-			for n := 0; n < b.N; n++ {
-				err = wrapStdErrors(tc.layers)
-			}
-			b.StopTimer()
-			global = err
-		})
-
 		b.Run(fmt.Sprintf("pkg errors %v layers", tc.layers), func(b *testing.B) {
 			var err error
 			for n := 0; n < b.N; n++ {
@@ -95,17 +77,6 @@ func BenchmarkWrap(b *testing.B) {
 
 func BenchmarkFormatWithoutTrace(b *testing.B) {
 	for _, tc := range cases {
-		b.Run(fmt.Sprintf("std errors %v layers", tc.layers), func(b *testing.B) {
-			err := wrapStdErrors(tc.layers)
-			b.ResetTimer()
-			var str string
-			for n := 0; n < b.N; n++ {
-				str = fmt.Sprint(err)
-			}
-			b.StopTimer()
-			global = str
-		})
-
 		b.Run(fmt.Sprintf("pkg errors %v layers", tc.layers), func(b *testing.B) {
 			err := wrapPkgErrors(tc.layers)
 			b.ResetTimer()
