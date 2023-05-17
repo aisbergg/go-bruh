@@ -17,11 +17,11 @@ repos:
       - id: gofumpt
       - id: revive
       - id: go-vet
-        exclude: "^(benchmarks|examples)/"
+        exclude: "^(benchmarks|examples|tools)/"
       # - id: golangci-lint
       - id: staticcheck
-        exclude: "^(benchmarks|examples)/"
+        exclude: "^(benchmarks|examples|tools)/"
       - id: errcheck
-        exclude: "^(benchmarks|examples)/"
+        exclude: "^(benchmarks|examples|tools)/"
       - id: go-test
-        exclude: "^(benchmarks|examples)/"
+        exclude: "^(benchmarks|examples|tools)/"
