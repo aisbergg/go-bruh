@@ -98,11 +98,13 @@ func (s stackPC) relativeTo(other stackPC) stackPC {
 }
 
 // toStack returns a Stack object with information details about the PCs.
-func (s stackPC) toStack() (stack Stack) {
+func (s stackPC) toStack() Stack {
 	if len(s) == 0 {
-		return
+		return Stack{}
 	}
+	stack := make(Stack, 0, len(s))
 	frames := runtime.CallersFrames(s)
+	var i int
 	for {
 		frame, more := frames.Next()
 		// exclude runtime calls
@@ -110,16 +112,22 @@ func (s stackPC) toStack() (stack Stack) {
 			break
 		}
 		stack = append(stack, StackFrame{
-			Name:           frame.Function,
-			File:           frame.File,
-			Line:           frame.Line,
-			ProgramCounter: frame.PC,
+			Name: frame.Function,
+			File: frame.File,
+			Line: frame.Line,
+			// CallersFrames.Next() reduces the program counter by 1. Using the
+			// reduced program counter in subsequent calls of CallersFrames
+			// would lead to wrong frames being returned, which happens in
+			// Sentry for example. Therefore we use the original program counter
+			// without the reduction.
+			ProgramCounter: s[i],
 		})
 		if !more {
 			break
 		}
+		i++
 	}
-	return
+	return stack
 }
 
 // isGlobal determines if the stack trace represents a globally defined error.
