@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	global interface{}
+	global any
 	cases  = []struct {
 		layers int
 	}{

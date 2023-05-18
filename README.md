@@ -244,7 +244,7 @@ type TimestampedError struct {
 // standard error creation function, there is a `Skip` equivalent. These
 // initialize the bruh error and make sure, that this very function does not
 // appear in the stack trace.
-func TEWrapf(err error, format string, args ...interface{}) error {
+func TEWrapf(err error, format string, args ...any) error {
 	return &TimestampedError{
 		// skip is required to skip the current function and thus exclude this
 		// function from the stack trace

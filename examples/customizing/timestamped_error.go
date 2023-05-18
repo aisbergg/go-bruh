@@ -30,7 +30,7 @@ type TimestampedError struct {
 }
 
 // TErrorf creates a new TimestampedError with a formatted message.
-func TErrorf(format string, args ...interface{}) error {
+func TErrorf(format string, args ...any) error {
 	return &TimestampedError{
 		// skip is required to skip the current function and thus exclude this
 		// function from the stack trace
@@ -40,7 +40,7 @@ func TErrorf(format string, args ...interface{}) error {
 }
 
 // TEWrapf wraps an error with a formatted message.
-func TEWrapf(err error, format string, args ...interface{}) error {
+func TEWrapf(err error, format string, args ...any) error {
 	// Easiest way to change the final error message is to change it early on.
 	// Here we include the timestamp in the message.
 	ts := time.Now()
