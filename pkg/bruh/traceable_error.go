@@ -15,20 +15,11 @@ func New(msg string) error {
 // NewSkip creates a new [TraceableError] with the given message and skips the
 // specified number of callers in the stack trace.
 func NewSkip(skip uint, msg string) error {
-	// skips this method, stack.callers, runtime.Callers and user defined number
-	// of other callers
-	stack := callers(3 + skip)
-
-	// strip stack for globally defined errors
-	if stack.isGlobal() {
-		return &TraceableError{
-			msg: msg,
-		}
-	}
-
 	return &TraceableError{
-		msg:   msg,
-		stack: stack,
+		msg: msg,
+		// skips this method, stack.callers, runtime.Callers and user defined number
+		// of other callers
+		stack: callers(3 + skip),
 	}
 }
 
@@ -56,23 +47,12 @@ func WrapSkip(err error, skip uint, msg string) error {
 	if err == nil {
 		return nil
 	}
-
-	// skips this method, stack.callers, runtime.Callers and user defined number
-	// of other callers
-	stack := callers(3 + skip)
-
-	// strip stack for globally defined errors
-	if stack.isGlobal() {
-		return &TraceableError{
-			msg: msg,
-			err: err,
-		}
-	}
-
 	return &TraceableError{
-		msg:   msg,
-		err:   err,
-		stack: stack,
+		msg: msg,
+		err: err,
+		// skips this method, stack.callers, runtime.Callers and user defined
+		// number of other callers
+		stack: callers(3 + skip),
 	}
 }
 

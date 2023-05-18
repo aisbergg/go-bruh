@@ -107,6 +107,10 @@ func (s stackPC) toStack() Stack {
 	var i int
 	for {
 		frame, more := frames.Next()
+		// discard stack for globally defined errors
+		if frame.Function == "runtime.doInit" {
+			return Stack{}
+		}
 		// exclude runtime calls
 		if strings.Contains(frame.File, "runtime/") {
 			break
@@ -128,19 +132,4 @@ func (s stackPC) toStack() Stack {
 		i++
 	}
 	return stack
-}
-
-// isGlobal determines if the stack trace represents a globally defined error.
-func (s stackPC) isGlobal() bool {
-	frames := runtime.CallersFrames(s)
-	for {
-		frame, more := frames.Next()
-		if frame.Function == "runtime.doInit" {
-			return true
-		}
-		if !more {
-			break
-		}
-	}
-	return false
 }
