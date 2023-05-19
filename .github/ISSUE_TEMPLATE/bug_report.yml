@@ -1,0 +1,48 @@
+name: 🐛 Bug Report
+description: Report a bug in the module
+title: "bug: "
+labels: ["bug"]
+assignees: ["aisbergg"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! 🤗
+        Please make sure this topic hasn't been already submitted by someone by looking through other open/closed issues. 😃
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Description of the bug
+      description: Give us a brief description of what happened and what should have happened.
+      placeholder: |
+        Tell us what you see and what you expect to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps To Reproduce
+      description: Steps or an example to reproduce the behavior
+      placeholder: |
+        package main
+
+        import (
+          "fmt"
+          "github.com/aisbergg/go-bruh/pkg/bruh"
+        )
+
+        func main() {
+          err := bruh.New("error")
+          fmt.Println(err)
+        }
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional Information
+      description: |
+        Provide any additional information such as logs or scenarios.

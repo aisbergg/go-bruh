@@ -1,0 +1,41 @@
+name: ✨ Feature Request
+description: Suggest a feature or enhancement for the module
+title: "feat: "
+labels: ["enhancement"]
+assignees: ["aisbergg"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request! 🤗
+        Please make sure this feature request hasn't been already submitted by someone by looking through other open/closed issues. 😃
+
+  - type: dropdown
+    attributes:
+      multiple: false
+      label: Type of Feature
+      description: Select the type of feature request.
+      options:
+        - "✨ New Feature"
+        - "📝 Documentation"
+        - "🎨 Style"
+        - "🔨 Code Refactor"
+        - "⚡ Performance Improvements"
+        - "✅ New Test"
+        - "👷 Build and CI"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Give us a brief description of the feature or enhancement you would like
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional Information
+      description: Give us some additional information on the feature request like proposed solutions, links, etc.
