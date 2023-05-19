@@ -54,7 +54,7 @@ Having a bruh moment? Don't worry, _bruh_ is here to help! _bruh_ is a Go error 
 
 **Features:**
 
-- includes stack traces
+- includes stack traces (also included when captured by [Sentry](https://sentry.io/))
 - offers custom error formatting
 - allows to create custom errors
 - acts as a drop-in replacement for Go's standard library `errors` package
@@ -119,7 +119,6 @@ func Get(url string) (*http.Response, error) {
 	}
 	return res, nil
 }
-
 ```
 
 ### Formatting Errors
@@ -205,7 +204,7 @@ Following formats are built-in:
     <typeName2>: <error2>
     ```
 
-The formatting can be customized by creating a formatter. Check the [json example](examples/formatting/json.go) on how create your very own formatter.
+You can customize the format by creating your own formatter. Check the [json example](examples/formatting/json.go) on how to accomplish that.
 
 ### Creating Custom Errors
 
@@ -232,7 +231,7 @@ func main() {
 }
 
 // TimestampedError represents the custom error. It embeds bruh.TraceableError
-// and "inherits" is properties. This way, you can create your own custom types
+// and "inherits" its properties. This way, you can create your own custom types
 // and add more properties as needed.
 type TimestampedError struct {
 	bruh.TraceableError
@@ -264,51 +263,38 @@ func (te *TimestampedError) Timestamp() time.Time {
 
 ## Benchmark
 
-Inside the `benchmark` directory reside some comparable benchmarks that allow some performance comparison of bruh with other error handling libraries. The benchmarks can be executed as follows:
-
-```sh
-cd benchmarks
-go mod download
-go test -run '^$' -bench=. -benchmem ./bench_test.go
-```
-
-Here are my results:
+Inside the `benchmark` directory reside some comparable benchmarks that allow some performance comparison of bruh with other error handling libraries. The benchmarks can be executed by running `make bench`. Here are my results:
 
 ```
 cpu: AMD Ryzen 5 5600X 6-Core Processor
-BenchmarkWrap/std_errors_1_layers-12             7593969               159.7 ns/op            72 B/op          3 allocs/op
-BenchmarkWrap/pkg_errors_1_layers-12             1000000              1123 ns/op             648 B/op          8 allocs/op
-BenchmarkWrap/eris_1_layers-12                    486070              2476 ns/op            2072 B/op         18 allocs/op
-BenchmarkWrap/bruh_1_layers-12                    449115              2425 ns/op            1096 B/op          7 allocs/op
-BenchmarkWrap/std_errors_10_layers-12             792187              1455 ns/op             968 B/op         21 allocs/op
-BenchmarkWrap/pkg_errors_10_layers-12             175286              6755 ns/op            3745 B/op         53 allocs/op
-BenchmarkWrap/eris_10_layers-12                    90980             12604 ns/op            9564 B/op         81 allocs/op
-BenchmarkWrap/bruh_10_layers-12                    86458             13995 ns/op            6066 B/op         43 allocs/op
-BenchmarkWrap/std_errors_100_layers-12             66074             18258 ns/op           51265 B/op        201 allocs/op
-BenchmarkWrap/pkg_errors_100_layers-12             19021             63471 ns/op           34720 B/op        503 allocs/op
-BenchmarkWrap/eris_100_layers-12                    8143            137947 ns/op           84480 B/op        711 allocs/op
-BenchmarkWrap/bruh_100_layers-12                    8653            128263 ns/op           55770 B/op        403 allocs/op
-BenchmarkFormatWithoutTrace/std_errors_1_layers-12              18859053                62.58 ns/op           24 B/op          1 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_1_layers-12              11473681               103.5 ns/op            48 B/op          2 allocs/op
-BenchmarkFormatWithoutTrace/eris_1_layers-12                     1374807               871.0 ns/op           840 B/op          9 allocs/op
-BenchmarkFormatWithoutTrace/bruh_1_layers-12                    11404887               104.4 ns/op          1024 B/op          1 allocs/op
-BenchmarkFormatWithoutTrace/std_errors_10_layers-12             16593740                69.05 ns/op           96 B/op          1 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_10_layers-12              2795234               430.7 ns/op           728 B/op         11 allocs/op
-BenchmarkFormatWithoutTrace/eris_10_layers-12                     329241              3676 ns/op            7136 B/op         54 allocs/op
-BenchmarkFormatWithoutTrace/bruh_10_layers-12                    4943726               243.3 ns/op          1024 B/op          1 allocs/op
-BenchmarkFormatWithoutTrace/std_errors_100_layers-12             8941819               133.0 ns/op          1024 B/op          1 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_100_layers-12              154872              7749 ns/op           49070 B/op        101 allocs/op
-BenchmarkFormatWithoutTrace/eris_100_layers-12                     20685             57930 ns/op          381146 B/op        504 allocs/op
-BenchmarkFormatWithoutTrace/bruh_100_layers-12                    775707              1479 ns/op            1024 B/op          1 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_1_layers-12                   265171              4246 ns/op            1168 B/op         19 allocs/op
-BenchmarkFormatWithTrace/eris_1_layers-12                         411547              2648 ns/op            4658 B/op         51 allocs/op
-BenchmarkFormatWithTrace/bruh_1_layers-12                         420058              2512 ns/op            5363 B/op         16 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_10_layers-12                   48283             25116 ns/op            6178 B/op        100 allocs/op
-BenchmarkFormatWithTrace/eris_10_layers-12                        139959              8799 ns/op           22284 B/op        159 allocs/op
-BenchmarkFormatWithTrace/bruh_10_layers-12                         99267             11999 ns/op           17145 B/op         79 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_100_layers-12                   3628            313512 ns/op           57854 B/op        910 allocs/op
-BenchmarkFormatWithTrace/eris_100_layers-12                         8454            133356 ns/op         1079221 B/op       1240 allocs/op
-BenchmarkFormatWithTrace/bruh_100_layers-12                        10000            107189 ns/op          150202 B/op        711 allocs/op
+cpu: Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz
+BenchmarkWrap/pkg_errors_1_layers-4         	  591044	      1860 ns/op     648 B/op	       8 allocs/op
+BenchmarkWrap/eris_1_layers-4               	  315375	      3917 ns/op    2072 B/op	      18 allocs/op
+BenchmarkWrap/bruh_1_layers-4               	  614971	      1876 ns/op     648 B/op	       5 allocs/op
+BenchmarkWrap/pkg_errors_10_layers-4        	  110172	     10593 ns/op    3744 B/op	      53 allocs/op
+BenchmarkWrap/eris_10_layers-4              	   61828	     19220 ns/op    9561 B/op	      81 allocs/op
+BenchmarkWrap/bruh_10_layers-4              	  106876	     11450 ns/op    3600 B/op	      32 allocs/op
+BenchmarkWrap/pkg_errors_100_layers-4       	   12339	     99581 ns/op   34709 B/op	     503 allocs/op
+BenchmarkWrap/eris_100_layers-4             	    5817	    210521 ns/op   84453 B/op	     711 allocs/op
+BenchmarkWrap/bruh_100_layers-4             	   10000	    103157 ns/op   33125 B/op	     302 allocs/op
+BenchmarkFormatWithoutTrace/pkg_errors_1_layers-4         	 8010217	       151.7 ns/op	      32 B/op	       2 allocs/op
+BenchmarkFormatWithoutTrace/eris_1_layers-4               	  757473	      1587 ns/op	     832 B/op	       9 allocs/op
+BenchmarkFormatWithoutTrace/bruh_1_layers-4               	 4559907	       265.2 ns/op	    1024 B/op	       1 allocs/op
+BenchmarkFormatWithoutTrace/pkg_errors_10_layers-4        	 1000000	      1026 ns/op	     648 B/op	      11 allocs/op
+BenchmarkFormatWithoutTrace/eris_10_layers-4              	  121372	      9674 ns/op	    7136 B/op	      54 allocs/op
+BenchmarkFormatWithoutTrace/bruh_10_layers-4              	 2112776	       565.9 ns/op	    1024 B/op	       1 allocs/op
+BenchmarkFormatWithoutTrace/pkg_errors_100_layers-4       	   65714	     18221 ns/op	   48431 B/op	     101 allocs/op
+BenchmarkFormatWithoutTrace/eris_100_layers-4             	    7857	    132445 ns/op	  381018 B/op	     504 allocs/op
+BenchmarkFormatWithoutTrace/bruh_100_layers-4             	  490214	      2169 ns/op	    1024 B/op	       1 allocs/op
+BenchmarkFormatWithTrace/pkg_errors_1_layers-4            	  173398	      6490 ns/op	    1168 B/op	      19 allocs/op
+BenchmarkFormatWithTrace/eris_1_layers-4                  	  269979	      5130 ns/op	    4681 B/op	      51 allocs/op
+BenchmarkFormatWithTrace/bruh_1_layers-4                  	  279738	      4913 ns/op	    4649 B/op	       9 allocs/op
+BenchmarkFormatWithTrace/pkg_errors_10_layers-4           	   29796	     37552 ns/op	    6175 B/op	     100 allocs/op
+BenchmarkFormatWithTrace/eris_10_layers-4                 	   81235	     17675 ns/op	   22702 B/op	     159 allocs/op
+BenchmarkFormatWithTrace/bruh_10_layers-4                 	   77246	     16414 ns/op	    9593 B/op	      27 allocs/op
+BenchmarkFormatWithTrace/pkg_errors_100_layers-4          	    1860	    552345 ns/op	   58379 B/op	     910 allocs/op
+BenchmarkFormatWithTrace/eris_100_layers-4                	    4376	    252741 ns/op	 1108655 B/op	    1240 allocs/op
+BenchmarkFormatWithTrace/bruh_100_layers-4                	    7178	    165860 ns/op	   75289 B/op	     209 allocs/op
 ```
 
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
@@ -318,8 +304,10 @@ BenchmarkFormatWithTrace/bruh_100_layers-12                        10000        
 ## Roadmap
 
 - [ ] Add more Tests
+- [x] Add examples
 - [x] Add pre-commit hooks
 - [ ] Add some automation
+- [ ] Add issue templates and such
 - [x] Write more documentation
 
 See the [open issues](https://github.com/aisbergg/go-bruh/issues) for a full list of proposed features (and known issues).
@@ -330,25 +318,9 @@ See the [open issues](https://github.com/aisbergg/go-bruh/issues) for a full lis
 
 ## Contributing
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue and tell me what you have in mind.
-Don't forget to give the project a star 🌟! Thanks again!
+If you have any suggestions, want to file a bug report or want to contribute to this project in some other way, please read the [contribution guideline](CONTRIBUTING.md).
 
-If you want to contribute code, then do following:
-
-1. Fork the Project and clone the Repository
-2. Install `pre-commit` Hooks
-    ```sh
-    # install requirements
-    pip3 install -u pre-commit
-    bash tools/install.sh
-
-    # enable hooks for this repo
-    pre-commit install
-    ```
-4. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-5. Commit your Changes (`git commit -m 'feat: add AmazingFeature'`)
-6. Push to the Branch (`git push origin feature/AmazingFeature`)
-7. Open a Pull Request
+And don't forget to give this project a star 🌟! Thanks again!
 
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
 
@@ -364,9 +336,11 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-André Lehmann - aisberg@posteo.de
+André Lehmann
 
-Project Link: [https://github.com/aisbergg/go-bruh](https://github.com/aisbergg/go-bruh)
+- Email: aisberg@posteo.de
+- [GitHub](https://github.com/aisbergg)
+- [LinkedIn](https://www.linkedin.com/in/andre-lehmann-97408221a/)
 
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
 
