@@ -7,8 +7,6 @@ package tools
 
 import (
 	_ "github.com/aisbergg/go-pre-commit"
-	_ "github.com/kisielk/errcheck"
-	_ "github.com/mgechev/revive"
-	_ "honnef.co/go/tools/cmd/staticcheck"
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	_ "mvdan.cc/gofumpt"
 )

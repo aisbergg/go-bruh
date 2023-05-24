@@ -15,13 +15,7 @@ repos:
     hooks:
       - id: go-fmt-goimports
       - id: gofumpt
-      - id: revive
-      - id: go-vet
-        exclude: "^(benchmarks|examples|tools)/"
-      # - id: golangci-lint
-      - id: staticcheck
-        exclude: "^(benchmarks|examples|tools)/"
-      - id: errcheck
+      - id: golangci-lint
         exclude: "^(benchmarks|examples|tools)/"
       - id: go-test
         exclude: "^(benchmarks|examples|tools)/"
