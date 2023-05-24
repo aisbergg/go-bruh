@@ -47,7 +47,6 @@ func ExampleToString_local() {
 	//     .../examples_test.go:35 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local
 	//     .../run_example.go:63 in testing.runExample
 	//     .../example.go:44 in testing.runExamples
-	//     .../testing.go:1908 in testing.(*M).Run
 	// file not found
 	//     .../examples_test.go:24 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func1
 	//     .../examples_test.go:27 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func2
@@ -108,19 +107,21 @@ func ExampleToString_global() {
 	// Output:
 	// error processing file 'example.json': error reading file 'example.json': unexpected EOF
 	// error processing file 'example.json'
-	//     .../examples_test.go:94 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
-	//     .../examples_test.go:100 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global
+	//     .../examples_test.go:93 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
+	//     .../examples_test.go:99 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global
 	//     .../run_example.go:63 in testing.runExample
 	//     .../example.go:44 in testing.runExamples
-	//     .../testing.go:1908 in testing.(*M).Run
 	// error reading file 'example.json'
-	//     .../examples_test.go:76 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func1
-	//     .../examples_test.go:82 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func2
-	//     .../examples_test.go:92 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
+	//     .../examples_test.go:75 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func1
+	//     .../examples_test.go:81 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func2
+	//     .../examples_test.go:91 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
 	// unexpected EOF
 }
 
-var regexpRemoveTestMain = regexp.MustCompile(` *_testmain\.go.*\n`)
+var (
+	regexpRemoveTestMain  = regexp.MustCompile(` *_testmain\.go.*\n`)
+	regexpRemoveTestingGo = regexp.MustCompile(` *.../testing\.go.*\n`)
+)
 
 // rplPth replaces the paths in the formatted error output to allow for consistent testing.
 func rplPth(s string) string {
@@ -130,5 +131,6 @@ func rplPth(s string) string {
 	s = strings.ReplaceAll(s, goTestingPath, "...")
 	s = strings.ReplaceAll(s, thisFilePath, ".../examples_test.go")
 	s = regexpRemoveTestMain.ReplaceAllLiteralString(s, "")
+	s = regexpRemoveTestingGo.ReplaceAllLiteralString(s, "")
 	return s
 }
