@@ -15,6 +15,7 @@ func ToString(err error, withTrace bool) string {
 }
 
 // ToCustomString returns a formatted string for the given error and formatter.
+// If the formatter is nil, the error will be formatted without a stack trace.
 func ToCustomString(err error, f Formatter) string {
 	if err == nil {
 		return ""
@@ -34,23 +35,6 @@ func ToCustomString(err error, f Formatter) string {
 // Formatter turns an unpacked error into a formatted string.
 type Formatter func(UnpackedError) string
 
-// FormatWithoutTrace is an error formatter that produces a combined error
-// message of all wrapped errors without a stack trace. (just kept for
-// reference)
-//
-// Format:
-//
-//	<error1>: <error2>: <errorN>
-func FormatWithoutTrace(upkErr UnpackedError) string {
-	strBld := strings.Builder{}
-	strBld.WriteString(upkErr[0].Msg)
-	for i := 1; i < len(upkErr); i++ {
-		strBld.WriteString(": ")
-		strBld.WriteString(upkErr[i].Msg)
-	}
-	return strBld.String()
-}
-
 // formatWithoutTrace formats an error without a stack trace by simply combining
 // all error messages.
 //
@@ -61,7 +45,7 @@ func formatWithoutTrace(err error) string {
 	strBld := strings.Builder{}
 	// pre-allocate a large buffer to avoid reallocations
 	strBld.Grow(1024)
-	if e, ok := err.(interface{ Message() string }); ok {
+	if e, ok := err.(interface{ Message() string }); ok { //revive:disable-line
 		strBld.WriteString(e.Message())
 	} else {
 		strBld.WriteString(err.Error())
@@ -69,7 +53,7 @@ func formatWithoutTrace(err error) string {
 	}
 	err = Unwrap(err)
 	for err != nil {
-		if e, ok := err.(interface{ Message() string }); ok {
+		if e, ok := err.(interface{ Message() string }); ok { //revive:disable-line
 			msg := e.Message()
 			if msg != "" {
 				strBld.WriteString(": ")

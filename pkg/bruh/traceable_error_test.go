@@ -260,7 +260,7 @@ func TestExternalErrorWrapping(t *testing.T) {
 			// unwrap to make sure external errors are actually wrapped properly
 			var inputErr []string
 			for err != nil {
-				inputErr = append(inputErr, ToCustomString(err, FormatWithoutTrace))
+				inputErr = append(inputErr, ToCustomString(err, nil))
 				err = Unwrap(err)
 			}
 

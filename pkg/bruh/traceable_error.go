@@ -92,11 +92,8 @@ func (e *TraceableError) Error() string {
 // fmt.Sprintf("%+v", err) with a stack trace included.
 func (e *TraceableError) Format(s fmt.State, verb rune) {
 	var withTrace bool
-	switch verb {
-	case 'v':
-		if s.Flag('+') {
-			withTrace = true
-		}
+	if verb == 'v' && s.Flag('+') {
+		withTrace = true
 	}
 	str := ToString(e, withTrace)
 	_, _ = io.WriteString(s, str)

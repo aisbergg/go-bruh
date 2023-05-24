@@ -48,12 +48,12 @@ func FormatJSON(upkErr bruh.UnpackedError) string {
 		}
 	}
 	// serialize to JSON
-	json, err := json.MarshalIndent(errStructs, "", "  ")
+	serialized, err := json.MarshalIndent(errStructs, "", "  ")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("json: ", string(json))
-	return string(json)
+	fmt.Println("json: ", string(serialized))
+	return string(serialized)
 }
 
 // -----------------------------------------------------------------------------

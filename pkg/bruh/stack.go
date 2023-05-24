@@ -69,7 +69,7 @@ type StackFrame struct {
 // frames to skip before recording in pc, with 0 identifying the frame for
 // Callers itself and 1 identifying the caller of Callers.
 func callers(skip uint) stackPC {
-	pcs := make([]uintptr, 32)
+	var pcs [32]uintptr
 	n := runtime.Callers(int(skip), pcs[:])
 	var st stackPC = pcs[0:n]
 	return st

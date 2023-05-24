@@ -107,7 +107,7 @@ func TestUnpack(t *testing.T) {
 	}
 }
 
-func isUnpackedErrorEqual(a []UnpackedElement, b []UnpackedElement) bool {
+func isUnpackedErrorEqual(a, b []UnpackedElement) bool {
 	// If one is nil, the other must also be nil.
 	if (a == nil) != (b == nil) {
 		return false

@@ -40,7 +40,7 @@ func NewRequire(t TestingT) Assertions {
 }
 
 // Equal asserts that two objects are equal.
-func (a Assertions) Equal(exp any, act any, msgAndArgs ...any) bool {
+func (a Assertions) Equal(exp, act any, msgAndArgs ...any) bool {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
@@ -53,7 +53,7 @@ func (a Assertions) Equal(exp any, act any, msgAndArgs ...any) bool {
 }
 
 // NotEqual asserts that two objects are not equal.
-func (a Assertions) NotEqual(exp any, act any, msgAndArgs ...any) bool {
+func (a Assertions) NotEqual(exp, act any, msgAndArgs ...any) bool {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}
@@ -158,7 +158,7 @@ func (a Assertions) True(exp bool, msgAndArgs ...any) bool {
 }
 
 // IsType asserts that the specified object is of the specified type.
-func (a Assertions) IsType(expType any, obj any, msgAndArgs ...any) bool {
+func (a Assertions) IsType(expType, obj any, msgAndArgs ...any) bool {
 	if h, ok := a.t.(tHelper); ok {
 		h.Helper()
 	}

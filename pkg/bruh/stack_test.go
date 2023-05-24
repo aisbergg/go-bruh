@@ -23,7 +23,7 @@ var (
 )
 
 // example func that either returns a wrapped global or creates/wraps a new local error
-func ReadFile(fname string, global bool, external bool) error {
+func ReadFile(fname string, global, external bool) error {
 	var err error
 	if !external && !global { // local errors
 		err = New("unexpected EOF")
@@ -38,7 +38,7 @@ func ReadFile(fname string, global bool, external bool) error {
 }
 
 // example func that just catches and returns an error
-func ParseFile(fname string, global bool, external bool) error {
+func ParseFile(fname string, global, external bool) error {
 	err := ReadFile(fname, global, external)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func ParseFile(fname string, global bool, external bool) error {
 }
 
 // example func that wraps an error with additional context
-func ProcessFile(fname string, global bool, external bool) error {
+func ProcessFile(fname string, global, external bool) error {
 	// parse the file
 	err := ParseFile(fname, global, external)
 	if err != nil {
@@ -202,7 +202,7 @@ func TestExtGlobalStack(t *testing.T) {
 	validateStack(t, expectedStack2, uerr[2].Stack)
 }
 
-func validateStack(t *testing.T, expected []StackFrame, actual []StackFrame) {
+func validateStack(t *testing.T, expected, actual []StackFrame) {
 	// remove irrelevant frames
 	filtered := []StackFrame{}
 	for _, f := range actual {
