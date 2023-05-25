@@ -20,9 +20,11 @@ func (s Stack) String() string {
 
 // RelativeTo returns new version of this stack relative to the other stack.
 func (s Stack) RelativeTo(other Stack) Stack {
+	if len(s) == 0 || len(other) == 0 {
+		return s
+	}
 	othInd := len(other) - 1
 	curInd := len(s) - 1
-
 	for {
 		if othInd < 0 || curInd < 0 {
 			break
@@ -33,7 +35,12 @@ func (s Stack) RelativeTo(other Stack) Stack {
 		othInd--
 		curInd--
 	}
-
+	// Due to optimizations, the frames of the two stacks may be identical. In
+	// that case, we would end up with an empty stack, which is not what we
+	// want.
+	if curInd < 0 {
+		return s[:1]
+	}
 	return s[:curInd+1]
 }
 

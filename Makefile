@@ -41,22 +41,24 @@ fmt-lint:
 ## Run the tests
 test:
 	@echo Running tests
-	@go test -race -v ./pkg/bruh/
-
-## Run benchmark tests
-bench:
-	@echo Running benchmark tests
-	@cd benchmarks && go test -benchmem -bench=. && cd ..
+	@go test -race -v -gcflags '-N -l' ./pkg/bruh/
 
 ## Run the tests with coverage
 test-coverage:
 	@echo Running tests with coverage
-	@go test -short -coverprofile cover.out -covermode=atomic ./pkg/bruh/
+	@# we use "-gcflags '-N -l'", because that stops optimization from eating
+	@# creating stacks with identical frames (PCs) and thus ruin our test results
+	@go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' ./pkg/bruh/
 
 ## Display test coverage
 display-coverage:
 	@echo Displaying test coverage
 	@go tool cover -html=cover.out
+
+## Run benchmark tests
+bench:
+	@echo Running benchmark tests
+	@cd benchmarks && go test -benchmem -bench=. && cd ..
 
 ## Stage a release (usage: make release-tag VERSION={VERSION_TAG})
 release-tag: fmt-lint test
