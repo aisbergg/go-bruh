@@ -41,14 +41,14 @@ fmt-lint:
 ## Run the tests
 test:
 	@echo Running tests
-	@go test -race -v -gcflags '-N -l' ./pkg/bruh/
+	@go test -race -v -gcflags '-N -l' ./pkg/...
 
 ## Run the tests with coverage
 test-coverage:
 	@echo Running tests with coverage
 	@# we use "-gcflags '-N -l'", because that stops optimization from eating
 	@# creating stacks with identical frames (PCs) and thus ruin our test results
-	@go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' ./pkg/bruh/
+	@go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' ./pkg/...
 
 ## Display test coverage
 display-coverage:
