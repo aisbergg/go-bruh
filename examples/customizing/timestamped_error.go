@@ -34,7 +34,7 @@ func TErrorf(format string, args ...any) error {
 	return &TimestampedError{
 		// skip is required to skip the current function and thus exclude this
 		// function from the stack trace
-		TraceableError: *bruh.ErrorfSkip(1, format, args...).(*bruh.TraceableError),
+		TraceableError: *bruh.ErrorfSkip(1, format, args...),
 		timestamp:      time.Now(),
 	}
 }
@@ -48,7 +48,7 @@ func TEWrapf(err error, format string, args ...any) error {
 	msg = fmt.Sprintf("[%s] %s", ts.Format(time.RFC3339), msg)
 
 	return &TimestampedError{
-		TraceableError: *bruh.WrapSkip(err, 1, msg).(*bruh.TraceableError),
+		TraceableError: *bruh.WrapSkip(err, 1, msg),
 		timestamp:      ts,
 	}
 }

@@ -89,31 +89,25 @@ func TestErrorCreation(t *testing.T) {
 		err      error
 		message  string
 		numStack int
-		isNil    bool
 	}{
-		{New("abc"), "abc", 2, false},
-		{NewSkip(1, "def"), "def", 1, false},
-		{Errorf("%s %d", "ghi", 42), "ghi 42", 2, false},
-		{ErrorfSkip(1, "%s %d", "jkl", 42), "jkl 42", 1, false},
+		{New("abc"), "abc", 2},
+		{NewSkip(1, "def"), "def", 1},
+		{Errorf("%s %d", "ghi", 42), "ghi 42", 2},
+		{ErrorfSkip(1, "%s %d", "jkl", 42), "jkl 42", 1},
 
-		{Wrap(nil, ""), "", 0, true},
-		{WrapSkip(nil, 1, ""), "", 0, true},
-		{Wrapf(nil, ""), "", 0, true},
-		{WrapfSkip(nil, 1, ""), "", 0, true},
-		{Wrap(globalErr, "mno"), "mno", 2, false},
-		{WrapSkip(globalErr, 1, "pqr"), "pqr", 1, false},
-		{Wrapf(globalErr, "%s %d", "stu", 42), "stu 42", 2, false},
-		{WrapfSkip(globalErr, 1, "%s %d", "vwx", 42), "vwx 42", 1, false},
+		{Wrap(nil, "abc"), "abc", 2},
+		{WrapSkip(nil, 1, "abc"), "abc", 1},
+		{Wrapf(nil, "abc"), "abc", 2},
+		{WrapfSkip(nil, 1, "abc"), "abc", 1},
+		{Wrap(globalErr, "mno"), "mno", 2},
+		{WrapSkip(globalErr, 1, "pqr"), "pqr", 1},
+		{Wrapf(globalErr, "%s %d", "stu", 42), "stu 42", 2},
+		{WrapfSkip(globalErr, 1, "%s %d", "vwx", 42), "vwx 42", 1},
 	}
 
 	for i, test := range tests {
-		if test.isNil && test.err != nil {
-			t.Errorf("test %d: expected nil, got %v", i, test.err)
-			continue
-		} else if test.err == nil {
-			if !test.isNil {
-				t.Errorf("test %d: expected non nil value", i)
-			}
+		if test.err == nil {
+			t.Errorf("test %d: expected non nil value", i)
 			continue
 		}
 		err := test.err.(*TraceableError)
