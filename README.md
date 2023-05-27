@@ -40,7 +40,6 @@
   - [Formatting Errors](#formatting-errors)
   - [Creating Custom Errors](#creating-custom-errors)
 - [Benchmark](#benchmark)
-- [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -249,7 +248,7 @@ func TEWrapf(err error, format string, args ...any) error {
 	return &TimestampedError{
 		// skip is required to skip the current function and thus exclude this
 		// function from the stack trace
-		TraceableError: *bruh.WrapfSkip(err, 1, format, args...).(*bruh.TraceableError),
+		TraceableError: *bruh.WrapfSkip(err, 1, format, args...),
 		timestamp:      time.Now(),
 	}
 }
@@ -268,51 +267,35 @@ func (te *TimestampedError) Timestamp() time.Time {
 Inside the `benchmark` directory reside some comparable benchmarks that allow some performance comparison of bruh with other error handling libraries. The benchmarks can be executed by running `make bench`. Here are my results:
 
 ```
-cpu: AMD Ryzen 5 5600X 6-Core Processor
 cpu: Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz
-BenchmarkWrap/pkg_errors_1_layers-4         	  591044	      1860 ns/op     648 B/op	       8 allocs/op
-BenchmarkWrap/eris_1_layers-4               	  315375	      3917 ns/op    2072 B/op	      18 allocs/op
-BenchmarkWrap/bruh_1_layers-4               	  614971	      1876 ns/op     648 B/op	       5 allocs/op
-BenchmarkWrap/pkg_errors_10_layers-4        	  110172	     10593 ns/op    3744 B/op	      53 allocs/op
-BenchmarkWrap/eris_10_layers-4              	   61828	     19220 ns/op    9561 B/op	      81 allocs/op
-BenchmarkWrap/bruh_10_layers-4              	  106876	     11450 ns/op    3600 B/op	      32 allocs/op
-BenchmarkWrap/pkg_errors_100_layers-4       	   12339	     99581 ns/op   34709 B/op	     503 allocs/op
-BenchmarkWrap/eris_100_layers-4             	    5817	    210521 ns/op   84453 B/op	     711 allocs/op
-BenchmarkWrap/bruh_100_layers-4             	   10000	    103157 ns/op   33125 B/op	     302 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_1_layers-4         	 8010217	       151.7 ns/op	      32 B/op	       2 allocs/op
-BenchmarkFormatWithoutTrace/eris_1_layers-4               	  757473	      1587 ns/op	     832 B/op	       9 allocs/op
-BenchmarkFormatWithoutTrace/bruh_1_layers-4               	 4559907	       265.2 ns/op	    1024 B/op	       1 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_10_layers-4        	 1000000	      1026 ns/op	     648 B/op	      11 allocs/op
-BenchmarkFormatWithoutTrace/eris_10_layers-4              	  121372	      9674 ns/op	    7136 B/op	      54 allocs/op
-BenchmarkFormatWithoutTrace/bruh_10_layers-4              	 2112776	       565.9 ns/op	    1024 B/op	       1 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_100_layers-4       	   65714	     18221 ns/op	   48431 B/op	     101 allocs/op
-BenchmarkFormatWithoutTrace/eris_100_layers-4             	    7857	    132445 ns/op	  381018 B/op	     504 allocs/op
-BenchmarkFormatWithoutTrace/bruh_100_layers-4             	  490214	      2169 ns/op	    1024 B/op	       1 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_1_layers-4            	  173398	      6490 ns/op	    1168 B/op	      19 allocs/op
-BenchmarkFormatWithTrace/eris_1_layers-4                  	  269979	      5130 ns/op	    4681 B/op	      51 allocs/op
-BenchmarkFormatWithTrace/bruh_1_layers-4                  	  279738	      4913 ns/op	    4649 B/op	       9 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_10_layers-4           	   29796	     37552 ns/op	    6175 B/op	     100 allocs/op
-BenchmarkFormatWithTrace/eris_10_layers-4                 	   81235	     17675 ns/op	   22702 B/op	     159 allocs/op
-BenchmarkFormatWithTrace/bruh_10_layers-4                 	   77246	     16414 ns/op	    9593 B/op	      27 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_100_layers-4          	    1860	    552345 ns/op	   58379 B/op	     910 allocs/op
-BenchmarkFormatWithTrace/eris_100_layers-4                	    4376	    252741 ns/op	 1108655 B/op	    1240 allocs/op
-BenchmarkFormatWithTrace/bruh_100_layers-4                	    7178	    165860 ns/op	   75289 B/op	     209 allocs/op
+BenchmarkWrap/pkg_errors_1_layers-4         	  635908	      1724 ns/op     648 B/op	       8 allocs/op
+BenchmarkWrap/eris_1_layers-4               	  322220	      3456 ns/op    2048 B/op	      18 allocs/op
+BenchmarkWrap/bruh_1_layers-4               	  649290	      1740 ns/op     648 B/op	       5 allocs/op
+BenchmarkWrap/pkg_errors_10_layers-4        	  116004	     10279 ns/op    3744 B/op	      53 allocs/op
+BenchmarkWrap/eris_10_layers-4              	   64450	     18281 ns/op    9537 B/op	      81 allocs/op
+BenchmarkWrap/bruh_10_layers-4              	  115884	     10097 ns/op    3600 B/op	      32 allocs/op
+BenchmarkWrap/pkg_errors_100_layers-4       	   12661	     95502 ns/op   34710 B/op	     503 allocs/op
+BenchmarkWrap/eris_100_layers-4             	    5637	    194317 ns/op   84431 B/op	     711 allocs/op
+BenchmarkWrap/bruh_100_layers-4             	   12771	     94043 ns/op   33125 B/op	     302 allocs/op
+BenchmarkFormatWithoutTrace/pkg_errors_1_layers-4         	 8095386	       144.2 ns/op	      32 B/op	       2 allocs/op
+BenchmarkFormatWithoutTrace/eris_1_layers-4               	  809655	      1277 ns/op	     832 B/op	       9 allocs/op
+BenchmarkFormatWithoutTrace/bruh_1_layers-4               	 6104916	       198.2 ns/op	    1024 B/op	       1 allocs/op
+BenchmarkFormatWithoutTrace/pkg_errors_10_layers-4        	 1977706	       605.0 ns/op	     648 B/op	      11 allocs/op
+BenchmarkFormatWithoutTrace/eris_10_layers-4              	  202749	      5498 ns/op	    7136 B/op	      54 allocs/op
+BenchmarkFormatWithoutTrace/bruh_10_layers-4              	 3406458	       348.0 ns/op	    1024 B/op	       1 allocs/op
+BenchmarkFormatWithoutTrace/pkg_errors_100_layers-4       	   98671	     11709 ns/op	   48431 B/op	     101 allocs/op
+BenchmarkFormatWithoutTrace/eris_100_layers-4             	   12165	     98143 ns/op	  381018 B/op	     504 allocs/op
+BenchmarkFormatWithoutTrace/bruh_100_layers-4             	  546447	      1969 ns/op	    1024 B/op	       1 allocs/op
+BenchmarkFormatWithTrace/pkg_errors_1_layers-4            	  176643	      6468 ns/op	    1168 B/op	      19 allocs/op
+BenchmarkFormatWithTrace/eris_1_layers-4                  	  273050	      4013 ns/op	    4457 B/op	      51 allocs/op
+BenchmarkFormatWithTrace/bruh_1_layers-4                  	  329194	      3273 ns/op	    4649 B/op	       9 allocs/op
+BenchmarkFormatWithTrace/pkg_errors_10_layers-4           	   30709	     38619 ns/op	    6943 B/op	     100 allocs/op
+BenchmarkFormatWithTrace/eris_10_layers-4                 	   88742	     13188 ns/op	   21165 B/op	     159 allocs/op
+BenchmarkFormatWithTrace/bruh_10_layers-4                 	   76670	     15897 ns/op	   11001 B/op	      27 allocs/op
+BenchmarkFormatWithTrace/pkg_errors_100_layers-4          	    1840	    558896 ns/op	   68972 B/op	     910 allocs/op
+BenchmarkFormatWithTrace/eris_100_layers-4                	    4554	    255518 ns/op	 1042515 B/op	    1240 allocs/op
+BenchmarkFormatWithTrace/bruh_100_layers-4                	    7057	    149821 ns/op	   93081 B/op	     209 allocs/op
 ```
-
-<p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
-
-
-
-## Roadmap
-
-- [ ] Add more Tests
-- [x] Add examples
-- [x] Add pre-commit hooks
-- [ ] Add some automation
-- [ ] Add issue templates and such
-- [x] Write more documentation
-
-See the [open issues](https://github.com/aisbergg/go-bruh/issues) for a full list of proposed features (and known issues).
 
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
 
