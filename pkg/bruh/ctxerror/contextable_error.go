@@ -2,7 +2,11 @@
 // context to it.
 package ctxerror
 
-import "github.com/aisbergg/go-bruh/pkg/bruh"
+import (
+	"fmt"
+
+	"github.com/aisbergg/go-bruh/pkg/bruh"
+)
 
 // Contexter is an error that includes additional context in form of a map.
 type Contexter interface {
@@ -10,124 +14,102 @@ type Contexter interface {
 	Context() map[string]any
 }
 
-// ContextAdder is an error that can add context to itself.
-type ContextAdder interface {
+// ContextableErrorer is an error that can modify its context.
+type ContextableErrorer interface {
 	error
-	Add(key string, value any) ContextAdder
-	AddAll(context map[string]any) ContextAdder
+	Context() map[string]any
+	FullContext() map[string]any
+	Add(keyValuePair ...any) ContextableErrorer
+	AddAll(context map[string]any) ContextableErrorer
+	Remove(key ...string) ContextableErrorer
 }
 
-var _ Contexter = (*ContextableError)(nil)
+var (
+	_ Contexter          = (*ContextableError)(nil)
+	_ ContextableErrorer = (*ContextableError)(nil)
+)
 
 // ContextableError is an error that let's you attach additional context to it.
 // E.g. you can attach a request or user ID that you can later retrieve and
 // write to your logs. The context is not part of the error message. You can
 // retrieve it by calling the [*ContextableError.Context] or
-// [*ContextableError.FullContext]` method.
+// [*ContextableError.FullContext] method.
 type ContextableError struct {
 	bruh.TraceableError
 	context map[string]any
 }
 
-// New creates a new [ContextableError] with the given message.
-func New(msg string) error {
-	return &ContextableError{
-		TraceableError: *bruh.NewSkip(1, msg).(*bruh.TraceableError),
+// New creates a new [ContextableError] with the given message and the given
+// key-value pairs.
+func New(msg string, keyValuePair ...any) error {
+	cerr := &ContextableError{
+		TraceableError: *bruh.NewSkip(1, msg),
 		context:        make(map[string]any),
 	}
+	cerr.Add(keyValuePair...)
+	return cerr
 }
 
-// NewSkip creates a new [ContextableError] with the given message and
-// skips the specified number of callers in the stack trace.
-func NewSkip(skip uint, msg string) error {
-	return &ContextableError{
-		TraceableError: *bruh.NewSkip(skip+1, msg).(*bruh.TraceableError),
+// NewSkip behaves like [New] but skips the given number of callers when
+// creating a stack trace. You should only use this if you are implementing a
+// new error type on top of [ContextableError].
+func NewSkip(skip uint, msg string, keyValuePair ...any) *ContextableError {
+	cerr := &ContextableError{
+		TraceableError: *bruh.NewSkip(skip+1, msg),
 		context:        make(map[string]any),
 	}
-}
-
-// Errorf creates a new [ContextableError] with a formatted message.
-func Errorf(format string, args ...any) error {
-	return &ContextableError{
-		TraceableError: *bruh.ErrorfSkip(1, format, args...).(*bruh.TraceableError),
-		context:        make(map[string]any),
-	}
-}
-
-// ErrorfSkip creates a new [ContextableError] with a formatted message and
-// skips the specified number of callers in the stack trace.
-func ErrorfSkip(skip uint, format string, args ...any) error {
-	return &ContextableError{
-		TraceableError: *bruh.ErrorfSkip(skip+1, format, args...).(*bruh.TraceableError),
-		context:        make(map[string]any),
-	}
+	cerr.Add(keyValuePair...)
+	return cerr
 }
 
 // Wrap wraps the given error by creating a new [ContextableError] with the
-// specified message.
-func Wrap(err error, msg string) error {
-	if err == nil {
-		return nil
-	}
-	return &ContextableError{
-		TraceableError: *bruh.WrapSkip(err, 1, msg).(*bruh.TraceableError),
+// specified message and the given key-value pairs.
+func Wrap(err error, msg string, keyValuePair ...any) error {
+	cerr := &ContextableError{
+		TraceableError: *bruh.WrapSkip(err, 1, msg),
 		context:        make(map[string]any),
 	}
+	cerr.Add(keyValuePair...)
+	return cerr
 }
 
-// WrapSkip wraps the given error by creating a new [ContextableError] with the
-// specified message and skips the specified number of callers in the stack
-// trace.
-func WrapSkip(err error, skip uint, msg string) error {
-	if err == nil {
-		return nil
-	}
-	return &ContextableError{
-		TraceableError: *bruh.WrapSkip(err, skip+1, msg).(*bruh.TraceableError),
+// WrapSkip behaves like [Wrap] but skips the given number of callers when
+// creating a stack trace. You should only use this if you are implementing a
+// new error type on top of [ContextableError].
+func WrapSkip(err error, skip uint, msg string, keyValuePair ...any) *ContextableError {
+	cerr := &ContextableError{
+		TraceableError: *bruh.WrapSkip(err, skip+1, msg),
 		context:        make(map[string]any),
 	}
+	cerr.Add(keyValuePair...)
+	return cerr
 }
 
-// Wrapf wraps the given error by creating a new [ContextableError] with a
-// formatted message.
-func Wrapf(err error, format string, args ...any) error {
-	if err == nil {
-		return nil
+// Add adds the given key-value pairs to the error context. Any key that
+// already exists, will be overwritten.
+func (e *ContextableError) Add(keyValuePair ...any) ContextableErrorer {
+	l := len(keyValuePair) - len(keyValuePair)%2 // silently drop a key without a value
+	for i := 0; i < l; i += 2 {
+		if key, ok := keyValuePair[i].(string); ok {
+			e.context[key] = keyValuePair[i+1]
+		}
+		e.context[fmt.Sprint(keyValuePair[i])] = keyValuePair[i+1]
 	}
-	return &ContextableError{
-		TraceableError: *bruh.WrapfSkip(err, 1, format, args...).(*bruh.TraceableError),
-		context:        make(map[string]any),
-	}
-}
-
-// WrapfSkip wraps the given error by creating a new [ContextableError] with a
-// formatted message and skips the specified number of callers in the stack
-// trace.
-func WrapfSkip(err error, skip uint, format string, args ...any) error {
-	if err == nil {
-		return nil
-	}
-	return &ContextableError{
-		TraceableError: *bruh.WrapfSkip(err, skip+1, format, args...).(*bruh.TraceableError),
-		context:        make(map[string]any),
-	}
-}
-
-// Add adds a key-value pair to the error context. If the key already exists, it
-// will be overwritten. If the value is nil, the key will be removed.
-func (e *ContextableError) Add(key string, value any) error {
-	if value == nil {
-		delete(e.context, key)
-		return e
-	}
-	e.context[key] = value
 	return e
 }
 
 // AddAll adds all key-value pairs to the error context.
-func (e *ContextableError) AddAll(context map[string]any) error {
+func (e *ContextableError) AddAll(context map[string]any) ContextableErrorer {
 	for key, value := range context {
 		_ = e.Add(key, value)
+	}
+	return e
+}
+
+// Remove removes the given keys from the error context.
+func (e *ContextableError) Remove(key ...string) ContextableErrorer {
+	for _, k := range key {
+		delete(e.context, k)
 	}
 	return e
 }
@@ -150,17 +132,20 @@ func (e *ContextableError) FullContext() map[string]any {
 //
 // -----------------------------------------------------------------------------
 
-// GetContext returns the attached context of the given error. If the error does
-// not have any context, nil is returned.
+// GetContext returns the attached context of the given error. An empty map is
+// returned if the error does not have any context.
 func GetContext(err error) map[string]any {
+	if err == nil {
+		return make(map[string]any)
+	}
 	if e, ok := err.(Contexter); ok {
 		return e.Context()
 	}
-	return nil
+	return make(map[string]any)
 }
 
-// GetFullContext returns the attached context of the whole error chain. If the
-// error does not have any context, nil is returned.
+// GetFullContext returns the attached context of the whole error chain. An
+// empty map is returned if the error does not have any context.
 func GetFullContext(err error) map[string]any {
 	if err == nil {
 		return make(map[string]any)
@@ -170,9 +155,6 @@ func GetFullContext(err error) map[string]any {
 		for k, v := range e.Context() {
 			ctx[k] = v
 		}
-	}
-	if len(ctx) == 0 {
-		return nil
 	}
 	return ctx
 }

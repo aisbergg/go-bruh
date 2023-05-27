@@ -49,6 +49,7 @@ issues:
   exclude:
     - "unhandled-error: Unhandled error in call to function strBld.Write.+"
     - "unhandled-error: Unhandled error in call to function fmt..+"
+    - "Error return value of `cerr.Add` is not checked"
 
 linters-settings:
   errcheck:
