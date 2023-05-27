@@ -26,3 +26,8 @@ jobs:
           draft: false
           prerelease: false
           body: ${{ steps.extract-release-notes.outputs.release_notes }}
+
+      - name: Trigger pkg.go.dev update
+        uses: wei/curl@v1.1.1
+        with:
+          args: https://sum.golang.org/lookup/github.com/aisbergg/go-bruh@${{ github.ref_name }}
