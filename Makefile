@@ -60,7 +60,7 @@ bench:
 	@echo Running benchmark tests
 	@cd benchmarks && go test -benchmem -bench=. && cd ..
 
-## Stage a release (usage: make release-tag VERSION={VERSION_TAG})
+## Stage a release (usage: make release-tag VERSION=v0.0.0)
 release-tag: fmt-lint test
 	@test -n "${VERSION}" || (echo -e "\nERR: You have to specify the next release version (e.g. 'VERSION=v0.0.0')!\n" && exit 1)
 	@git diff-index --quiet HEAD -- || (echo -e "\nERR: You have uncommited changes. Please stash them before creating a release!\n" && exit 1)
