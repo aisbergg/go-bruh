@@ -81,8 +81,26 @@ go get github.com/aisbergg/go-bruh
 Creating new errors with stack traces is done by calling [`bruh.New(msg string)`](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh#New) or [`Errorf(format string, args ...any)`](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh#Errorf):
 
 ```golang
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/aisbergg/go-bruh/pkg/bruh"
+)
+
 // create a global error
 var ErrInternalServer = bruh.New("error internal server")
+
+func main() {
+	url := "https://foo-bar.local"
+	if _, err := Get(url); err != nil {
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
+		os.Exit(1)
+	}
+}
 
 func Get(url string) (*http.Response, error) {
 	res, err := http.Get(url)
@@ -98,17 +116,35 @@ func Get(url string) (*http.Response, error) {
 }
 ```
 
+Outputs:
+
+```plaintext
+request failed
+    path/to/main.go:26 in main.Get
+    path/to/main.go:16 in main.main
+```
+
 ### Wrapping Errors
 
 Wrapping errors is not different than creating entirely new errors. You can use [`Wrap(err error, msg string)`](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh#Wrap) or [`Wrapf(err error, format string, args ...any)`](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh#Wrapf) for this:
 
 ```golang
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/aisbergg/go-bruh/pkg/bruh"
+)
+
 func main() {
-	url := "https://example.com"
-	_, err := Get(url)
-	if err != nil {
+	url := "https://foo-bar.local"
+	if _, err := Get(url); err != nil {
 		err = bruh.Wrapf(err, "failed to fetch %s", url)
-		panic(err)
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
+		os.Exit(1)
 	}
 }
 
@@ -120,6 +156,17 @@ func Get(url string) (*http.Response, error) {
 	}
 	return res, nil
 }
+```
+
+Outputs:
+
+```plaintext
+failed to fetch https://foo-bar.local
+    path/to/main.go:17 in main.main
+request failed
+    path/to/main.go:27 in main.Get
+    path/to/main.go:16 in main.main
+Get "https://foo-bar.local": dial tcp: lookup foo-bar.local: no such host
 ```
 
 ### Formatting Errors
