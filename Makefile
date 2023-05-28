@@ -55,10 +55,15 @@ display-coverage:
 	@echo Displaying test coverage
 	@go tool cover -html=cover.out
 
-## Run benchmark tests
+## Run benchmarks
 bench:
 	@echo Running benchmark tests
 	@cd benchmarks && go test -benchmem -bench=. && cd ..
+
+## Run and compare benchmarks to previous run. Use `make release-tag PREVIOUS=bench-compare` to compare against a specifc run
+bench-compare:
+	@echo Running and comparing benchmarks against previous run
+	@bash benchmarks/benchstat.sh "${PREVIOUS}"
 
 ## Stage a release (usage: make release-tag VERSION=v0.0.0)
 release-tag: fmt-lint test
