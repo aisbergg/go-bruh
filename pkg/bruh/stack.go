@@ -1,8 +1,8 @@
 package bruh
 
 import (
-	"fmt"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -10,12 +10,22 @@ import (
 type Stack []StackFrame
 
 func (s Stack) String() string {
-	formatted := make([]string, 0, len(s))
+	strBld := strings.Builder{}
+	// pre-allocate a large buffer to avoid reallocations; some guesswork here:
+	// Name: 40 per error
+	// Location: 160 per error
+	strBld.Grow(len(s) * (40 + 160))
 	for _, f := range s {
-		ftdFrm := fmt.Sprintf("%s\n        %s:%d pc=0x%x", f.Name, f.File, f.Line, f.ProgramCounter)
-		formatted = append(formatted, ftdFrm)
+		strBld.WriteString(f.Name)
+		strBld.WriteString("\n        ")
+		strBld.WriteString(f.File)
+		strBld.WriteRune(':')
+		strBld.WriteString(strconv.Itoa(f.Line))
+		strBld.WriteString(" pc=0x")
+		strBld.WriteString(strconv.FormatInt(int64(f.ProgramCounter), 16)) // format as hex
+		strBld.WriteRune('\n')
 	}
-	return strings.Join(formatted, "\n")
+	return strBld.String()
 }
 
 // RelativeTo returns new version of this stack relative to the other stack.

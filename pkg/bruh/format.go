@@ -139,6 +139,12 @@ func FormatWithTrace(upkErr UnpackedError) string {
 //	    <fileN>:<lineN> in <functionN>
 func FormatWithCombinedTrace(upkErr UnpackedError) string {
 	strBld := strings.Builder{}
+	// pre-allocate a large buffer to avoid reallocations; some guesswork here:
+	// message: 80 per error
+	// location: 160 per error
+	guessCap := len(upkErr)*60 + len(upkErr[0].Stack)*2*160
+	strBld.Grow(guessCap)
+
 	if len(upkErr) == 1 && upkErr[0].Msg == "" {
 		strBld.WriteString(`""`)
 	} else {
@@ -187,6 +193,16 @@ func FormatWithCombinedTrace(upkErr UnpackedError) string {
 //	<typeName2>: <error2>
 func FormatPythonTraceback(upkErr UnpackedError) string {
 	strBld := strings.Builder{}
+	// pre-allocate a large buffer to avoid reallocations; some guesswork here:
+	// fixed text: 110 per error
+	// message: 80 per error
+	// location: 160 per error
+	guessCap := len(upkErr) * (80 + 110)
+	for _, upkElm := range upkErr {
+		guessCap += len(upkElm.PartialStack) * 160
+	}
+	strBld.Grow(guessCap)
+
 	for i := len(upkErr) - 1; i >= 0; i-- {
 		upkElm := upkErr[i]
 		if upkElm.PartialStack != nil {

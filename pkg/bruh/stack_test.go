@@ -278,7 +278,7 @@ func TestStackString(t *testing.T) {
 		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter: 0x456},
 		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter: 0x789},
 	}
-	expectedString := "main\n        main.go:10 pc=0x123\nfoo\n        foo.go:20 pc=0x456\nbar\n        bar.go:30 pc=0x789"
+	expectedString := "main\n        main.go:10 pc=0x123\nfoo\n        foo.go:20 pc=0x456\nbar\n        bar.go:30 pc=0x789\n"
 
 	result := stack.String()
 	if result != expectedString {
