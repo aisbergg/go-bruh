@@ -17,5 +17,6 @@ repos:
       - id: gofumpt
       - id: golangci-lint
         exclude: "^(benchmarks|examples|tools)/"
+        require_serial: true
       - id: go-test
         exclude: "^(benchmarks|examples|tools)/"
