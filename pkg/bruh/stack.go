@@ -22,7 +22,7 @@ func (s Stack) String() string {
 		strBld.WriteRune(':')
 		strBld.WriteString(strconv.Itoa(f.Line))
 		strBld.WriteString(" pc=0x")
-		strBld.WriteString(strconv.FormatInt(int64(f.ProgramCounter), 16)) // format as hex
+		strBld.WriteString(strconv.FormatInt(int64(f.ProgramCounter2), 16)) // format as hex
 		strBld.WriteRune('\n')
 	}
 	return strBld.String()
@@ -78,8 +78,18 @@ type StackFrame struct {
 	File string
 	// Line number where the function is defined.
 	Line int
-	// ProgramCounter is the underlying program counter for the function.
+	// ProgramCounter, obtained from [runtime.Callers], indicates the starting
+	// point of the previous instruction before our instruction of interest.
+	// Apperently this is done for historical reasons. You can use its value
+	// with [runtime.CallersFrames] to look up the corresponding symbolic
+	// information of the function (as done by Sentry for example).
 	ProgramCounter uintptr
+	// ProgramCounter2, obtained from [runtime.CallersFrames], indicates the
+	// starting point of the instruction in question. However, if your goal is to
+	// retrieve the associated function, it is recommended to utilize
+	// ProgramCounter instead. ProgramCounter appears to offer greater
+	// reliability in conjunction with [runtime.CallersFrames].
+	ProgramCounter2 uintptr
 }
 
 // callers returns a stack trace. the argument skip is the number of stack
@@ -140,9 +150,10 @@ func (s stackPC) toStack() Stack {
 			break
 		}
 		stack = append(stack, StackFrame{
-			Name: frame.Function,
-			File: frame.File,
-			Line: frame.Line,
+			Name:            frame.Function,
+			File:            frame.File,
+			Line:            frame.Line,
+			ProgramCounter2: frame.PC,
 			// CallersFrames.Next() reduces the program counter by 1. Using the
 			// reduced program counter in subsequent calls of CallersFrames
 			// would lead to wrong frames being returned, which happens in

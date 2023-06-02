@@ -39,7 +39,7 @@ func FormatJSON(upkErr bruh.UnpackedError) string {
 				Name:           frame.Name,
 				File:           frame.File,
 				Line:           frame.Line,
-				ProgramCounter: frame.ProgramCounter,
+				ProgramCounter: frame.ProgramCounter2,
 			}
 		}
 		errStructs[i] = ErrorStruct{

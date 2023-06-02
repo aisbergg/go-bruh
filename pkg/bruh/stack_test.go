@@ -274,9 +274,9 @@ func TestGoRoutines(t *testing.T) {
 
 func TestStackString(t *testing.T) {
 	stack := Stack{
-		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter: 0x123},
-		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter: 0x456},
-		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter: 0x789},
+		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter2: 0x123},
+		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter2: 0x456},
+		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter2: 0x789},
 	}
 	expectedString := "main\n        main.go:10 pc=0x123\nfoo\n        foo.go:20 pc=0x456\nbar\n        bar.go:30 pc=0x789\n"
 
@@ -288,16 +288,16 @@ func TestStackString(t *testing.T) {
 
 func TestStackFirst(t *testing.T) {
 	stack := Stack{
-		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter: 0x123},
-		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter: 0x456},
-		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter: 0x789},
+		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter2: 0x123},
+		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter2: 0x456},
+		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter2: 0x789},
 	}
 	expectedFirstTwo := Stack{
-		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter: 0x123},
-		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter: 0x456},
+		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter2: 0x123},
+		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter2: 0x456},
 	}
 	expectedFirstOne := Stack{
-		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter: 0x123},
+		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter2: 0x123},
 	}
 
 	assert := testutils.NewAssert(t)
@@ -307,16 +307,16 @@ func TestStackFirst(t *testing.T) {
 
 func TestStackLast(t *testing.T) {
 	stack := Stack{
-		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter: 0x123},
-		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter: 0x456},
-		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter: 0x789},
+		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter2: 0x123},
+		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter2: 0x456},
+		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter2: 0x789},
 	}
 	expectedLastTwo := Stack{
-		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter: 0x456},
-		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter: 0x789},
+		StackFrame{Name: "foo", File: "foo.go", Line: 20, ProgramCounter2: 0x456},
+		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter2: 0x789},
 	}
 	expectedLastOne := Stack{
-		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter: 0x789},
+		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter2: 0x789},
 	}
 
 	assert := testutils.NewAssert(t)
