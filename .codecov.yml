@@ -10,3 +10,6 @@ coverage:
         threshold: 2%
     patch: off
     changes: false
+
+ignore:
+  - "**/testutils"

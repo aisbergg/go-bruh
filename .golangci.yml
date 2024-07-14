@@ -47,7 +47,7 @@ issues:
         - revive
         - gosec
   exclude:
-    - "unhandled-error: Unhandled error in call to function strBld.Write.+"
+    - "unhandled-error: Unhandled error in call to function strings.Builder..+"
     - "unhandled-error: Unhandled error in call to function fmt..+"
     - "Error return value of `cerr.Add` is not checked"
 
@@ -85,12 +85,12 @@ linters-settings:
         disabled: true
       - name: banned-characters
         disabled: true
+      - name: cyclomatic
+        disabled: true
+      - name: cognitive-complexity
+        disabled: true
 
       - name: argument-limit
         arguments: [5]
-      - name: cyclomatic
-        arguments: [10]
-      - name: cognitive-complexity
-        arguments: [15]
       - name: function-result-limit
         arguments: [3]

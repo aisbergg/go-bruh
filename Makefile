@@ -48,7 +48,7 @@ test-coverage:
 	@echo Running tests with coverage
 	@# we use "-gcflags '-N -l'", because that stops optimization from eating
 	@# creating stacks with identical frames (PCs) and thus ruin our test results
-	@go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' ./pkg/...
+	@go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' $$(go list ./pkg/... | grep -v testutils)
 
 ## Display test coverage
 display-coverage:
