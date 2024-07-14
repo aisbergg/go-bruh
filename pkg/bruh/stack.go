@@ -19,11 +19,11 @@ func (s Stack) String() string {
 		strBld.WriteString(f.Name)
 		strBld.WriteString("\n        ")
 		strBld.WriteString(f.File)
-		strBld.WriteRune(':')
+		strBld.WriteByte(':')
 		strBld.WriteString(strconv.Itoa(f.Line))
 		strBld.WriteString(" pc=0x")
 		strBld.WriteString(strconv.FormatInt(int64(f.ProgramCounter2), 16)) // format as hex
-		strBld.WriteRune('\n')
+		strBld.WriteByte('\n')
 	}
 	return strBld.String()
 }
@@ -33,25 +33,25 @@ func (s Stack) RelativeTo(other Stack) Stack {
 	if len(s) == 0 || len(other) == 0 {
 		return s
 	}
-	othInd := len(other) - 1
-	curInd := len(s) - 1
+	othIdx := len(other) - 1
+	curIdx := len(s) - 1
 	for {
-		if othInd < 0 || curInd < 0 {
+		if othIdx < 0 || curIdx < 0 {
 			break
 		}
-		if other[othInd] != s[curInd] {
+		if other[othIdx] != s[curIdx] {
 			break
 		}
-		othInd--
-		curInd--
+		othIdx--
+		curIdx--
 	}
 	// Due to optimizations, the frames of the two stacks may be identical. In
 	// that case, we would end up with an empty stack, which is not what we
 	// want.
-	if curInd < 0 {
+	if curIdx < 0 {
 		return s[:1]
 	}
-	return s[:curInd+1]
+	return s[:curIdx+1]
 }
 
 // First returns the first x stack frames in the stack.
@@ -110,25 +110,25 @@ func (s stackPC) relativeTo(other stackPC) stackPC {
 	if len(s) == 0 || len(other) == 0 {
 		return s
 	}
-	othInd := len(other) - 1
-	curInd := len(s) - 1
+	othIdx := len(other) - 1
+	curIdx := len(s) - 1
 	for {
-		if othInd < 0 || curInd < 0 {
+		if othIdx < 0 || curIdx < 0 {
 			break
 		}
-		if other[othInd] != s[curInd] {
+		if other[othIdx] != s[curIdx] {
 			break
 		}
-		othInd--
-		curInd--
+		othIdx--
+		curIdx--
 	}
 	// Due to optimizations, the frames of the two stacks may be identical. In
 	// that case, we would end up with an empty stack, which is not what we
 	// want.
-	if curInd < 0 {
+	if curIdx < 0 {
 		return s[:1]
 	}
-	return s[:curInd+1]
+	return s[:curIdx+1]
 }
 
 // toStack returns a Stack object with information details about the PCs.
