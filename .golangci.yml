@@ -47,6 +47,7 @@ issues:
         - revive
         - gosec
   exclude:
+    - "unhandled-error: Unhandled error in call to function strBld.Write.+"
     - "unhandled-error: Unhandled error in call to function strings.Builder..+"
     - "unhandled-error: Unhandled error in call to function fmt..+"
     - "Error return value of `cerr.Add` is not checked"
