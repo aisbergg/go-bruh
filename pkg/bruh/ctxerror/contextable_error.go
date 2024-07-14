@@ -19,9 +19,15 @@ type ContextableErrorer interface {
 	error
 	Context() map[string]any
 	FullContext() map[string]any
+	RangeContext(func(key string, value any) bool)
 	Add(keyValuePair ...any) ContextableErrorer
 	AddAll(context map[string]any) ContextableErrorer
 	Remove(key ...string) ContextableErrorer
+}
+
+type keyValue struct {
+	key   string
+	value any
 }
 
 var (
@@ -36,15 +42,16 @@ var (
 // [*ContextableError.FullContext] method.
 type ContextableError struct {
 	bruh.TraceableError
-	context map[string]any
+	// using a slice is more efficient than a map for small sizes
+	context []keyValue
 }
 
 // New creates a new [ContextableError] with the given message and the given
 // key-value pairs.
-func New(msg string, keyValuePair ...any) error {
+func New(msg string, keyValuePair ...any) ContextableErrorer {
 	cerr := &ContextableError{
 		TraceableError: *bruh.NewSkip(1, msg),
-		context:        make(map[string]any),
+		context:        make([]keyValue, 0, 8),
 	}
 	cerr.Add(keyValuePair...)
 	return cerr
@@ -56,7 +63,7 @@ func New(msg string, keyValuePair ...any) error {
 func NewSkip(skip uint, msg string, keyValuePair ...any) *ContextableError {
 	cerr := &ContextableError{
 		TraceableError: *bruh.NewSkip(skip+1, msg),
-		context:        make(map[string]any),
+		context:        make([]keyValue, 0, 8),
 	}
 	cerr.Add(keyValuePair...)
 	return cerr
@@ -64,10 +71,10 @@ func NewSkip(skip uint, msg string, keyValuePair ...any) *ContextableError {
 
 // Wrap wraps the given error by creating a new [ContextableError] with the
 // specified message and the given key-value pairs.
-func Wrap(err error, msg string, keyValuePair ...any) error {
+func Wrap(err error, msg string, keyValuePair ...any) ContextableErrorer {
 	cerr := &ContextableError{
 		TraceableError: *bruh.WrapSkip(err, 1, msg),
-		context:        make(map[string]any),
+		context:        make([]keyValue, 0, 8),
 	}
 	cerr.Add(keyValuePair...)
 	return cerr
@@ -79,7 +86,7 @@ func Wrap(err error, msg string, keyValuePair ...any) error {
 func WrapSkip(err error, skip uint, msg string, keyValuePair ...any) *ContextableError {
 	cerr := &ContextableError{
 		TraceableError: *bruh.WrapSkip(err, skip+1, msg),
-		context:        make(map[string]any),
+		context:        make([]keyValue, 0, 8),
 	}
 	cerr.Add(keyValuePair...)
 	return cerr
@@ -91,25 +98,45 @@ func (e *ContextableError) Add(keyValuePair ...any) ContextableErrorer {
 	l := len(keyValuePair) - len(keyValuePair)%2 // silently drop a key without a value
 	for i := 0; i < l; i += 2 {
 		if key, ok := keyValuePair[i].(string); ok {
-			e.context[key] = keyValuePair[i+1]
+			e.addPair(key, keyValuePair[i+1])
+		} else {
+			e.addPair(fmt.Sprint(keyValuePair[i]), keyValuePair[i+1])
 		}
-		e.context[fmt.Sprint(keyValuePair[i])] = keyValuePair[i+1]
 	}
 	return e
+}
+
+// addPair adds the given single key-value pair to the error context. Any key
+// that already exists, will be overwritten.
+func (e *ContextableError) addPair(key string, value any) {
+	// check if the key already exists and update the value if it does
+	for i, kv := range e.context {
+		if kv.key == key {
+			e.context[i].value = value
+			return
+		}
+	}
+	e.context = append(e.context, keyValue{key, value})
 }
 
 // AddAll adds all key-value pairs to the error context.
 func (e *ContextableError) AddAll(context map[string]any) ContextableErrorer {
 	for key, value := range context {
-		_ = e.Add(key, value)
+		e.addPair(key, value)
 	}
 	return e
 }
 
 // Remove removes the given keys from the error context.
 func (e *ContextableError) Remove(key ...string) ContextableErrorer {
-	for _, k := range key {
-		delete(e.context, k)
+	for i := 0; i < len(e.context); i++ {
+		for _, k := range key {
+			if e.context[i].key == k {
+				e.context = append(e.context[:i], e.context[i+1:]...)
+				i--
+				break
+			}
+		}
 	}
 	return e
 }
@@ -118,12 +145,22 @@ func (e *ContextableError) Remove(key ...string) ContextableErrorer {
 // other errors in the chain. If you want to get the full context, use
 // [*ContextableError.FullContext] instead.
 func (e *ContextableError) Context() map[string]any {
-	return e.context
+	ctx := make(map[string]any, len(e.context))
+	for _, kv := range e.context {
+		ctx[kv.key] = kv.value
+	}
+	return ctx
 }
 
 // FullContext returns the combined context of the whole error chain.
 func (e *ContextableError) FullContext() map[string]any {
 	return GetFullContext(e)
+}
+
+// RangeContext iterates over the context of the error and calls the given
+// function for each key-value pair.
+func (e *ContextableError) RangeContext(fn func(key string, value any) bool) {
+	RangeContext(e, fn)
 }
 
 // -----------------------------------------------------------------------------
@@ -150,11 +187,63 @@ func GetFullContext(err error) map[string]any {
 	if err == nil {
 		return make(map[string]any)
 	}
-	ctx := GetFullContext(bruh.Unwrap(err))
-	if e, ok := err.(Contexter); ok {
-		for k, v := range e.Context() {
-			ctx[k] = v
+	curErr := err
+	// calculate size of the context map
+	size := 0
+	for {
+		if curErr == nil {
+			break
 		}
+		if e, ok := curErr.(*ContextableError); ok {
+			size += len(e.context)
+		} else if e2, ok := curErr.(Contexter); ok {
+			size += len(e2.Context())
+		}
+		curErr = bruh.Unwrap(curErr)
+	}
+	ctx := make(map[string]any, size)
+	// fill the context map
+	for {
+		if err == nil {
+			break
+		}
+		if e, ok := err.(*ContextableError); ok {
+			for _, kv := range e.context {
+				ctx[kv.key] = kv.value
+			}
+		} else if e2, ok := err.(Contexter); ok {
+			for k, v := range e2.Context() {
+				ctx[k] = v
+			}
+		}
+		err = bruh.Unwrap(err)
 	}
 	return ctx
+}
+
+// RangeContext iterates over the context of the given error and calls the given
+// function for each key-value pair.
+func RangeContext(err error, fn func(key string, value any) bool) {
+	if err == nil {
+		return
+	}
+	for {
+		if err == nil {
+			break
+		}
+		if e, ok := err.(*ContextableError); ok {
+			for _, kv := range e.context {
+				if !fn(kv.key, kv.value) {
+					return
+				}
+			}
+		} else if e2, ok := err.(Contexter); ok {
+			for k, v := range e2.Context() {
+				if !fn(k, v) {
+					return
+				}
+			}
+		}
+		err = bruh.Unwrap(err)
+	}
 }
