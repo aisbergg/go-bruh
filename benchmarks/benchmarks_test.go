@@ -46,7 +46,16 @@ func wrapBruh(layers int) error {
 
 func BenchmarkWrap(b *testing.B) {
 	for _, tc := range cases {
-		b.Run(fmt.Sprintf("pkg errors %v layers", tc.layers), func(b *testing.B) {
+		b.Run(fmt.Sprintf("pkg=bruh/layers=%v", tc.layers), func(b *testing.B) {
+			var err error
+			for n := 0; n < b.N; n++ {
+				err = wrapBruh(tc.layers)
+			}
+			b.StopTimer()
+			global = err
+		})
+
+		b.Run(fmt.Sprintf("pkg=pkgerrors/layers=%v", tc.layers), func(b *testing.B) {
 			var err error
 			for n := 0; n < b.N; n++ {
 				err = wrapPkgErrors(tc.layers)
@@ -55,19 +64,10 @@ func BenchmarkWrap(b *testing.B) {
 			global = err
 		})
 
-		b.Run(fmt.Sprintf("eris %v layers", tc.layers), func(b *testing.B) {
+		b.Run(fmt.Sprintf("pkg=eris/layers=%v", tc.layers), func(b *testing.B) {
 			var err error
 			for n := 0; n < b.N; n++ {
 				err = wrapEris(tc.layers)
-			}
-			b.StopTimer()
-			global = err
-		})
-
-		b.Run(fmt.Sprintf("bruh %v layers", tc.layers), func(b *testing.B) {
-			var err error
-			for n := 0; n < b.N; n++ {
-				err = wrapBruh(tc.layers)
 			}
 			b.StopTimer()
 			global = err
@@ -77,7 +77,18 @@ func BenchmarkWrap(b *testing.B) {
 
 func BenchmarkFormatWithoutTrace(b *testing.B) {
 	for _, tc := range cases {
-		b.Run(fmt.Sprintf("pkg errors %v layers", tc.layers), func(b *testing.B) {
+		b.Run(fmt.Sprintf("pkg=bruh/layers=%v", tc.layers), func(b *testing.B) {
+			err := wrapBruh(tc.layers)
+			b.ResetTimer()
+			var str string
+			for n := 0; n < b.N; n++ {
+				str = bruh.ToString(err, false)
+			}
+			b.StopTimer()
+			global = str
+		})
+
+		b.Run(fmt.Sprintf("pkg=pkgerrors/layers=%v", tc.layers), func(b *testing.B) {
 			err := wrapPkgErrors(tc.layers)
 			b.ResetTimer()
 			var str string
@@ -88,7 +99,7 @@ func BenchmarkFormatWithoutTrace(b *testing.B) {
 			global = str
 		})
 
-		b.Run(fmt.Sprintf("eris %v layers", tc.layers), func(b *testing.B) {
+		b.Run(fmt.Sprintf("pkg=eris/layers=%v", tc.layers), func(b *testing.B) {
 			err := wrapEris(tc.layers)
 			b.ResetTimer()
 			var str string
@@ -98,23 +109,23 @@ func BenchmarkFormatWithoutTrace(b *testing.B) {
 			b.StopTimer()
 			global = str
 		})
-
-		b.Run(fmt.Sprintf("bruh %v layers", tc.layers), func(b *testing.B) {
-			err := wrapBruh(tc.layers)
-			b.ResetTimer()
-			var str string
-			for n := 0; n < b.N; n++ {
-				str = bruh.ToString(err, false)
-			}
-			b.StopTimer()
-			global = str
-		})
 	}
 }
 
 func BenchmarkFormatWithTrace(b *testing.B) {
 	for _, tc := range cases {
-		b.Run(fmt.Sprintf("pkg errors %v layers", tc.layers), func(b *testing.B) {
+		b.Run(fmt.Sprintf("pkg=bruh/layers=%v", tc.layers), func(b *testing.B) {
+			err := wrapBruh(tc.layers)
+			b.ResetTimer()
+			var str string
+			for n := 0; n < b.N; n++ {
+				str = bruh.ToString(err, true)
+			}
+			b.StopTimer()
+			global = str
+		})
+
+		b.Run(fmt.Sprintf("pkg=pkgerrors/layers=%v", tc.layers), func(b *testing.B) {
 			err := wrapPkgErrors(tc.layers)
 			b.ResetTimer()
 			var str string
@@ -125,7 +136,7 @@ func BenchmarkFormatWithTrace(b *testing.B) {
 			global = str
 		})
 
-		b.Run(fmt.Sprintf("eris %v layers", tc.layers), func(b *testing.B) {
+		b.Run(fmt.Sprintf("pkg=eris/layers=%v", tc.layers), func(b *testing.B) {
 			err := wrapEris(tc.layers)
 			format := eris.StringFormat{
 				Options: eris.FormatOptions{

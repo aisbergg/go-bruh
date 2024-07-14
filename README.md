@@ -315,33 +315,33 @@ Inside the `benchmark` directory reside some comparable benchmarks that allow so
 
 ```
 cpu: Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz
-BenchmarkWrap/pkg_errors_1_layers-4         	  635908	      1724 ns/op     648 B/op	       8 allocs/op
-BenchmarkWrap/eris_1_layers-4               	  322220	      3456 ns/op    2048 B/op	      18 allocs/op
-BenchmarkWrap/bruh_1_layers-4               	  649290	      1740 ns/op     648 B/op	       5 allocs/op
-BenchmarkWrap/pkg_errors_10_layers-4        	  116004	     10279 ns/op    3744 B/op	      53 allocs/op
-BenchmarkWrap/eris_10_layers-4              	   64450	     18281 ns/op    9537 B/op	      81 allocs/op
-BenchmarkWrap/bruh_10_layers-4              	  115884	     10097 ns/op    3600 B/op	      32 allocs/op
-BenchmarkWrap/pkg_errors_100_layers-4       	   12661	     95502 ns/op   34710 B/op	     503 allocs/op
-BenchmarkWrap/eris_100_layers-4             	    5637	    194317 ns/op   84431 B/op	     711 allocs/op
-BenchmarkWrap/bruh_100_layers-4             	   12771	     94043 ns/op   33125 B/op	     302 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_1_layers-4         	 8095386	       144.2 ns/op	      32 B/op	       2 allocs/op
-BenchmarkFormatWithoutTrace/eris_1_layers-4               	  809655	      1277 ns/op	     832 B/op	       9 allocs/op
-BenchmarkFormatWithoutTrace/bruh_1_layers-4               	 6104916	       198.2 ns/op	    1024 B/op	       1 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_10_layers-4        	 1977706	       605.0 ns/op	     648 B/op	      11 allocs/op
-BenchmarkFormatWithoutTrace/eris_10_layers-4              	  202749	      5498 ns/op	    7136 B/op	      54 allocs/op
-BenchmarkFormatWithoutTrace/bruh_10_layers-4              	 3406458	       348.0 ns/op	    1024 B/op	       1 allocs/op
-BenchmarkFormatWithoutTrace/pkg_errors_100_layers-4       	   98671	     11709 ns/op	   48431 B/op	     101 allocs/op
-BenchmarkFormatWithoutTrace/eris_100_layers-4             	   12165	     98143 ns/op	  381018 B/op	     504 allocs/op
-BenchmarkFormatWithoutTrace/bruh_100_layers-4             	  546447	      1969 ns/op	    1024 B/op	       1 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_1_layers-4            	  176643	      6468 ns/op	    1168 B/op	      19 allocs/op
-BenchmarkFormatWithTrace/eris_1_layers-4                  	  273050	      4013 ns/op	    4457 B/op	      51 allocs/op
-BenchmarkFormatWithTrace/bruh_1_layers-4                  	  329194	      3273 ns/op	    4649 B/op	       9 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_10_layers-4           	   30709	     38619 ns/op	    6943 B/op	     100 allocs/op
-BenchmarkFormatWithTrace/eris_10_layers-4                 	   88742	     13188 ns/op	   21165 B/op	     159 allocs/op
-BenchmarkFormatWithTrace/bruh_10_layers-4                 	   76670	     15897 ns/op	   11001 B/op	      27 allocs/op
-BenchmarkFormatWithTrace/pkg_errors_100_layers-4          	    1840	    558896 ns/op	   68972 B/op	     910 allocs/op
-BenchmarkFormatWithTrace/eris_100_layers-4                	    4554	    255518 ns/op	 1042515 B/op	    1240 allocs/op
-BenchmarkFormatWithTrace/bruh_100_layers-4                	    7057	    149821 ns/op	   93081 B/op	     209 allocs/op
+BenchmarkWrap/pkg=bruh/layers=1-4                 752203              1395 ns/op             648 B/op          5 allocs/op
+BenchmarkWrap/pkg=pkgerrors/layers=1-4            814128              1465 ns/op             648 B/op          8 allocs/op
+BenchmarkWrap/pkg=eris/layers=1-4                 276560              3665 ns/op            2048 B/op         18 allocs/op
+BenchmarkWrap/pkg=bruh/layers=10-4                148750              7318 ns/op            3600 B/op         32 allocs/op
+BenchmarkWrap/pkg=pkgerrors/layers=10-4           125960              9040 ns/op            3744 B/op         53 allocs/op
+BenchmarkWrap/pkg=eris/layers=10-4                 60559             18084 ns/op            9537 B/op         81 allocs/op
+BenchmarkWrap/pkg=bruh/layers=100-4                19662             62340 ns/op           33126 B/op        302 allocs/op
+BenchmarkWrap/pkg=pkgerrors/layers=100-4           14648             84568 ns/op           34710 B/op        503 allocs/op
+BenchmarkWrap/pkg=eris/layers=100-4                 5730            178413 ns/op           84431 B/op        711 allocs/op
+BenchmarkFormatWithoutTrace/pkg=bruh/layers=1-4                  6034773               179.4 ns/op          1024 B/op          1 allocs/op
+BenchmarkFormatWithoutTrace/pkg=pkgerrors/layers=1-4             7391492               153.3 ns/op            32 B/op          2 allocs/op
+BenchmarkFormatWithoutTrace/pkg=eris/layers=1-4                   779587              1530 ns/op             832 B/op          9 allocs/op
+BenchmarkFormatWithoutTrace/pkg=bruh/layers=10-4                 4275469               278.8 ns/op          1024 B/op          1 allocs/op
+BenchmarkFormatWithoutTrace/pkg=pkgerrors/layers=10-4            1630375               700.7 ns/op           648 B/op         11 allocs/op
+BenchmarkFormatWithoutTrace/pkg=eris/layers=10-4                  183391              6237 ns/op            7136 B/op         54 allocs/op
+BenchmarkFormatWithoutTrace/pkg=bruh/layers=100-4                 822076              1259 ns/op            1024 B/op          1 allocs/op
+BenchmarkFormatWithoutTrace/pkg=pkgerrors/layers=100-4             81950             14245 ns/op           48432 B/op        101 allocs/op
+BenchmarkFormatWithoutTrace/pkg=eris/layers=100-4                  10794            107690 ns/op          382554 B/op        504 allocs/op
+BenchmarkFormatWithTrace/pkg=bruh/layers=1-4                      348889              3600 ns/op            4745 B/op          9 allocs/op
+BenchmarkFormatWithTrace/pkg=pkgerrors/layers=1-4                 162422              6887 ns/op            1168 B/op         19 allocs/op
+BenchmarkFormatWithTrace/pkg=eris/layers=1-4                      198182              5363 ns/op            4457 B/op         51 allocs/op
+BenchmarkFormatWithTrace/pkg=bruh/layers=10-4                      69140             16209 ns/op           11529 B/op         27 allocs/op
+BenchmarkFormatWithTrace/pkg=pkgerrors/layers=10-4                 30410             46021 ns/op            6951 B/op        100 allocs/op
+BenchmarkFormatWithTrace/pkg=eris/layers=10-4                      64896             16679 ns/op           21166 B/op        159 allocs/op
+BenchmarkFormatWithTrace/pkg=bruh/layers=100-4                      7196            145970 ns/op           97930 B/op        209 allocs/op
+BenchmarkFormatWithTrace/pkg=pkgerrors/layers=100-4                 2107            568167 ns/op           64751 B/op        910 allocs/op
+BenchmarkFormatWithTrace/pkg=eris/layers=100-4                      3900            302192 ns/op         1044113 B/op       1241 allocs/op
 ```
 
 <p align="right"><a href="#readme-top" alt="abc"><b>back to top ⇧</b></a></p>
