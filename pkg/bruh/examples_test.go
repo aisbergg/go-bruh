@@ -45,8 +45,6 @@ func ExampleToString_local() {
 	// error reading file 'example.json'
 	//     .../examples_test.go:29 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func2
 	//     .../examples_test.go:35 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local
-	//     .../run_example.go:63 in testing.runExample
-	//     .../example.go:40 in testing.runExamples
 	// file not found
 	//     .../examples_test.go:24 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func1
 	//     .../examples_test.go:27 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func2
@@ -107,20 +105,18 @@ func ExampleToString_global() {
 	// Output:
 	// error processing file 'example.json': error reading file 'example.json': unexpected EOF
 	// error processing file 'example.json'
-	//     .../examples_test.go:93 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
-	//     .../examples_test.go:99 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global
-	//     .../run_example.go:63 in testing.runExample
-	//     .../example.go:40 in testing.runExamples
-	// error reading file 'example.json'
-	//     .../examples_test.go:75 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func1
-	//     .../examples_test.go:81 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func2
 	//     .../examples_test.go:91 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
+	//     .../examples_test.go:97 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global
+	// error reading file 'example.json'
+	//     .../examples_test.go:73 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func1
+	//     .../examples_test.go:79 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func2
+	//     .../examples_test.go:89 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
 	// unexpected EOF
 }
 
 var (
 	regexpRemoveTestMain  = regexp.MustCompile(` *_testmain\.go.*\n`)
-	regexpRemoveTestingGo = regexp.MustCompile(` *.../testing\.go.*\n`)
+	regexpRemoveTestingGo = regexp.MustCompile(` *.../(testing|example|run_example)\.go.*\n`)
 )
 
 // rplPth replaces the paths in the formatted error output to allow for consistent testing.
