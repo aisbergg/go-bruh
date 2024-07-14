@@ -142,7 +142,7 @@ func (s stackPC) toStack() Stack {
 	for {
 		frame, more := frames.Next()
 		// discard stack for globally defined errors
-		if frame.Function == "runtime.doInit" {
+		if frame.Function == "runtime.doInit" || strings.HasSuffix(frame.Function, ".init") {
 			return Stack{}
 		}
 		// exclude runtime calls

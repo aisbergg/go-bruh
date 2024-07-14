@@ -46,7 +46,7 @@ func ExampleToString_local() {
 	//     .../examples_test.go:29 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func2
 	//     .../examples_test.go:35 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local
 	//     .../run_example.go:63 in testing.runExample
-	//     .../example.go:44 in testing.runExamples
+	//     .../example.go:40 in testing.runExamples
 	// file not found
 	//     .../examples_test.go:24 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func1
 	//     .../examples_test.go:27 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func2
@@ -110,7 +110,7 @@ func ExampleToString_global() {
 	//     .../examples_test.go:93 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
 	//     .../examples_test.go:99 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global
 	//     .../run_example.go:63 in testing.runExample
-	//     .../example.go:44 in testing.runExamples
+	//     .../example.go:40 in testing.runExamples
 	// error reading file 'example.json'
 	//     .../examples_test.go:75 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func1
 	//     .../examples_test.go:81 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func2
