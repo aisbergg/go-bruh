@@ -7,6 +7,6 @@ package tools
 
 import (
 	_ "github.com/aisbergg/go-pre-commit"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 	_ "mvdan.cc/gofumpt"
 )

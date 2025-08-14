@@ -163,7 +163,13 @@ func (a Assertions) IsType(expType, obj any, msgAndArgs ...any) bool {
 		h.Helper()
 	}
 	if !equal(reflect.TypeOf(obj), reflect.TypeOf(expType)) {
-		a.log(fmt.Sprintf("expected object to be of type %v, was %v", reflect.TypeOf(expType), reflect.TypeOf(obj)), msgAndArgs...)
+		a.log(
+			fmt.Sprintf(
+				"expected object to be of type %v, was %v",
+				reflect.TypeOf(expType),
+				reflect.TypeOf(obj),
+			),
+			msgAndArgs...)
 		return false
 	}
 	return true
@@ -199,14 +205,21 @@ func (a Assertions) Len(obj any, length int, msgAndArgs ...any) bool {
 		h.Helper()
 	}
 	rv := reflect.ValueOf(obj)
-	switch rv.Kind() {
+	switch rv.Kind() { //nolint:exhaustive
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice, reflect.String:
 		if rv.Len() != length {
-			a.log(fmt.Sprintf("expected object to have length %v, was %v", length, rv.Len()), msgAndArgs...)
+			a.log(
+				fmt.Sprintf("expected object to have length %v, was %v", length, rv.Len()),
+				msgAndArgs...)
 			return false
 		}
 	default:
-		a.log(fmt.Sprintf("expected object to be of type array, chan, map, slice or string, was %v", rv.Kind()), msgAndArgs...)
+		a.log(
+			fmt.Sprintf(
+				"expected object to be of type array, chan, map, slice or string, was %v",
+				rv.Kind(),
+			),
+			msgAndArgs...)
 		return false
 	}
 	return true

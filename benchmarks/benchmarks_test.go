@@ -7,44 +7,53 @@ import (
 	"github.com/aisbergg/go-bruh/pkg/bruh"
 	pkgerrors "github.com/pkg/errors"
 	"github.com/rotisserie/eris"
+
+	emperror "emperror.dev/errors"
+)
+
+var (
+	rootErrorMessage = "error"
+	wrapErrorMessage = "wrap"
 )
 
 var (
 	global any
-	cases  = []struct {
-		layers int
-	}{
-		{1},
-		{10},
-		{100},
-	}
+	cases  = []struct{ layers int }{{1}, {10}, {100}}
 )
 
+func wrapBruh(layers int) error {
+	err := bruh.New(rootErrorMessage)
+	for i := 0; i < layers-1; i++ {
+		err = bruh.Wrap(err, wrapErrorMessage)
+	}
+	return err
+}
+
 func wrapPkgErrors(layers int) error {
-	err := pkgerrors.New("error")
-	for i := 0; i < layers; i++ {
-		err = pkgerrors.Wrapf(err, "wrap %v", i)
+	err := pkgerrors.New(rootErrorMessage)
+	for i := 0; i < layers-1; i++ {
+		err = pkgerrors.Wrap(err, wrapErrorMessage)
 	}
 	return err
 }
 
 func wrapEris(layers int) error {
-	err := eris.New("error")
-	for i := 0; i < layers; i++ {
-		err = eris.Wrapf(err, "wrap %v", i)
+	err := eris.New(rootErrorMessage)
+	for i := 0; i < layers-1; i++ {
+		err = eris.Wrap(err, wrapErrorMessage)
 	}
 	return err
 }
 
-func wrapBruh(layers int) error {
-	err := bruh.New("error")
-	for i := 0; i < layers; i++ {
-		err = bruh.Wrapf(err, "wrap %v", i)
+func wrapEmperror(layers int) error {
+	err := emperror.New(rootErrorMessage)
+	for i := 0; i < layers-1; i++ {
+		err = emperror.Wrap(err, wrapErrorMessage)
 	}
 	return err
 }
 
-func BenchmarkWrap(b *testing.B) {
+func BenchmarkCompareWrap(b *testing.B) {
 	for _, tc := range cases {
 		b.Run(fmt.Sprintf("pkg=bruh/layers=%v", tc.layers), func(b *testing.B) {
 			var err error
@@ -72,17 +81,26 @@ func BenchmarkWrap(b *testing.B) {
 			b.StopTimer()
 			global = err
 		})
+
+		b.Run(fmt.Sprintf("pkg=emperror/layers=%v", tc.layers), func(b *testing.B) {
+			var err error
+			for n := 0; n < b.N; n++ {
+				err = wrapEmperror(tc.layers)
+			}
+			b.StopTimer()
+			global = err
+		})
 	}
 }
 
-func BenchmarkFormatWithoutTrace(b *testing.B) {
+func BenchmarkCompareFormatMessageOnly(b *testing.B) {
 	for _, tc := range cases {
 		b.Run(fmt.Sprintf("pkg=bruh/layers=%v", tc.layers), func(b *testing.B) {
 			err := wrapBruh(tc.layers)
 			b.ResetTimer()
 			var str string
 			for n := 0; n < b.N; n++ {
-				str = bruh.ToString(err, false)
+				str = bruh.Message(err)
 			}
 			b.StopTimer()
 			global = str
@@ -109,17 +127,39 @@ func BenchmarkFormatWithoutTrace(b *testing.B) {
 			b.StopTimer()
 			global = str
 		})
+
+		b.Run(fmt.Sprintf("pkg=emperror/layers=%v", tc.layers), func(b *testing.B) {
+			err := wrapEmperror(tc.layers)
+			b.ResetTimer()
+			var str string
+			for n := 0; n < b.N; n++ {
+				str = fmt.Sprintf("%s", err)
+			}
+			b.StopTimer()
+			global = str
+		})
 	}
 }
 
-func BenchmarkFormatWithTrace(b *testing.B) {
+func BenchmarkCompareFormatTrace(b *testing.B) {
 	for _, tc := range cases {
 		b.Run(fmt.Sprintf("pkg=bruh/layers=%v", tc.layers), func(b *testing.B) {
 			err := wrapBruh(tc.layers)
 			b.ResetTimer()
 			var str string
 			for n := 0; n < b.N; n++ {
-				str = bruh.ToString(err, true)
+				str = bruh.StringFormat(err, bruh.BruhFormatter)
+			}
+			b.StopTimer()
+			global = str
+		})
+
+		b.Run(fmt.Sprintf("pkg=bruh-stacked/layers=%v", tc.layers), func(b *testing.B) {
+			err := wrapBruh(tc.layers)
+			b.ResetTimer()
+			var str string
+			for n := 0; n < b.N; n++ {
+				str = bruh.StringFormat(err, bruh.BruhStackedFormatter)
 			}
 			b.StopTimer()
 			global = str
@@ -157,15 +197,48 @@ func BenchmarkFormatWithTrace(b *testing.B) {
 			global = str
 		})
 
-		b.Run(fmt.Sprintf("bruh %v layers", tc.layers), func(b *testing.B) {
-			err := wrapBruh(tc.layers)
+		b.Run(fmt.Sprintf("pkg=emperror/layers=%v", tc.layers), func(b *testing.B) {
+			err := wrapEmperror(tc.layers)
 			b.ResetTimer()
 			var str string
 			for n := 0; n < b.N; n++ {
-				str = bruh.ToString(err, true)
+				str = fmt.Sprintf("%+v", err)
 			}
 			b.StopTimer()
 			global = str
 		})
 	}
+}
+
+func BenchmarkMessage(b *testing.B) {
+	err := wrapBruh(20)
+	var str string
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		str = bruh.Message(err)
+	}
+	b.StopTimer()
+	global = str
+}
+
+func BenchmarkFormatBruh(b *testing.B) {
+	err := wrapBruh(20)
+	var str string
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		str = bruh.StringFormat(err, bruh.BruhFormatter)
+	}
+	b.StopTimer()
+	global = str
+}
+
+func BenchmarkFormatBruhStacked(b *testing.B) {
+	err := wrapBruh(20)
+	var str string
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		str = bruh.StringFormat(err, bruh.BruhStackedFormatter)
+	}
+	b.StopTimer()
+	global = str
 }

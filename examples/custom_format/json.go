@@ -9,7 +9,7 @@ import (
 
 func main() {
 	err := foo()
-	ftdErr := bruh.ToCustomString(err, FormatJSON)
+	ftdErr := bruh.StringFormat(err, JsonFormatter)
 	fmt.Println(ftdErr)
 }
 
@@ -29,8 +29,9 @@ type Location struct {
 	ProgramCounter uintptr `json:"pc"`
 }
 
-func FormatJSON(upkErr bruh.UnpackedError) string {
+func JsonFormatter(b []byte, unpacker *bruh.Unpacker) []byte {
 	// convert unpacked error to a list of ErrorStruct
+	upkErr := unpacker.Unpack()
 	errStructs := make([]ErrorStruct, len(upkErr))
 	for i, err := range upkErr {
 		stack := make([]Location, len(err.Stack))
@@ -52,8 +53,11 @@ func FormatJSON(upkErr bruh.UnpackedError) string {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("json: ", string(serialized))
-	return string(serialized)
+	if b == nil {
+		return serialized
+	}
+	b = append(b, serialized...)
+	return b
 }
 
 // -----------------------------------------------------------------------------
@@ -63,7 +67,7 @@ func FormatJSON(upkErr bruh.UnpackedError) string {
 func foo() error {
 	err := bar()
 	if err != nil {
-		return bruh.Wrapf(err, "foo: failed to read config file")
+		return bruh.Wrapf(err, "foo: reading config file")
 	}
 	return nil
 }
@@ -71,7 +75,7 @@ func foo() error {
 func bar() error {
 	err := baz()
 	if err != nil {
-		return bruh.Wrapf(err, "bar: failed to parse")
+		return bruh.Wrapf(err, "bar: parsing stuff")
 	}
 	return nil
 }
