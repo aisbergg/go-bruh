@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        go-version: [1.22.x]
+        go-version: [1.23.x]
 
     name: golangci-lint
     runs-on: ${{ matrix.os }}

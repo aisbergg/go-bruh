@@ -3,10 +3,9 @@ package bruh_test
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
+	"time"
 
 	"github.com/aisbergg/go-bruh/pkg/bruh"
 )
@@ -16,117 +15,119 @@ var (
 	FormattedErrUnexpectedEOF = bruh.Errorf("unexpected %v", "EOF")
 )
 
-// Demonstrates string formatting of wrapped errors that originate from local
-// root errors (created at the source of the error via New).
-func ExampleToString_local() {
-	// examples functions that return some errors
-	readFile := func(fname string) error {
-		return bruh.New("file not found")
-	}
-	parseFile := func(fname string) error {
-		err := readFile(fname)
-		if err != nil {
-			return bruh.Wrapf(err, "error reading file '%v'", fname)
-		}
-		return nil
-	}
+func ExampleMessage() {
+	err := io.ErrUnexpectedEOF
+	err = bruh.Wrapf(err, "reading file '%v'", "example.json")
 
-	// call the example functions
-	err := parseFile("example.json")
+	// generated via bruh.Message
+	fmt.Println(bruh.Message(err))
 
-	// print the error via fmt.Printf
-	fmt.Printf("%v\n", err) // %v: omit stack trace
-
-	// unpack and print the error via uerr.ToString(...)
-	fmt.Println(rplPth(bruh.ToString(err, true))) // include stack trace; you can also use fmt.Printf("%+v\n", err)
+	// or via fmt.Printf
+	_ = fmt.Sprintf("%v\n", err) // %v: omit stack trace
 
 	// Output:
-	// error reading file 'example.json': file not found
-	// error reading file 'example.json'
-	//     .../examples_test.go:29 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func2
-	//     .../examples_test.go:35 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local
-	// file not found
-	//     .../examples_test.go:24 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func1
-	//     .../examples_test.go:27 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_local.func2
+	// reading file 'example.json': unexpected EOF
 }
 
-// Demonstrates string formatting of wrapped errors that originate from external (non-bruh) error
-// types.
-func ExampleToString_external() {
-	// example func that returns an IO error
-	readFile := func(fname string) error {
-		return io.ErrUnexpectedEOF
-	}
+func ExampleString() {
+	err := io.ErrUnexpectedEOF
+	err = bruh.Wrapf(err, "reading file '%v'", "example.json")
 
-	// unpack and print the error
-	err := readFile("example.json")
-	fmt.Println(bruh.ToString(err, false)) // false: omit stack trace
+	// error message with stack trace
+	// ignore `clean`, it is just for consistent testing output
+	fmt.Println(clean(bruh.String(err)))
+
+	// same result as above when called on a *bruh.Error type
+	// BEWARE: if it is not *bruh.Error type, the result will be something else
+	_ = fmt.Sprintf("%+v\n", err) // %+v: includes the stack trace
 
 	// Output:
-	// unexpected EOF
+	// reading file 'example.json': unexpected EOF
+	//     at github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleString (.../pkg/bruh/examples_test.go:123)
+	//     at testing.runExample (.../testing/run_example.go:123)
+	//     at testing.runExamples (.../testing/example.go:123)
+	//     at testing.(*M).Run (.../testing/testing.go:123)
+	//     at main.main (_testmain.go:123)
 }
 
-// Demonstrates string formatting of wrapped errors that originate from global root errors.
-func ExampleToString_global() {
-	// example func that wraps a global error value
-	readFile := func(fname string) error {
-		return bruh.Wrapf(FormattedErrUnexpectedEOF, "error reading file '%v'", fname)
-	}
+func ExampleStringFormat() {
+	err := io.ErrUnexpectedEOF
+	err = bruh.Wrapf(err, "reading file '%v'", "example.json")
 
-	// example func that catches and returns an error without modification
-	parseFile := func(fname string) error {
-		// read the file
-		err := readFile(fname)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// example func that just catches and returns an error
-	processFile := func(fname string) error {
-		// parse the file
-		err := parseFile(fname)
-		if err != nil {
-			return bruh.Wrapf(err, "error processing file '%v'", fname)
-		}
-		return nil
-	}
-
-	// call processFile and catch the error
-	err := processFile("example.json")
-
-	// print the error via fmt.Printf
-	fmt.Printf("%v\n", err) // %v: omit stack trace
-
-	// unpack and print the error via uerr.ToString(...)
-	fmt.Printf("%v\n", rplPth(bruh.ToString(err, true))) // true: include stack trace
+	// error message generated with custom format
+	// ignore `clean`, it is just for consistent testing output
+	fmt.Println(clean(bruh.StringFormat(err, bruh.BruhStackedFancyFormatter(false, false, true))))
 
 	// Output:
-	// error processing file 'example.json': error reading file 'example.json': unexpected EOF
-	// error processing file 'example.json'
-	//     .../examples_test.go:91 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
-	//     .../examples_test.go:97 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global
-	// error reading file 'example.json'
-	//     .../examples_test.go:73 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func1
-	//     .../examples_test.go:79 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func2
-	//     .../examples_test.go:89 in github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleToString_global.func3
-	// unexpected EOF
+	// *bruh.Err: reading file 'example.json'
+	//     at github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleStringFormat (.../pkg/bruh/examples_test.go:123)
+	//     at testing.runExample (.../testing/run_example.go:123)
+	//     at testing.runExamples (.../testing/example.go:123)
+	//     at testing.(*M).Run (.../testing/testing.go:123)
+	//     at main.main (_testmain.go:123)
+	// *errors.errorString: unexpected EOF
 }
 
-var (
-	regexpRemoveTestMain  = regexp.MustCompile(` *_testmain\.go.*\n`)
-	regexpRemoveTestingGo = regexp.MustCompile(` *.../(testing|example|run_example)\.go.*\n`)
-)
+func ExampleWrapSkip() {
+	type TimestampedError struct {
+		bruh.Err
+		timestamp time.Time
+	}
+	wrapTimestampedError := func(err error, msg string) *TimestampedError {
+		// fixed timestamp for consistent testing output
+		timestamp := time.Date(2025, 7, 30, 0, 0, 0, 0, time.FixedZone("UTC+2", 2*60*60))
+		msg = fmt.Sprintf("[%s] %s", timestamp.Format(time.DateOnly), msg)
+		return &TimestampedError{
+			Err:       *bruh.WrapSkip(err, 1, msg),
+			timestamp: timestamp,
+		}
+	}
+	err := io.ErrUnexpectedEOF
+	err = wrapTimestampedError(err, "reading file")
 
-// rplPth replaces the paths in the formatted error output to allow for consistent testing.
-func rplPth(s string) string {
-	_, thisFilePath, _, _ := runtime.Caller(0)
-	_, goTestingPath, _, _ := runtime.Caller(2)
-	goTestingPath = filepath.Dir(goTestingPath)
+	// ignore `clean`, it is just for consistent testing output
+	fmt.Println(clean(bruh.String(err)))
+	// Output:
+	// [2025-07-30] reading file: unexpected EOF
+	//     at github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleWrapSkip (.../pkg/bruh/examples_test.go:123)
+	//     at testing.runExample (.../testing/run_example.go:123)
+	//     at testing.runExamples (.../testing/example.go:123)
+	//     at testing.(*M).Run (.../testing/testing.go:123)
+	//     at main.main (_testmain.go:123)
+}
+
+func ExampleWrapfSkip() {
+	type TimestampedError struct {
+		bruh.Err
+		timestamp time.Time
+	}
+	wrapTimestampedError := func(err error, format string, args ...any) *TimestampedError {
+		// fixed timestamp for consistent testing output
+		timestamp := time.Date(2025, 7, 30, 0, 0, 0, 0, time.FixedZone("UTC+2", 2*60*60))
+		format = "[%s] " + format
+		return &TimestampedError{
+			Err:       *bruh.WrapfSkip(err, 1, format, append([]any{timestamp.Format(time.DateOnly)}, args...)...),
+			timestamp: timestamp,
+		}
+	}
+	err := io.ErrUnexpectedEOF
+	err = wrapTimestampedError(err, "reading file '%v'", "example.json")
+
+	// ignore `clean`, it is just for consistent testing output
+	fmt.Println(clean(bruh.String(err)))
+	// Output:
+	// [2025-07-30] reading file 'example.json': unexpected EOF
+	//     at github.com/aisbergg/go-bruh/pkg/bruh_test.ExampleWrapfSkip (.../pkg/bruh/examples_test.go:123)
+	//     at testing.runExample (.../testing/run_example.go:123)
+	//     at testing.runExamples (.../testing/example.go:123)
+	//     at testing.(*M).Run (.../testing/testing.go:123)
+	//     at main.main (_testmain.go:123)
+}
+
+// clean replaces the paths in the formatted error output to allow for consistent testing.
+func clean(s string) string {
 	s = strings.ReplaceAll(s, goTestingPath, "...")
-	s = strings.ReplaceAll(s, thisFilePath, ".../examples_test.go")
-	s = regexpRemoveTestMain.ReplaceAllLiteralString(s, "")
-	s = regexpRemoveTestingGo.ReplaceAllLiteralString(s, "")
+	s = strings.ReplaceAll(s, repoDir, "...")
+	s = regexp.MustCompile(`:\d+`).ReplaceAllLiteralString(s, ":123")
 	return s
 }

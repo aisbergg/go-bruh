@@ -1,31 +1,13 @@
-.DEFAULT_GOAL       := help
-VERSION 			:= ""
-TARGET_MAX_CHAR_NUM := 20
+VERSION := ""
 
 GREEN  := $(shell tput -Txterm setaf 2)
 YELLOW := $(shell tput -Txterm setaf 3)
 WHITE  := $(shell tput -Txterm setaf 7)
 RESET  := $(shell tput -Txterm sgr0)
 
-.PHONY: help fmt-lint test release-tag release-push
+FUZZ_TIME ?= 1m
 
-## Show help
-help:
-	@echo 'Package eris provides a better way to handle errors in Go.'
-	@echo ''
-	@echo 'Usage:'
-	@echo '  ${YELLOW}make${RESET} ${GREEN}<target>${RESET}'
-	@echo ''
-	@echo 'Targets:'
-	@awk '/^[a-zA-Z\-\_0-9]+:/ { \
-		helpMessage = match(lastLine, /^## (.*)/); \
-		if (helpMessage) { \
-			helpCommand = substr($$1, 0, index($$1, ":")-1); \
-			helpMessage = substr(lastLine, RSTART + 3, RLENGTH); \
-			printf "  ${YELLOW}%-$(TARGET_MAX_CHAR_NUM)s${RESET} ${GREEN}%s${RESET}\n", helpCommand, helpMessage; \
-		} \
-	} \
-	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+.PHONY: dev-setup fmt-lint test test-coverage fuzz display-coverage bench bench-compare release-tag release-push
 
 ## Setup dev dependencies
 dev-setup:
@@ -50,6 +32,11 @@ test-coverage:
 	@# creating stacks with identical frames (PCs) and thus ruin our test results
 	@go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' $$(go list ./pkg/... | grep -v testutils)
 
+## Run fuzz testing
+fuzz:
+	@echo Running fuzz tests
+	@cd fuzzing && ./fuzz_all.sh $(FUZZ_TIME)
+
 ## Display test coverage
 display-coverage:
 	@echo Displaying test coverage
@@ -58,10 +45,11 @@ display-coverage:
 ## Run benchmarks
 bench:
 	@echo Running benchmark tests
-	@cd benchmarks && go test -benchmem -bench=. && cd ..
+	@cd benchmarks && go test -benchmem -bench='^BenchmarkCompare' && cd ..
 
-## Run and compare benchmarks to previous run. Use `make release-tag PREVIOUS=bench-compare` to compare against a specifc run
+## Run and compare benchmarks to previous run. Use `make bench-compare PREVIOUS=XXX` to compare against a specifc run
 bench-compare:
+	# XXX
 	@echo Running and comparing benchmarks against previous run
 	@bash benchmarks/benchstat.sh "${PREVIOUS}"
 

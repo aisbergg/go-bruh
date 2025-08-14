@@ -1,6 +1,9 @@
+/playground
+
 # IDE
 /.vscode
 /.idea
+/.zed
 
 # OSX
 .DS_Store
@@ -14,6 +17,7 @@
 
 # Test binary, built with `go test -c`
 *.test
+fuzz/
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out

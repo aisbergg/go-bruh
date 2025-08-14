@@ -41,10 +41,14 @@ func main() {
 	fmt.Println("done")
 }
 
+// -----------------------------------------------------------------------------
+// Just some functions that return errors
+// -----------------------------------------------------------------------------
+
 func foo() error {
 	err := bar()
 	if err != nil {
-		return bruh.Wrap(err, "foo: failed to read config file")
+		return bruh.Wrapf(err, "foo: reading config file")
 	}
 	return nil
 }
@@ -52,7 +56,7 @@ func foo() error {
 func bar() error {
 	err := baz()
 	if err != nil {
-		return bruh.Wrapf(err, "bar: failed to parse")
+		return bruh.Wrapf(err, "bar: parsing stuff")
 	}
 	return nil
 }

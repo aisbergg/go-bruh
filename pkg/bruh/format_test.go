@@ -1,136 +1,119 @@
-package bruh
+package bruh_test
 
 import (
 	"errors"
 	"fmt"
 	"html/template"
+	"path/filepath"
+	"regexp"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/aisbergg/go-bruh/internal/testutils"
+	"github.com/aisbergg/go-bruh/pkg/bruh"
 )
 
-func TestUnpack(t *testing.T) {
-	tests := map[string]struct {
-		cause          error
-		input          []string
-		unwrapExternal bool
-		exp            UnpackedError
-	}{
-		"nil error": {
-			cause: nil,
-			input: nil,
-			exp:   UnpackedError{},
-		},
-		"nil root error": {
-			cause: nil,
-			input: []string{"additional context"},
-			exp: UnpackedError{
-				{
-					Msg: "additional context",
-				},
-			},
-		},
-		"standard error wrapping with internal root cause (New)": {
-			cause: New("root error"),
-			input: []string{"additional context", "even more context"},
-			exp: UnpackedError{
-				{
-					Msg: "even more context",
-				},
-				{
-					Msg: "additional context",
-				},
-				{
-					Msg: "root error",
-				},
-			},
-		},
-		"standard error wrapping with external root cause (errors.New)": {
-			cause: errors.New("external error"),
-			input: []string{"additional context", "even more context"},
-			exp: UnpackedError{
-				{
-					Msg: "even more context",
-				},
-				{
-					Msg: "additional context",
-				},
-				{
-					Msg: "external error",
-				},
-			},
-		},
-		"no error wrapping with internal root cause (Errorf)": {
-			cause: Errorf("%v", "root error"),
-			exp: UnpackedError{
-				{
-					Msg: "root error",
-				},
-			},
-		},
-		"external wrapped error cause, no unwrap (fmt.Errorf)": {
-			cause: fmt.Errorf("external wrapped: %w", New("external root error")),
-			exp: UnpackedError{
-				{
-					Msg: "external wrapped: external root error",
-				},
-			},
-		},
-		"external wrapped error cause, with unwrap (fmt.Errorf)": {
-			cause: fmt.Errorf("external wrapped: %w", New("external root error")),
-			exp: UnpackedError{
-				{
-					Msg: "external wrapped: external root error",
-				},
-				{
-					Msg: "external root error",
-				},
-			},
-			unwrapExternal: true,
-		},
-	}
-	for desc, tt := range tests {
-		t.Run(desc, func(t *testing.T) {
-			err := setupTestCase(false, tt.cause, tt.input)
-			upk := Unpack(err, tt.unwrapExternal)
-			// assert.Equal(tt.exp, upk)
-			if !isUnpackedErrorEqual(tt.exp, upk) {
-				expMsgs := make([]string, 0, len(tt.exp))
-				for _, msg := range tt.exp {
-					expMsgs = append(expMsgs, msg.Msg)
-				}
-				actMsgs := make([]string, 0, len(upk))
-				for _, msg := range upk {
-					actMsgs = append(actMsgs, msg.Msg)
-				}
-				t.Errorf("expected %#v, got %#v", expMsgs, actMsgs)
-			}
-		})
-	}
+var (
+	globalSingleError  = bruh.New("root error")
+	globalWrappedError = bruh.Wrap(globalSingleError, "globally wrapped")
+)
+
+//go:noinline
+func singleRootError() error {
+	return bruh.New("root error")
 }
 
-func isUnpackedErrorEqual(a, b []UnpackedElement) bool {
-	// If one is nil, the other must also be nil.
-	if (a == nil) != (b == nil) {
-		return false
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i].Msg != b[i].Msg {
-			return false
-		}
-	}
-
-	return true
+//go:noinline
+func emptyMessageError() error {
+	return bruh.New("")
 }
 
-func TestFormatWithoutTrace(t *testing.T) {
+//go:noinline
+func wrappedError1() error {
+	if err := singleRootError(); err != nil {
+		return bruh.Wrap(err, "wrapped 1")
+	}
+	return nil
+}
+
+//go:noinline
+func wrappedError2() error {
+	if err := wrappedError1(); err != nil {
+		return bruh.Wrap(err, "wrapped 2")
+	}
+	return nil
+}
+
+//go:noinline
+func wrappedError3() error {
+	if err := wrappedError2(); err != nil {
+		return bruh.Wrap(err, "wrapped 3")
+	}
+	return nil
+}
+
+//go:noinline
+func wrappedEmptyMessageError() error {
+	if err := emptyMessageError(); err != nil {
+		return bruh.Wrap(err, "")
+	}
+	return nil
+}
+
+//go:noinline
+func externalError() error {
+	return errors.New("external error")
+}
+
+//go:noinline
+func externallyWrappedError() error {
+	return fmt.Errorf("external error: %w", singleRootError())
+}
+
+//go:noinline
+func wrappedExternalError() error {
+	if err := externalError(); err != nil {
+		return bruh.Wrap(err, "wrapped 1")
+	}
+	return nil
+}
+
+//go:noinline
+func wrappedExternalInterleavedError() error {
+	if err := externallyWrappedError(); err != nil {
+		return bruh.Wrap(err, "wrapped")
+	}
+	return nil
+}
+
+//go:noinline
+func externallyWrappedNilError() error {
+	if err := fmt.Errorf("external error: %w", nil); err != nil {
+		return bruh.Wrap(err, "wrapped")
+	}
+	return nil
+}
+
+//go:noinline
+func wrappedGlobalError() error {
+	return bruh.Wrap(globalWrappedError, "wrapped")
+}
+
+var (
+	repoDir             string
+	goTestingPath       string
+	regexpMemoryAddress = regexp.MustCompile(`0x[0-9a-fA-F]+`)
+)
+
+func init() {
+	_, repoDir, _, _ = runtime.Caller(0)
+	repoDir = filepath.Dir(filepath.Dir(filepath.Dir(repoDir)))
+	_, goTestingPath, _, _ = runtime.Caller(2)
+	goTestingPath = filepath.Dir(filepath.Dir(goTestingPath))
+}
+
+func TestFormatMessageOnly(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		input error
 		exp   string
@@ -140,38 +123,55 @@ func TestFormatWithoutTrace(t *testing.T) {
 			exp:   "",
 		},
 		"basic root error": {
-			input: New("root error"),
+			input: bruh.New("root error"),
 			exp:   "root error",
 		},
 		"basic wrapped error": {
-			input: Wrap(Wrap(New("root error"), "additional context"), "even more context"),
-			exp:   "even more context: additional context: root error",
+			input: bruh.Wrap(
+				bruh.Wrap(bruh.New("root error"), "additional context"),
+				"even more context",
+			),
+			exp: "even more context: additional context: root error",
 		},
 		"external wrapped error": {
-			input: Wrap(errors.New("external error"), "additional context"),
+			input: bruh.Wrap(errors.New("external error"), "additional context"),
 			exp:   "additional context: external error",
+		},
+		"wrapped partially empty error": {
+			input: bruh.Wrap(
+				bruh.Wrap(
+					bruh.Wrap(bruh.Wrap(bruh.Wrap(bruh.New(""), "some context"), ""), ""),
+					"even more context",
+				),
+				"",
+			),
+			exp: "even more context: some context",
 		},
 		"external error": {
 			input: errors.New("external error"),
 			exp:   "external error",
 		},
 		"empty error": {
-			input: New(""),
+			input: bruh.New(""),
 			exp:   "",
 		},
 		"empty wrapped external error": {
-			input: Wrap(errors.New(""), "additional context"),
+			input: bruh.Wrap(errors.New(""), "additional context"),
 			exp:   "additional context",
 		},
 		"empty wrapped error": {
-			input: Wrap(New(""), "additional context"),
+			input: bruh.Wrap(bruh.New(""), "additional context"),
 			exp:   "additional context",
 		},
 	}
 	for desc, tt := range tests {
 		t.Run(desc, func(t *testing.T) {
 			assert := testutils.NewAssert(t)
-			assert.Equal(tt.exp, ToCustomString(tt.input, nil))
+			assert.Equal(tt.exp, bruh.StringFormat(tt.input, nil))
+			assert.Equal(tt.exp, bruh.Message(tt.input))
+			if tt.input != nil {
+				assert.Equal(tt.exp, fmt.Sprintf("%v", tt.input))
+			}
 		})
 	}
 }
@@ -187,372 +187,43 @@ func lineNum() int {
 	return line
 }
 
-func TestFormatWithTrace(t *testing.T) {
-	tests := map[string]struct {
-		input error
-		line  int
-		exp   string
+func BenchmarkFormatters(b *testing.B) {
+	for _, tc := range []struct {
+		name string
+		fmt  bruh.Formatter
 	}{
-		"empty input": {
-			input: nil,
-			exp:   "",
-		},
-		"basic root error": {
-			input: New("root error"),
-			line:  lineNum() - 1,
-			exp: `root error
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
-		},
-		"basic wrapped error": {
-			input: Wrap(
-				Wrap(
-					New("root error"),
-					"additional context",
-				),
-				"even more context",
-			),
-			line: lineNum() - 7,
-			exp: `even more context
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner
-additional context
-    {{.file}}:{{add .line 1}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-root error
-    {{.file}}:{{add .line 2}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace`,
-		},
-		"external wrapped error": {
-			input: Wrap(errors.New("external error"), "additional context"),
-			line:  lineNum() - 1,
-			exp: `additional context
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner
-external error`,
-		},
-		"external error": {
-			input: errors.New("external error"),
-			exp:   `external error`,
-		},
-		"empty error": {
-			input: New(""),
-			line:  lineNum() - 1,
-			exp: `""
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
-		},
-		"empty wrapped external error": {
-			input: Wrap(errors.New(""), "additional context"),
-			line:  lineNum() - 1,
-			exp: `additional context
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner
-""`,
-		},
-		"empty wrapped error": {
-			input: Wrap(
-				New(""),
-				"additional context",
-			),
-			line: lineNum() - 4,
-			exp: `additional context
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner
-""
-    {{.file}}:{{add .line 1}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithTrace`,
-		},
-	}
-	_, testingFile, testingLine, _ := runtime.Caller(1)
-	_, file, _, _ := runtime.Caller(0)
-
-	for desc, tt := range tests {
-		t.Run(desc, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
-			expTpl := template.Must(template.New("").Funcs(funcMaps).Parse(tt.exp))
-			strBld := strings.Builder{}
-			if err := expTpl.Execute(&strBld, map[string]any{
-				"file":        file,
-				"line":        tt.line,
-				"testingFile": testingFile,
-				"testingLine": testingLine,
-			}); err != nil {
-				panic(err)
+		{"WithoutTrace", nil},
+		{"Bruh", bruh.BruhFormatter},
+		{"BruhColored", bruh.BruhFancyFormatter(true, false)},
+		{"BruhSourced", bruh.BruhFancyFormatter(false, true)},
+		{"BruhSourcedColored", bruh.BruhFancyFormatter(true, true)},
+		{"BruhStacked", bruh.BruhStackedFormatter},
+		{"BruhStackedColored", bruh.BruhStackedFancyFormatter(true, false, false)},
+		{"BruhStackedTyped", bruh.BruhStackedFancyFormatter(false, false, true)},
+		{"BruhStackedTypedColored", bruh.BruhStackedFancyFormatter(true, false, true)},
+		{"BruhStackedSourced", bruh.BruhStackedFancyFormatter(false, true, false)},
+		{"BruhStackedSourcedColored", bruh.BruhStackedFancyFormatter(true, true, false)},
+		{"BruhStackedSourcedTypedColored", bruh.BruhStackedFancyFormatter(true, true, true)},
+		{"GoPanic", bruh.GoPanicFormatter},
+		{"JavaStackTrace", bruh.JavaStackTraceFormatter},
+		{"PythonTraceback", bruh.PythonTracebackFormatter},
+	} {
+		b.Run(fmt.Sprintf("%v", tc.name), func(b *testing.B) {
+			err := wrappedError(20)
+			b.ResetTimer()
+			var str string
+			for n := 0; n < b.N; n++ {
+				str = bruh.StringFormat(err, tc.fmt)
 			}
-			exp := strBld.String()
-			act := ToCustomString(tt.input, FormatWithTrace)
-			if tt.input == nil && len(act) != 0 {
-				t.Errorf("expected empty string, got '%s'", act)
-			}
-			assert.Equal(exp, ToCustomString(tt.input, FormatWithTrace))
+			_ = str
 		})
 	}
 }
 
-func TestFormatWithCombinedTrace(t *testing.T) {
-	tests := map[string]struct {
-		input error
-		line  int
-		exp   string
-	}{
-		"empty input": {
-			input: nil,
-			exp:   "",
-		},
-		"basic root error": {
-			input: New("root error"),
-			line:  lineNum() - 1,
-			exp: `root error
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
-		},
-		"basic wrapped error": {
-			input: Wrap(
-				Wrap(
-					New("root error"),
-					"additional context",
-				),
-				"even more context",
-			),
-			line: lineNum() - 7,
-			exp: `even more context: additional context: root error
-    {{.file}}:{{add .line 2}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.file}}:{{add .line 1}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
-		},
-		"external wrapped error": {
-			input: Wrap(errors.New("external error"), "additional context"),
-			line:  lineNum() - 1,
-			exp: `additional context: external error
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
-		},
-		"external error": {
-			input: errors.New("external error"),
-			line:  lineNum() - 1,
-			exp:   `external error`,
-		},
-		"empty error": {
-			input: New(""),
-			line:  lineNum() - 1,
-			exp: `""
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
-		},
-		"empty wrapped external error": {
-			input: Wrap(errors.New(""), "additional context"),
-			line:  lineNum() - 1,
-			exp: `additional context:` + ` ` + `
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
-		},
-		"empty wrapped error": {
-			input: Wrap(
-				New(""),
-				"additional context",
-			),
-			line: lineNum() - 4,
-			exp: `additional context:` + ` ` + `
-    {{.file}}:{{add .line 1}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.file}}:{{.line}} in github.com/aisbergg/go-bruh/pkg/bruh.TestFormatWithCombinedTrace
-    {{.testingFile}}:{{.testingLine}} in testing.tRunner`,
-		},
+func wrappedError(layers int) error {
+	err := bruh.New("error")
+	for i := 0; i < layers; i++ {
+		err = bruh.Wrap(err, "wrap")
 	}
-	_, testingFile, testingLine, _ := runtime.Caller(1)
-	_, file, _, _ := runtime.Caller(0)
-
-	for desc, tt := range tests {
-		t.Run(desc, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
-			expTpl := template.Must(template.New("").Funcs(funcMaps).Parse(tt.exp))
-			strBld := strings.Builder{}
-			if err := expTpl.Execute(&strBld, map[string]any{
-				"file":        file,
-				"line":        tt.line,
-				"testingFile": testingFile,
-				"testingLine": testingLine,
-			}); err != nil {
-				panic(err)
-			}
-			exp := strBld.String()
-			act := ToCustomString(tt.input, FormatWithTrace)
-			if tt.input == nil && len(act) != 0 {
-				t.Errorf("expected empty string, got '%s'", act)
-			}
-			assert.Equal(exp, ToCustomString(tt.input, FormatWithCombinedTrace))
-		})
-	}
-}
-
-func TestFormatPythonTraceback(t *testing.T) {
-	tests := map[string]struct {
-		input UnpackedError
-		exp   string
-	}{
-		"empty input": {
-			input: nil,
-			exp:   "",
-		},
-		"basic root error": {
-			input: UnpackedError{
-				{
-					PartialStack: []StackFrame{
-						{File: "<file1>", Line: 10, Name: "<function1>"},
-						{File: "<file2>", Line: 20, Name: "<function2>"},
-						{File: "<file3>", Line: 30, Name: "<function3>"},
-					},
-					Err: New("root error"),
-					Msg: "root error",
-				},
-			},
-			exp: `Traceback (most recent call last):
-  File "<file3>", line 30, in <function3>
-  File "<file2>", line 20, in <function2>
-  File "<file1>", line 10, in <function1>
-*bruh.TraceableError: root error`,
-		},
-		"basic wrapped error": {
-			input: UnpackedError{
-				{
-					PartialStack: []StackFrame{
-						{File: "<file1>", Line: 10, Name: "<function1>"},
-						{File: "<file2>", Line: 20, Name: "<function2>"},
-						{File: "<file3>", Line: 30, Name: "<function3>"},
-					},
-					Err: New("foo"),
-					Msg: "foo",
-				},
-				{
-					PartialStack: []StackFrame{
-						{File: "<file4>", Line: 40, Name: "<function4>"},
-						{File: "<file5>", Line: 50, Name: "<function5>"},
-						{File: "<file6>", Line: 60, Name: "<function6>"},
-					},
-					Err: New("bar"),
-					Msg: "bar",
-				},
-				{
-					PartialStack: []StackFrame{
-						{File: "<file7>", Line: 70, Name: "<function7>"},
-						{File: "<file8>", Line: 80, Name: "<function8>"},
-						{File: "<file9>", Line: 90, Name: "<function9>"},
-					},
-					Err: errors.New("bar"),
-					Msg: "root error",
-				},
-			},
-			exp: `Traceback (most recent call last):
-  File "<file9>", line 90, in <function9>
-  File "<file8>", line 80, in <function8>
-  File "<file7>", line 70, in <function7>
-*errors.errorString: root error
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "<file6>", line 60, in <function6>
-  File "<file5>", line 50, in <function5>
-  File "<file4>", line 40, in <function4>
-*bruh.TraceableError: bar
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "<file3>", line 30, in <function3>
-  File "<file2>", line 20, in <function2>
-  File "<file1>", line 10, in <function1>
-*bruh.TraceableError: foo`,
-		},
-		"external error": {
-			input: UnpackedError{
-				{
-					PartialStack: []StackFrame{
-						{File: "<file1>", Line: 10, Name: "<function1>"},
-						{File: "<file2>", Line: 20, Name: "<function2>"},
-					},
-					Err: errors.New("external error"),
-					Msg: "external error",
-				},
-			},
-			exp: `Traceback (most recent call last):
-  File "<file2>", line 20, in <function2>
-  File "<file1>", line 10, in <function1>
-*errors.errorString: external error`,
-		},
-		"empty error": {
-			input: UnpackedError{
-				{
-					PartialStack: []StackFrame{
-						{File: "<file1>", Line: 10, Name: "<function1>"},
-					},
-					Err: New(""),
-					Msg: "",
-				},
-			},
-			exp: `Traceback (most recent call last):
-  File "<file1>", line 10, in <function1>
-*bruh.TraceableError`,
-		},
-		"empty wrapped external error": {
-			input: UnpackedError{
-				{
-					PartialStack: []StackFrame{
-						{File: "<file1>", Line: 10, Name: "<function1>"},
-					},
-					Err: New("foo"),
-					Msg: "foo",
-				},
-				{
-					PartialStack: []StackFrame{
-						{File: "<file2>", Line: 20, Name: "<function2>"},
-					},
-					Err: errors.New("external error"),
-				},
-			},
-			exp: `Traceback (most recent call last):
-  File "<file2>", line 20, in <function2>
-*errors.errorString
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "<file1>", line 10, in <function1>
-*bruh.TraceableError: foo`,
-		},
-		"empty wrapped error": {
-			input: UnpackedError{
-				{
-					PartialStack: []StackFrame{
-						{File: "<file1>", Line: 10, Name: "<function1>"},
-					},
-					Err: New("foo"),
-					Msg: "foo",
-				},
-				{
-					PartialStack: []StackFrame{
-						{File: "<file2>", Line: 20, Name: "<function2>"},
-					},
-					Err: errors.New("root error"),
-					Msg: "root error",
-				},
-			},
-			exp: `Traceback (most recent call last):
-  File "<file2>", line 20, in <function2>
-*errors.errorString: root error
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "<file1>", line 10, in <function1>
-*bruh.TraceableError: foo`,
-		},
-	}
-
-	for desc, tt := range tests {
-		t.Run(desc, func(t *testing.T) {
-			result := FormatPythonTraceback(tt.input)
-			if result != tt.exp {
-				t.Errorf("unexpected result:\n%s\nexpected:\n%s", result, tt.exp)
-			}
-		})
-	}
+	return err
 }
