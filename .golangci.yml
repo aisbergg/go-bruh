@@ -27,6 +27,12 @@ formatters:
     gofumpt:
       extra-rules: true
 
+    golines:
+      max-len: 120
+      tab-len: 4
+      shorten-comments: false
+      reformat-tags: true
+      chain-split-dots: true
 
 linters:
   default: standard
@@ -42,16 +48,19 @@ linters:
     - misspell
     - nakedret
     - nilerr
-    - nolintlint
     - prealloc
     - revive
     - staticcheck
     - unconvert
     - unused
     - wastedassign
+    - nolintlint
+
+  exclusions:
+    paths:
+      - "playground/.*"
 
   settings:
-
     revive:
       severity: "warning"
       confidence: 0.8
@@ -81,9 +90,11 @@ linters:
           disabled: true
         - name: cognitive-complexity
           disabled: true
+        - name: unhandled-error
+          disabled: true
 
         - name: argument-limit
-          arguments: [5]
+          arguments: [6]
         - name: function-result-limit
           arguments: [3]
 
@@ -93,8 +104,9 @@ linters:
 
     errcheck:
       exclude-functions:
-        - (*github.com/aisbergg/go-bruh/internal/stringbuilder.StringBuilder).WriteString
-        - (*github.com/aisbergg/go-bruh/internal/stringbuilder.StringBuilder).WriteByte
+        - (*github.com/aisbergg/go-bruh/pkg/bruh/fmthelper.StringBuilder).WriteString
+        - (*github.com/aisbergg/go-bruh/pkg/bruh/fmthelper.StringBuilder).WriteByte
+        - (*github.com/aisbergg/go-bruh/pkg/bruh/fmthelper.StringBuilder).WriteStringIndent
 
     gosec:
       excludes:

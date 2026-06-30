@@ -1,0 +1,185 @@
+# mise configuration file (https://mise.en.dev)
+#
+# This file defines the tools and tasks for the project.
+
+[tools]
+go = "1.26"
+
+# Go linter and formatter aggregator.
+# Used in this repo to format code, run lint checks, and apply safe auto-fixes.
+# https://golangci-lint.run/
+golangci-lint = "2.12.2"
+
+# Opinionated formatter for various text-based files.
+# Used here to keep Markdown, TOML, and other supported project files consistently formatted.
+# https://prettier.io/
+prettier = "3.8.3"
+
+# Git hooks runner.
+# Used here to execute pre-commit checks locally via the configured lefthook workflow.
+# https://lefthook.dev/
+lefthook = "2.1.9"
+
+# Go documentation generator that emits Markdown from package docs.
+# Used here to build the API reference files under docs/reference/ from the packages in pkg/.
+# https://github.com/princjef/gomarkdoc
+"go:github.com/princjef/gomarkdoc/cmd/gomarkdoc" = "v1.1.0"
+
+# Fast spell checker for source, docs, and configuration files.
+# Used in this project to catch and prevent typos as part of the formatting/check pipeline.
+# https://github.com/crate-ci/typos
+typos = "1.47.2"
+
+# Link checker for Markdown and other text content.
+# Used here to verify that documentation links in the repository stay valid.
+# https://github.com/lycheeverse/lychee
+lychee = "0.23.0"
+
+# Secret scanner for finding hardcoded credentials and tokens.
+# Used in this project to detect committed secrets before they land in the repository history.
+# https://github.com/Yelp/detect-secrets
+"pipx:detect-secrets" = "1.5.0"
+
+# JSON processor for shell scripts and CI pipelines.
+# Used in this repo to create a check-mode for the `detect-secrets` task.
+# https://github.com/jqlang/jq
+jq = "1.8.1"
+
+
+# ------------------------------------------------------------------------------
+# Auto-Fix tasks
+# ------------------------------------------------------------------------------
+
+[tasks.fix-fmt-lint]
+description = "Format and lint via golangci-lint"
+run = "golangci-lint fmt && golangci-lint run --fix"
+
+[tasks.fix-run-hooks]
+description = "Run pre-commit hooks"
+run = "lefthook run pre-commit"
+
+
+# ------------------------------------------------------------------------------
+# Docs tasks
+# ------------------------------------------------------------------------------
+
+[tasks.docs-make]
+description = "Generate documentation as markdown files in docs/reference/"
+run = """
+cd pkg
+gomarkdoc -o '../docs/reference/{{.Dir}}/README.md' ./...
+"""
+
+[tasks.docs-serve]
+description = "Serve Go documentation"
+run = "go doc -http"
+
+
+# ------------------------------------------------------------------------------
+# Test tasks
+# ------------------------------------------------------------------------------
+
+[tasks.test]
+description = "Run tests with race detector and optimizations disabled"
+run = "go test -race -v -gcflags '-N -l' ./pkg/..."
+
+[tasks.test-coverage]
+description = "Run tests with coverage"
+run = """
+go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' \
+  $(go list ./pkg/... | grep -v testutils)
+"""
+
+[tasks.test-display-coverage]
+description = "Display test coverage in browser"
+depends = ["test-coverage"]
+run = "go tool cover -html=cover.out"
+
+[tasks.test-fuzz]
+description = "Run fuzz tests"
+run = """
+cd fuzzing && ./fuzz_all.sh "${FUZZ_TIME:-1m}"
+"""
+
+
+# ------------------------------------------------------------------------------
+# Benchmarking tasks
+# ------------------------------------------------------------------------------
+
+[tasks.bench]
+description = "Run benchmarks (set BENCHMARK env var to filter)"
+run = """
+BENCHMARK=${BENCHMARK:-BenchmarkCompare}
+cd benchmarks
+go test -benchmem -bench="^${BENCHMARK}"
+"""
+
+[tasks.bench-compare]
+description = "Compare benchmarks against previous run (use PREVIOUS env var)"
+run = """
+bash benchmarks/benchstat.sh "${PREVIOUS}"
+"""
+
+
+# ------------------------------------------------------------------------------
+# Check tasks
+# ------------------------------------------------------------------------------
+
+[tasks.check-generated]
+description = "Regenerate derived files and fail if the repo changes"
+run = """
+go generate ./...
+go mod tidy -go 1.25.0
+cd pkg
+gomarkdoc -o '../docs/reference/{{.Dir}}/README.md' ./...
+cd ..
+git diff --exit-code
+"""
+
+[tasks.check-format]
+description = "Verify formatting and spelling checks without changing tracked files"
+run = """
+golangci-lint fmt
+prettier --check .
+typos .
+git diff --exit-code
+"""
+
+[tasks.check-lint]
+description = "Run golangci-lint against the library packages"
+run = "golangci-lint run ./pkg/..."
+
+[tasks.check-secrets]
+description = "Check repository for newly introduced secrets"
+run = "bash .github/detect-secrets.sh"
+
+[tasks.check-links]
+description = "Verify repository links resolve successfully"
+run = "lychee --no-progress ."
+
+
+# ------------------------------------------------------------------------------
+# Release tasks
+# ------------------------------------------------------------------------------
+
+[tasks.release-tag]
+description = "Stage a release (requires VERSION env var)"
+depends = ["fix-run-hooks", "test"]
+run = """
+if [ -z "$VERSION" ]; then
+  echo "ERR: You have to specify the next release version (e.g. 'VERSION=v0.0.0')!"
+  exit 1
+fi
+if ! git diff-index --quiet HEAD --; then
+  echo "ERR: You have uncommitted changes. Please stash them before creating a release!"
+  exit 1
+fi
+git-chglog -o CHANGELOG.md --next-tag "$VERSION"
+git add CHANGELOG.md
+git commit -m "chore: update changelog for version $VERSION"
+git tag -s -a "$VERSION" -m "$VERSION"
+"""
+
+[tasks.release-push]
+description = "Push a release to remote (warning: ensure release was staged properly)"
+run = "git push --follow-tags"
