@@ -20,20 +20,19 @@ func TestFormatBruhStackedSourced(t *testing.T) {
 	externallyWrappedNilError := externallyWrappedNilError()
 	wrappedGlobalError := wrappedGlobalError()
 
-	tests := []struct {
-		name string
-		err  error
-		exp  string
-	}{
-		{
-			name: "Nil",
-			err:  nil,
-			exp:  ``,
-		},
-		{
-			name: "SingleRoot",
-			err:  singleRootError,
-			exp: `root error
+	assertBruhStackedSourced := func(name string, err error, exp string) {
+		t.Run(name, func(t *testing.T) {
+			result := bruhTraceSourcedReplacePath(
+				bruh.StringFormat(err, bruh.BruhStackedFancyFormatter(false, true, false)),
+			)
+			if result != exp {
+				t.Errorf("%s, expected:\n|%s|\n\ngot:\n|%s|", name, exp, result)
+			}
+		})
+	}
+
+	assertBruhStackedSourced("Nil", nil, "")
+	assertBruhStackedSourced("SingleRoot", singleRootError, `root error
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.singleRootError (/pkg/bruh/format_test.go:23)
     21│    //go:noinline
@@ -47,12 +46,8 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.TestFormatBruhStackedSourced (/pkg/
   → 12│    singleRootError := singleRootError()
     13│    emptyMessageError := emptyMessageError()
     14│    wrappedError := wrappedError3()
-at testing.tRunner (/testing/testing.go:1234)`,
-		},
-		{
-			name: "EmptyMessage",
-			err:  emptyMessageError,
-			exp: `<no message>
+at testing.tRunner (/testing/testing.go:1234)`)
+	assertBruhStackedSourced("EmptyMessage", emptyMessageError, `<no message>
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.emptyMessageError (/pkg/bruh/format_test.go:28)
     26│    //go:noinline
@@ -66,12 +61,8 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.TestFormatBruhStackedSourced (/pkg/
   → 13│    emptyMessageError := emptyMessageError()
     14│    wrappedError := wrappedError3()
     15│    wrappedEmptyMessageError := wrappedEmptyMessageError()
-at testing.tRunner (/testing/testing.go:1234)`,
-		},
-		{
-			name: "Wrapped",
-			err:  wrappedError,
-			exp: `wrapped 3
+at testing.tRunner (/testing/testing.go:1234)`)
+	assertBruhStackedSourced("Wrapped", wrappedError, `wrapped 3
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.wrappedError3 (/pkg/bruh/format_test.go:50)
     48│    func wrappedError3() error {
@@ -127,12 +118,8 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.wrappedError1 (/pkg/bruh/format_tes
     32│    func wrappedError1() error {
   → 33│        if err := singleRootError(); err != nil {
     34│            return bruh.Wrap(err, "wrapped 1")
-    35│        }`,
-		},
-		{
-			name: "WrappedEmptyMessage",
-			err:  wrappedEmptyMessageError,
-			exp: `<no message>
+    35│        }`)
+	assertBruhStackedSourced("WrappedEmptyMessage", wrappedEmptyMessageError, `<no message>
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.wrappedEmptyMessageError (/pkg/bruh/format_test.go:58)
     56│    func wrappedEmptyMessageError() error {
@@ -160,17 +147,9 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.wrappedEmptyMessageError (/pkg/bruh
     56│    func wrappedEmptyMessageError() error {
   → 57│        if err := emptyMessageError(); err != nil {
     58│            return bruh.Wrap(err, "")
-    59│        }`,
-		},
-		{
-			name: "External",
-			err:  externalError,
-			exp:  `external error`,
-		},
-		{
-			name: "WrappedExternal",
-			err:  wrappedExternalError,
-			exp: `wrapped 1
+    59│        }`)
+	assertBruhStackedSourced("External", externalError, `external error`)
+	assertBruhStackedSourced("WrappedExternal", wrappedExternalError, `wrapped 1
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.wrappedExternalError (/pkg/bruh/format_test.go:76)
     74│    func wrappedExternalError() error {
@@ -185,12 +164,8 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.TestFormatBruhStackedSourced (/pkg/
     19│    wrappedExternalInterleavedError := wrappedExternalInterleavedError()
     20│    externallyWrappedNilError := externallyWrappedNilError()
 at testing.tRunner (/testing/testing.go:1234)
-external error`,
-		},
-		{
-			name: "ExternallyWrapped",
-			err:  externallyWrappedError,
-			exp: `external error
+external error`)
+	assertBruhStackedSourced("ExternallyWrapped", externallyWrappedError, `external error
 root error
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.singleRootError (/pkg/bruh/format_test.go:23)
@@ -211,12 +186,8 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.TestFormatBruhStackedSourced (/pkg/
   → 17│    externallyWrappedError := externallyWrappedError()
     18│    wrappedExternalError := wrappedExternalError()
     19│    wrappedExternalInterleavedError := wrappedExternalInterleavedError()
-at testing.tRunner (/testing/testing.go:1234)`,
-		},
-		{
-			name: "WrappedExternalInterleaved",
-			err:  wrappedExternalInterleavedError,
-			exp: `wrapped
+at testing.tRunner (/testing/testing.go:1234)`)
+	assertBruhStackedSourced("WrappedExternalInterleaved", wrappedExternalInterleavedError, `wrapped
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.wrappedExternalInterleavedError (/pkg/bruh/format_test.go:84)
     82│    func wrappedExternalInterleavedError() error {
@@ -251,12 +222,8 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.wrappedExternalInterleavedError (/p
     82│    func wrappedExternalInterleavedError() error {
   → 83│        if err := externallyWrappedError(); err != nil {
     84│            return bruh.Wrap(err, "wrapped")
-    85│        }`,
-		},
-		{
-			name: "ExternallyWrappedNil",
-			err:  externallyWrappedNilError,
-			exp: `wrapped
+    85│        }`)
+	assertBruhStackedSourced("ExternallyWrappedNil", externallyWrappedNilError, `wrapped
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.externallyWrappedNilError (/pkg/bruh/format_test.go:92)
     90│    func externallyWrappedNilError() error {
@@ -271,12 +238,8 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.TestFormatBruhStackedSourced (/pkg/
     21│    wrappedGlobalError := wrappedGlobalError()
     22│
 at testing.tRunner (/testing/testing.go:1234)
-external error: %!w(<nil>)`,
-		},
-		{
-			name: "WrappedGlobal",
-			err:  wrappedGlobalError,
-			exp: `wrapped
+external error: %!w(<nil>)`)
+	assertBruhStackedSourced("WrappedGlobal", wrappedGlobalError, `wrapped
 
 at github.com/aisbergg/go-bruh/pkg/bruh_test.wrappedGlobalError (/pkg/bruh/format_test.go:99)
      97│    //go:noinline
@@ -289,19 +252,8 @@ at github.com/aisbergg/go-bruh/pkg/bruh_test.TestFormatBruhStackedSourced (/pkg/
     20│    externallyWrappedNilError := externallyWrappedNilError()
   → 21│    wrappedGlobalError := wrappedGlobalError()
     22│
-    23│    tests := []struct {
+    23│    assertBruhStackedSourced := func(name string, err error, exp string) {
 at testing.tRunner (/testing/testing.go:1234)
 globally wrapped
-root error`,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			result := bruhTraceSourcedReplacePath(bruh.StringFormat(tc.err, bruh.BruhStackedFancyFormatter(false, true, false)))
-			if result != tc.exp {
-				t.Errorf("%s, expected:\n|%s|\n\ngot:\n|%s|", tc.name, tc.exp, result)
-			}
-		})
-	}
+root error`)
 }

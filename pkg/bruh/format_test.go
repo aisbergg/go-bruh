@@ -114,66 +114,200 @@ func init() {
 
 func TestFormatMessageOnly(t *testing.T) {
 	t.Parallel()
-	tests := map[string]struct {
-		input error
-		exp   string
-	}{
-		"empty input": {
-			input: nil,
-			exp:   "",
-		},
-		"basic root error": {
-			input: bruh.New("root error"),
-			exp:   "root error",
-		},
-		"basic wrapped error": {
-			input: bruh.Wrap(
-				bruh.Wrap(bruh.New("root error"), "additional context"),
-				"even more context",
-			),
-			exp: "even more context: additional context: root error",
-		},
-		"external wrapped error": {
-			input: bruh.Wrap(errors.New("external error"), "additional context"),
-			exp:   "additional context: external error",
-		},
-		"wrapped partially empty error": {
-			input: bruh.Wrap(
-				bruh.Wrap(
-					bruh.Wrap(bruh.Wrap(bruh.Wrap(bruh.New(""), "some context"), ""), ""),
-					"even more context",
-				),
-				"",
-			),
-			exp: "even more context: some context",
-		},
-		"external error": {
-			input: errors.New("external error"),
-			exp:   "external error",
-		},
-		"empty error": {
-			input: bruh.New(""),
-			exp:   "",
-		},
-		"empty wrapped external error": {
-			input: bruh.Wrap(errors.New(""), "additional context"),
-			exp:   "additional context",
-		},
-		"empty wrapped error": {
-			input: bruh.Wrap(bruh.New(""), "additional context"),
-			exp:   "additional context",
-		},
-	}
-	for desc, tt := range tests {
-		t.Run(desc, func(t *testing.T) {
+	assertFormatMessage := func(name string, input error, exp string) {
+		t.Run(name, func(t *testing.T) {
 			assert := testutils.NewAssert(t)
-			assert.Equal(tt.exp, bruh.StringFormat(tt.input, nil))
-			assert.Equal(tt.exp, bruh.Message(tt.input))
-			if tt.input != nil {
-				assert.Equal(tt.exp, fmt.Sprintf("%v", tt.input))
+			assert.Equal(exp, bruh.StringFormat(input, nil))
+			assert.Equal(exp, bruh.Message(input))
+			if input != nil {
+				assert.Equal(exp, fmt.Sprintf("%v", input))
 			}
 		})
 	}
+
+	assertFormatMessage("EmptyInput", nil, "")
+	assertFormatMessage("BasicRootError", bruh.New("root error"), "root error")
+	assertFormatMessage(
+		"BasicWrappedError",
+		bruh.Wrap(
+			bruh.Wrap(bruh.New("root error"), "additional context"),
+			"even more context",
+		),
+		"even more context: additional context: root error",
+	)
+	assertFormatMessage(
+		"ExternalWrappedError",
+		bruh.Wrap(errors.New("external error"), "additional context"),
+		"additional context: external error",
+	)
+	assertFormatMessage(
+		"WrappedPartiallyEmptyError",
+		bruh.Wrap(
+			bruh.Wrap(
+				bruh.Wrap(bruh.Wrap(bruh.Wrap(bruh.New(""), "some context"), ""), ""),
+				"even more context",
+			),
+			"",
+		),
+		"even more context: some context",
+	)
+	assertFormatMessage("ExternalError", errors.New("external error"), "external error")
+	assertFormatMessage("EmptyError", bruh.New(""), "")
+	assertFormatMessage(
+		"EmptyWrappedExternalError",
+		bruh.Wrap(errors.New(""), "additional context"),
+		"additional context",
+	)
+	assertFormatMessage(
+		"EmptyWrappedError",
+		bruh.Wrap(bruh.New(""), "additional context"),
+		"additional context",
+	)
+}
+
+func TestAppendMessage(t *testing.T) {
+	t.Parallel()
+	assertAppendMessage := func(name, prefix string, input error, exp string) {
+		t.Run(name, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
+			result := bruh.AppendMessage([]byte(prefix), input)
+			assert.Equal(exp, string(result))
+		})
+	}
+
+	assertAppendMessage("NilError", "prefix: ", nil, "prefix: ")
+	assertAppendMessage("RootError", "prefix: ", singleRootError(), "prefix: root error")
+	assertAppendMessage(
+		"WrappedError",
+		"prefix: ",
+		wrappedError2(),
+		"prefix: wrapped 2: wrapped 1: root error",
+	)
+}
+
+func TestMessageLastN(t *testing.T) {
+	t.Parallel()
+	assertMessageLastN := func(name string, input error, n int, exp string) {
+		t.Run(name, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
+			assert.Equal(exp, bruh.MessageLastN(input, n))
+		})
+	}
+
+	assertMessageLastN("NilError", nil, 1, "")
+	assertMessageLastN("NonPositiveN", wrappedError3(), 0, "")
+	assertMessageLastN("LastOne", wrappedError3(), 1, "root error")
+	assertMessageLastN("LastTwo", wrappedError3(), 2, "wrapped 1: root error")
+	assertMessageLastN(
+		"ChainShorterThanN",
+		wrappedError3(),
+		10,
+		"wrapped 3: wrapped 2: wrapped 1: root error",
+	)
+}
+
+func TestString(t *testing.T) {
+	t.Parallel()
+	assertString := func(name string, input error, exp string) {
+		t.Run(name, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
+			assert.Equal(exp, bruh.String(input))
+		})
+	}
+
+	assertString("NilError", nil, "")
+	err := wrappedError1()
+	assertString("UsesBruhFormatter", err, bruh.StringFormat(err, bruh.BruhFormatter))
+}
+
+func TestAppendString(t *testing.T) {
+	t.Parallel()
+	assertAppendString := func(name, prefix string, input error, exp string) {
+		t.Run(name, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
+			result := bruh.AppendString([]byte(prefix), input)
+			assert.Equal(exp, string(result))
+		})
+	}
+
+	assertAppendString("NilError", "prefix", nil, "prefix")
+	err := wrappedError1()
+	assertAppendString(
+		"UsesBruhFormatter",
+		"prefix\n",
+		err,
+		"prefix\n"+bruh.String(err),
+	)
+}
+
+func TestStringFormat(t *testing.T) {
+	t.Parallel()
+	customFormatter := func(b []byte, unpacker *bruh.Unpacker) []byte {
+		return fmt.Appendf(b, "chain=%d unpacked=%d", unpacker.ChainLen(), len(unpacker.Unpack()))
+	}
+	multiExternalWrappedError := fmt.Errorf(
+		"external 2: %w",
+		fmt.Errorf("external 1: %w", singleRootError()),
+	)
+	assertStringFormat := func(name string, input error, formatter bruh.Formatter, unpackAll bool, exp string) {
+		t.Run(name, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
+			assert.Equal(exp, bruh.StringFormat(input, formatter, unpackAll))
+		})
+	}
+
+	assertStringFormat("NilError", nil, customFormatter, false, "")
+	assertStringFormat("NilFormatterUsesMessage", wrappedError2(), nil, false, "wrapped 2: wrapped 1: root error")
+	assertStringFormat(
+		"FormatterReceivesUnpacker",
+		multiExternalWrappedError,
+		customFormatter,
+		false,
+		"chain=3 unpacked=2",
+	)
+	assertStringFormat("UnpackAllPropagates", multiExternalWrappedError, customFormatter, true, "chain=3 unpacked=3")
+}
+
+func TestAppendStringFormat(t *testing.T) {
+	t.Parallel()
+	customFormatter := func(b []byte, unpacker *bruh.Unpacker) []byte {
+		return fmt.Appendf(b, "chain=%d unpacked=%d", unpacker.ChainLen(), len(unpacker.Unpack()))
+	}
+	multiExternalWrappedError := fmt.Errorf(
+		"external 2: %w",
+		fmt.Errorf("external 1: %w", singleRootError()),
+	)
+	assertAppendStringFormat := func(
+		name, prefix string,
+		input error,
+		formatter bruh.Formatter,
+		unpackAll bool,
+		exp string,
+	) {
+		t.Run(name, func(t *testing.T) {
+			assert := testutils.NewAssert(t)
+			result := bruh.AppendStringFormat([]byte(prefix), input, formatter, unpackAll)
+			assert.Equal(exp, string(result))
+		})
+	}
+
+	assertAppendStringFormat("NilError", "prefix", nil, customFormatter, false, "prefix")
+	assertAppendStringFormat(
+		"NilFormatterUsesMessage",
+		"prefix: ",
+		wrappedError2(),
+		nil,
+		false,
+		"prefix: wrapped 2: wrapped 1: root error",
+	)
+	assertAppendStringFormat(
+		"AppendsCustomFormattedValue",
+		"prefix: ",
+		multiExternalWrappedError,
+		customFormatter,
+		true,
+		"prefix: chain=3 unpacked=3",
+	)
 }
 
 var funcMaps = template.FuncMap{

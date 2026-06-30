@@ -1,5 +1,4 @@
-// Package util provides utility functions for various operations.
-package util //nolint:revive
+package fmthelper
 
 // DigitsInNumber returns the number of digits in a given integer.
 func DigitsInNumber(n int) int {

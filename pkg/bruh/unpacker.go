@@ -1,15 +1,8 @@
 package bruh
 
 import (
-	"bufio"
-	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
-	"unsafe"
-
-	"github.com/aisbergg/go-bruh/internal/stringbuilder"
 )
 
 // Unpacker holds information about an error chain and provides methods to
@@ -54,7 +47,7 @@ func disposeUnpacker(unpacker *Unpacker) {
 	if unpacker.cbdStk != nil {
 		stack := unpacker.cbdStk
 		unpacker.cbdStk = nil
-		dispose4xStack(stack)
+		disposeChainStack(stack)
 	}
 	if unpacker.upkErr != nil {
 		upkErr := unpacker.upkErr
@@ -160,53 +153,6 @@ func (u *Unpacker) Unpack() UnpackedError {
 	return upkErr
 }
 
-// CombinedMessage returns a combined message of all errors in the chain.
-func (u *Unpacker) CombinedMessage() string {
-	if _, ok := u.err.(messager); ok {
-		buf := make([]byte, 0, u.ChainLen()*100)
-		buf = u.AppendMessage(buf)
-		return unsafe.String(unsafe.SliceData(buf), len(buf)) //nolint:gosec
-
-	}
-	return u.err.Error()
-}
-
-// AppendMessage appends the combined message of all errors in the chain to the
-// provided byte slice.
-func (u *Unpacker) AppendMessage(buf []byte) []byte {
-	return appendMessageToBuffer(buf, u.err)
-}
-
-// AppendMessageBuilder appends the combined message of all errors in the chain
-// to the provided [stringbuilder.StringBuilder].
-func (u *Unpacker) AppendMessageBuilder(stringBuilder *stringbuilder.StringBuilder) {
-	var messageWritten bool
-	for err := u.err; err != nil; err = Unwrap(err) {
-		var msg string
-		var cont bool
-		if e, ok := err.(messager); ok {
-			msg = e.Message()
-			cont = true
-		} else {
-			msg = err.Error()
-		}
-
-		if msg == "" {
-			continue
-		}
-
-		if messageWritten {
-			stringBuilder.WriteString(": ")
-		}
-		stringBuilder.WriteString(msg)
-		messageWritten = true
-
-		if !cont {
-			break
-		}
-	}
-}
-
 // CombinedStack returns a combined stack trace of all errors in the chain.
 func (u *Unpacker) CombinedStack() Stack {
 	if u.cbdStk != nil {
@@ -215,7 +161,7 @@ func (u *Unpacker) CombinedStack() Stack {
 	if u.err == nil {
 		return Stack{}
 	}
-	stackPtr := new4xStack()
+	stackPtr := newChainStack()
 	stack := *stackPtr
 	stack = stack[:combinedStack(u.err, stack)]
 	*stackPtr = stack
@@ -252,7 +198,7 @@ func (u *Unpacker) GetSourceLines(ctxLines, colCap int, unindent bool) ([][]Sour
 	// create a mapping from (file, line) combination to source lines
 	sourcesInFileLine := make(map[fileLine]SourceLines, len(upkErr))
 	for file, lineNums := range linesInFiles {
-		sourceLines, err := getSourceLinesFromFile(file, lineNums, ctxLines, colCap, unindent)
+		sourceLines, err := getSourceLines(osFS{}, file, lineNums, ctxLines, colCap, unindent)
 		if err != nil {
 			return nil, err
 		}
@@ -280,7 +226,7 @@ var callerserErrorPool = sync.Pool{
 	},
 }
 
-// newUnpackedError allocates a new [UnpackedError] or grabs a cached one.
+// newCallerserErrors allocates a new callerser slice or grabs a cached one.
 func newCallerserErrors(size int) *[]callerser {
 	callerserErrsPtr := callerserErrorPool.Get().(*[]callerser) //nolint:revive
 	if size > cap(*callerserErrsPtr) {
@@ -290,17 +236,28 @@ func newCallerserErrors(size int) *[]callerser {
 	return callerserErrsPtr
 }
 
-// dispose[]callerser puts the [[]callerser] object back into the pool.
+// disposeCallerserErrors puts the callerser slice back into the pool.
 func disposeCallerserErrors(callerserErrs *[]callerser) {
 	*callerserErrs = (*callerserErrs)[:0]
 	callerserErrorPool.Put(callerserErrs)
 }
 
-var stackPCPool = sync.Pool{
+var combinedStackPCPool = sync.Pool{
 	New: func() any {
-		stack := make(stackPC, 4*MAX_STACK_DEPTH)
+		stack := make(stackPC, MaxChainStackDepth)
 		return &stack
 	},
+}
+
+// newCombinedStackPC allocates a new stackPC or grabs a cached one.
+func newCombinedStackPC() *stackPC {
+	return combinedStackPCPool.Get().(*stackPC) //nolint:revive
+}
+
+// disposeCombinedStackPC puts the stackPC back into the pool.
+func disposeCombinedStackPC(stack *stackPC) {
+	*stack = (*stack)[:cap(*stack)]
+	combinedStackPCPool.Put(stack)
 }
 
 // combinedStack returns a combined stack trace of all errors in the chain.
@@ -309,7 +266,6 @@ func combinedStack(err error, stack Stack) int {
 	for uerr := err; uerr != nil; uerr = Unwrap(uerr) {
 		chainLen++
 	}
-	// errs := make([]callerser, 0, chainLen)
 	errsPtr := newCallerserErrors(chainLen)
 	errs := *errsPtr
 
@@ -335,7 +291,7 @@ func combinedStack(err error, stack Stack) int {
 	}
 
 	// combine the stack traces
-	combinedPtr := stackPCPool.Get().(*stackPC) //nolint:revive
+	combinedPtr := newCombinedStackPC()
 	combined := *combinedPtr
 	combined = combined[:copy(combined, errs[len(errs)-1].Callers())]
 	for i := len(errs) - 2; i >= 0; i-- {
@@ -350,7 +306,7 @@ func combinedStack(err error, stack Stack) int {
 	}
 	disposeCallerserErrors(errsPtr)
 	n := combined.toStack(stack)
-	stackPCPool.Put(combinedPtr)
+	disposeCombinedStackPC(combinedPtr)
 
 	return n
 }
@@ -364,7 +320,7 @@ type UnpackedElement struct {
 	// Msg is the message contained in the error.
 	Msg string
 	// stackStore is the backing store for Stack and PartialStack.
-	stackStore [MAX_STACK_DEPTH]StackFrame
+	stackStore [MaxErrorStackDepth]StackFrame
 	// Stack is the error stack for this particular error instance.
 	Stack Stack
 	// PartialStack is the error stack with parts cut off that are already in
@@ -413,180 +369,4 @@ func (upkErr UnpackedError) CombinedStack() Stack {
 		combinedStack = append(combinedStack, upkErr[i].PartialStack...)
 	}
 	return combinedStack
-}
-
-// -----------------------------------------------------------------------------
-
-// SourceLines represents a collection of SourceLine elements used for
-// generating snippets of source code in error messages.
-type SourceLines []SourceLine
-
-// SourceLine represents a single line of source code along with its line number.
-// LineNum specifies the line number in the source file.
-// Source contains the actual content of the line.
-type SourceLine struct {
-	LineNum int
-	Source  string
-}
-
-type lineToIndex struct {
-	lineNum int
-	index1  int
-	index2  int
-	isLine  bool
-}
-
-// getSourceLinesFromFile reads the given lines (index starting at 1) of source
-// code from a file. ctxLines are the number of lines before and after the
-// requested lines that should be included. colCap is the maximum number of
-// characters per line. If unindent is true, the source lines are unindented.
-func getSourceLinesFromFile(
-	file string,
-	lines []int,
-	ctxLines, colCap int,
-	unindent bool,
-) ([]SourceLines, error) {
-	ctxLines = max(0, ctxLines)
-	colCap = max(0, colCap)
-
-	// initialize the source lines data structure
-	numLines := len(lines) * (2*ctxLines + 1)
-	sourceLines := make([]SourceLines, len(lines))
-	for i := range lines {
-		sourceLines[i] = make([]SourceLine, 2*ctxLines+1)
-	}
-
-	// create a mapping from line numbers to indices in the sourceLines data
-	// structure for efficient access to the file
-	linesToIndex := make([]lineToIndex, 0, numLines)
-	for i, l := range lines {
-		index2 := 0
-		for j := ctxLines - 1; j >= 0; j-- {
-			linesToIndex = append(
-				linesToIndex,
-				lineToIndex{lineNum: l - j - 1, index1: i, index2: index2, isLine: false},
-			)
-			index2++
-		}
-		linesToIndex = append(
-			linesToIndex,
-			lineToIndex{lineNum: l, index1: i, index2: index2, isLine: true},
-		)
-		index2++
-		for j := range ctxLines {
-			linesToIndex = append(
-				linesToIndex,
-				lineToIndex{lineNum: l + j + 1, index1: i, index2: index2, isLine: false},
-			)
-			index2++
-		}
-	}
-	sort.Slice(linesToIndex, func(i, j int) bool {
-		return linesToIndex[i].lineNum < linesToIndex[j].lineNum
-	})
-
-	// ensure we only read files in the current working directory
-	if filepath.IsAbs(file) {
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, Wrap(err, "getting current working directory")
-		}
-		file, err = filepath.Rel(wd, file)
-		if err != nil {
-			return nil, Wrap(err, "getting relative path to source file")
-		}
-	}
-	// ensure '.go' file extension, so we reduce the risk of reading anything
-	// that is not supposed to be read
-	if !strings.HasSuffix(file, ".go") {
-		return nil, New("source file must have a .go extension")
-	}
-	f, err := os.Open(file) //nolint:gosec
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close() //nolint:errcheck
-
-	// try to find the source lines in the file and store them in the sourceLines data structure
-	scanner := bufio.NewScanner(f)
-	if !scanner.Scan() {
-		if err := scanner.Err(); err != nil {
-			return nil, err
-		}
-	}
-	moreLinesInFile := true
-	currentLine := 1
-outer:
-	for _, lti := range linesToIndex {
-		if lti.lineNum < 1 {
-			continue
-		}
-		if !moreLinesInFile {
-			sourceLines[lti.index1][lti.index2] = SourceLine{LineNum: lti.lineNum}
-			continue
-		}
-		for currentLine < lti.lineNum {
-			if !scanner.Scan() {
-				if err := scanner.Err(); err != nil {
-					return nil, err
-				}
-				if lti.isLine {
-					return nil, New("source file too short")
-				}
-				moreLinesInFile = false
-				sourceLines[lti.index1][lti.index2] = SourceLine{LineNum: lti.lineNum}
-				continue outer
-			}
-			currentLine++
-		}
-		sourceLines[lti.index1][lti.index2] = SourceLine{
-			LineNum: lti.lineNum,
-			Source:  scanner.Text(),
-		}
-	}
-
-	// unindent the source lines
-	if unindent {
-		for i := range sourceLines {
-			// count the number of leading tabs
-			minTabIndents := int(^uint(0) >> 1)
-			for _, sl := range sourceLines[i] {
-				// skip lines that are not in the file or are empty
-				if sl.LineNum <= 0 || sl.Source == "" {
-					continue
-				}
-				lineTabIndents := 0
-				for _, c := range sl.Source {
-					if c != '\t' {
-						break
-					}
-					lineTabIndents++
-				}
-				if lineTabIndents < minTabIndents {
-					minTabIndents = lineTabIndents
-				}
-			}
-			// strip leading tabs
-			for j, sl := range sourceLines[i] {
-				// skip lines that are not in the file or are empty
-				if sl.LineNum <= 0 || sl.Source == "" {
-					continue
-				}
-				sourceLines[i][j].Source = sourceLines[i][j].Source[minTabIndents:]
-			}
-		}
-	}
-
-	// trim the source lines to the given column capacity
-	if colCap > 0 {
-		for i := range sourceLines {
-			for j := range sourceLines[i] {
-				if len(sourceLines[i][j].Source) > colCap {
-					sourceLines[i][j].Source = sourceLines[i][j].Source[:colCap]
-				}
-			}
-		}
-	}
-
-	return sourceLines, nil
 }

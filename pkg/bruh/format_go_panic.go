@@ -1,7 +1,7 @@
 package bruh
 
 import (
-	"github.com/aisbergg/go-bruh/internal/stringbuilder"
+	"github.com/aisbergg/go-bruh/pkg/bruh/fmthelper"
 )
 
 // GoPanicFormatter is an error formatter that produces error traces similar to
@@ -25,13 +25,13 @@ func GoPanicFormatter(b []byte, unpacker *Unpacker) []byte {
 	// allocate a large buffer to avoid later reallocations
 	// message: 80 per error
 	// location: 160 per location
-	builder := stringbuilder.New(b)
+	builder := fmthelper.New(b)
 	guessCap := unpacker.ChainLen() * 80
 	if len(stack) != 0 {
 		guessCap += len(stack) * 160
 	}
 	builder.Grow(guessCap)
-	unpacker.AppendMessageBuilder(builder)
+	builder.WriteString(Message(unpacker.Error()))
 
 	if len(stack) != 0 {
 		if builder.Len() > 0 {
@@ -44,7 +44,7 @@ func GoPanicFormatter(b []byte, unpacker *Unpacker) []byte {
 			builder.WriteByte(':')
 			builder.WriteInt(int64(s.Line))
 			builder.WriteString(" +0x")
-			builder.WriteIntAsHex(int64(s.ProgramCounter2))
+			builder.WriteUintAsHex(uint64(s.ProgramCounter2))
 			if i < len(stack)-1 {
 				builder.WriteByte('\n')
 			}

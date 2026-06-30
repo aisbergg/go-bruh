@@ -1,7 +1,7 @@
 package bruh
 
 import (
-	"github.com/aisbergg/go-bruh/internal/stringbuilder"
+	"github.com/aisbergg/go-bruh/pkg/bruh/fmthelper"
 )
 
 // JavaStackTraceFormatter is an error formatter that produces error traces similar
@@ -29,7 +29,7 @@ func JavaStackTraceFormatter(b []byte, unpacker *Unpacker) []byte {
 	// allocate a large buffer to avoid later reallocations
 	// message: 80 per error
 	// location: 160 per location
-	builder := stringbuilder.New(b)
+	builder := fmthelper.New(b)
 	guessCap := len(upkErr) * 80
 	for _, upkElm := range upkErr {
 		guessCap += len(upkElm.PartialStack) * 160

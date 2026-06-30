@@ -1,5 +1,9 @@
-//go:build bruh.maxstackdepth12
+//go:build bruh.maxerrorstackdepth12
 
 package bruh
 
-const MAX_STACK_DEPTH = 12
+// MaxStackDepth defines the maximum number of stack frames to capture per error.
+// If a function call stack exceeds this depth, the excess frames are truncated.
+// This is generally not an issue, as the library merges stack traces across the error chain during serialization.
+// To ensure full stack trace reconstruction, wrap errors from deeply nested calls to maintain stack frame overlap.
+const MaxStackDepth = 12

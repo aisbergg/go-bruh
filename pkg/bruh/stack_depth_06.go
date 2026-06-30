@@ -1,4 +1,4 @@
-//go:build bruh.maxerrorstackdepth48
+//go:build bruh.maxerrorstackdepth6
 
 package bruh
 
@@ -6,4 +6,4 @@ package bruh
 // If a function call stack exceeds this depth, the excess frames are truncated.
 // This is generally not an issue, as the library merges stack traces across the error chain during serialization.
 // To ensure full stack trace reconstruction, wrap errors from deeply nested calls to maintain stack frame overlap.
-const MaxErrorStackDepth = 48
+const MaxErrorStackDepth = 6

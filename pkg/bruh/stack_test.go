@@ -94,33 +94,33 @@ func TestCombinedStack(t *testing.T) {
 }
 
 func TestCombinedStackGlobal(t *testing.T) {
-	assert := testutils.NewAssert(t)
+	required := testutils.NewRequire(t)
 	tfname := prefix + t.Name()
 	expectedCombinedStack0 := []StackFrame{
 		{Name: readFunc, File: file, Line: 39},
 		{Name: parseFunc, File: file, Line: 44},
 		{Name: processFunc, File: file, Line: 54},
 		{Name: processFunc, File: file, Line: 56},
-		{Name: tfname, File: file, Line: 114},
+		{Name: tfname, File: file, Line: 115},
 	}
 	expectedCombinedStack1 := []StackFrame{
 		{Name: readFunc, File: file, Line: 39},
 		{Name: parseFunc, File: file, Line: 44},
 		{Name: processFunc, File: file, Line: 54},
-		{Name: tfname, File: file, Line: 114},
+		{Name: tfname, File: file, Line: 115},
 	}
 	expectedCombinedStack2 := []StackFrame{}
 
+	MaxChainStackDepth = 150
 	err := ProcessFile("example.json", true, false)
 	uerr := newUnpacker(err, true).Unpack()
 	validateStack(t, expectedCombinedStack0, uerr[0].Err.(*Err).Stack())
 	validateStack(t, expectedCombinedStack1, uerr[1].Err.(*Err).Stack())
 	validateStack(t, expectedCombinedStack2, uerr[2].Err.(*Err).Stack())
 
-	// error with call stack that is larger than MAX_STACK_DEPTH
 	bruhErr := (errorFn1()).(*Err)
 	stack := bruhErr.Stack()
-	assert.Equal(101, len(stack))
+	required.Equal(101, len(stack))
 	if !strings.HasSuffix(stack[0].Name, "errorFn50") {
 		t.Errorf("Expected name to end with '%s', name was '%s'", "errorFn50", stack[0].Name)
 	}
@@ -154,7 +154,7 @@ func TestPartialStack(t *testing.T) {
 	validateStack(t, expectedPartialStack1, uerr[1].PartialStack)
 	validateStack(t, expectedPartialStack2, uerr[2].PartialStack)
 
-	// error with call stack that is larger than MAX_STACK_DEPTH
+	// error with call stack that is larger than MaxStackDepth
 	err = errorFn1()
 	uerr = newUnpacker(err, true).Unpack()
 	assert.Equal(len(uerr), 50)
@@ -462,7 +462,7 @@ func TestStackPCRelativeTo(t *testing.T) {
 	}
 }
 
-// error with a call stack depth larger than MAX_STACK_DEPTH
+// error with a call stack depth larger than MaxStackDepth
 
 //go:noinline
 func errorFn1() error {

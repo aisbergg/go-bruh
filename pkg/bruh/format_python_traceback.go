@@ -1,7 +1,7 @@
 package bruh
 
 import (
-	"github.com/aisbergg/go-bruh/internal/stringbuilder"
+	"github.com/aisbergg/go-bruh/pkg/bruh/fmthelper"
 )
 
 // PythonTracebackFormatter is an error formatter that produces error traces
@@ -66,7 +66,7 @@ func formatPythonTraceback(b []byte, unpacker *Unpacker, includeSource bool) []b
 	// message: 80 per error
 	// location: 160 per location
 	// source line: 124 per location
-	builder := stringbuilder.New(b)
+	builder := fmthelper.New(b)
 	guessCap := len(upkErr) * (80 + 110)
 	for _, upkElm := range upkErr {
 		guessCap += len(upkElm.PartialStack) * 160

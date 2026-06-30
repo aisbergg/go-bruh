@@ -3,9 +3,7 @@ package bruh
 import (
 	"strings"
 
-	"github.com/aisbergg/go-bruh/internal/color"
-	"github.com/aisbergg/go-bruh/internal/stringbuilder"
-	"github.com/aisbergg/go-bruh/internal/util"
+	"github.com/aisbergg/go-bruh/pkg/bruh/fmthelper"
 )
 
 // BruhFormatter is the default error formatter that produces a single error
@@ -18,7 +16,10 @@ import (
 //	    at function1 (file1:line1)
 //	    at function2 (file2:line2)
 //	    at functionN (fileN:lineN)
-func BruhFormatter(b []byte, unpacker *Unpacker) []byte { //nolint:revive
+func BruhFormatter( //nolint:revive // we keep the "Bruh" prefix to differentiate from the other formatters
+	b []byte,
+	unpacker *Unpacker,
+) []byte {
 	return formatBruhSourced(b, unpacker, false, false)
 }
 
@@ -56,7 +57,9 @@ func BruhFormatter(b []byte, unpacker *Unpacker) []byte { //nolint:revive
 //	  → 164│    return bruh.Wrap(foo(), "errorMsg2")
 //	    165│ }
 //	    166│
-func BruhFancyFormatter(colored, sourced bool) Formatter { //nolint:revive
+func BruhFancyFormatter( //nolint:revive // we keep the "Bruh" prefix to differentiate from the other formatters
+	colored, sourced bool,
+) Formatter {
 	return func(b []byte, unpacker *Unpacker) []byte {
 		return formatBruhSourced(b, unpacker, colored, sourced)
 	}
@@ -78,7 +81,10 @@ func BruhFancyFormatter(colored, sourced bool) Formatter { //nolint:revive
 //	    at function2 (file2:line2)
 //	    at functionN (fileN:lineN)
 //	externalErrorMsg
-func BruhStackedFormatter(b []byte, unpacker *Unpacker) []byte { //nolint:revive
+func BruhStackedFormatter( //nolint:revive // we keep the "Bruh" prefix to differentiate from the other formatters
+	b []byte,
+	unpacker *Unpacker,
+) []byte {
 	return formatBruhStacked(b, unpacker, false, false, false)
 }
 
@@ -150,7 +156,9 @@ func BruhStackedFormatter(b []byte, unpacker *Unpacker) []byte { //nolint:revive
 //	    166│
 //
 //	externalErrorMsg
-func BruhStackedFancyFormatter(colored, sourced, typed bool) Formatter { //nolint:revive
+func BruhStackedFancyFormatter( //nolint:revive // we keep the "Bruh" prefix to differentiate from the other formatters
+	colored, sourced, typed bool,
+) Formatter {
 	return func(b []byte, unpacker *Unpacker) []byte {
 		return formatBruhStacked(b, unpacker, colored, sourced, typed)
 	}
@@ -174,7 +182,7 @@ func formatBruhStacked(b []byte, unpacker *Unpacker, colored, sourced, typed boo
 	// type and message: 120 per error
 	// location: 160 per location
 	// source line: 250 per location
-	builder := stringbuilder.New(b)
+	builder := fmthelper.New(b)
 	guessCap := len(upkErr) * 120
 	for _, upkElm := range upkErr {
 		guessCap += len(upkElm.PartialStack) * 160
@@ -183,7 +191,7 @@ func formatBruhStacked(b []byte, unpacker *Unpacker, colored, sourced, typed boo
 		}
 	}
 	builder.Grow(guessCap)
-	colorer := color.NewColorer(builder, colored)
+	colorer := fmthelper.NewColorer(builder, colored)
 
 	lastIndex := len(upkErr) - 1
 	for i, upkElm := range upkErr {
@@ -192,13 +200,13 @@ func formatBruhStacked(b []byte, unpacker *Unpacker, colored, sourced, typed boo
 			msg = "<no message>"
 		}
 		if typed {
-			colorer.ColoredText(typeName(upkElm.Err), color.Bold, color.BrightRed)
-			colorer.Color(color.Bold)
+			colorer.ColoredText(typeName(upkElm.Err), fmthelper.Bold, fmthelper.BrightRed)
+			colorer.Color(fmthelper.Bold)
 			builder.WriteString(": ")
 			builder.WriteString(msg)
 			colorer.Reset()
 		} else {
-			colorer.ColoredText(msg, color.Bold, color.BrightRed)
+			colorer.ColoredText(msg, fmthelper.Bold, fmthelper.BrightRed)
 		}
 		if sourced && errSourceLines == nil {
 			if len(upkElm.PartialStack) > 0 {
@@ -210,9 +218,9 @@ func formatBruhStacked(b []byte, unpacker *Unpacker, colored, sourced, typed boo
 		} else {
 			for _, s := range upkElm.PartialStack {
 				builder.WriteString("\n    at ")
-				colorer.ColoredText(s.Name, color.BrightCyan)
+				colorer.ColoredText(s.Name, fmthelper.BrightCyan)
 				builder.WriteString(" (")
-				colorer.ColoredText(s.File, color.BrightGreen)
+				colorer.ColoredText(s.File, fmthelper.BrightGreen)
 				builder.WriteByte(':')
 				builder.WriteInt(int64(s.Line))
 				builder.WriteByte(')')
@@ -241,7 +249,7 @@ func formatBruhSourced(b []byte, unpacker *Unpacker, colored, sourced bool) []by
 	// message: 80 per error
 	// location: 160 per location
 	// source line: 250 per location
-	builder := stringbuilder.New(b)
+	builder := fmthelper.New(b)
 	guessCap := unpacker.ChainLen() * 80
 	if len(stack) != 0 {
 		guessCap += len(stack) * 160
@@ -250,10 +258,10 @@ func formatBruhSourced(b []byte, unpacker *Unpacker, colored, sourced bool) []by
 		}
 	}
 	builder.Grow(guessCap)
-	colorer := color.NewColorer(builder, colored)
-	colorer.Color(color.Bold, color.BrightRed)
+	colorer := fmthelper.NewColorer(builder, colored)
+	colorer.Color(fmthelper.Bold, fmthelper.BrightRed)
 	emptyLen := builder.Len()
-	unpacker.AppendMessageBuilder(builder)
+	builder.WriteString(Message(unpacker.Error()))
 	if builder.Len() == emptyLen {
 		// If we got no message we want to state that. I think this is better
 		// than the alternatives of writing nothing, presenting the user a
@@ -272,9 +280,9 @@ func formatBruhSourced(b []byte, unpacker *Unpacker, colored, sourced bool) []by
 		} else {
 			for _, s := range stack {
 				builder.WriteString("\n    at ")
-				colorer.ColoredText(s.Name, color.BrightCyan)
+				colorer.ColoredText(s.Name, fmthelper.BrightCyan)
 				builder.WriteString(" (")
-				colorer.ColoredText(s.File, color.BrightGreen)
+				colorer.ColoredText(s.File, fmthelper.BrightGreen)
 				builder.WriteByte(':')
 				builder.WriteInt(int64(s.Line))
 				builder.WriteByte(')')
@@ -288,18 +296,18 @@ func formatBruhSourced(b []byte, unpacker *Unpacker, colored, sourced bool) []by
 func formatSingleStackWithSourceCode(
 	s StackFrame,
 	sourceLines SourceLines,
-	builder *stringbuilder.StringBuilder,
-	colorer color.Colorer,
+	builder *fmthelper.StringBuilder,
+	colorer fmthelper.Colorer,
 ) {
 	builder.WriteString("\nat ")
-	colorer.ColoredText(s.Name, color.BrightCyan)
+	colorer.ColoredText(s.Name, fmthelper.BrightCyan)
 	builder.WriteString(" (")
-	colorer.ColoredText(s.File, color.BrightGreen)
+	colorer.ColoredText(s.File, fmthelper.BrightGreen)
 	builder.WriteByte(':')
 	builder.WriteInt(int64(s.Line))
 	builder.WriteByte(')')
 	// add source code
-	numDigits := util.DigitsInNumber(max(
+	numDigits := fmthelper.DigitsInNumber(max(
 		sourceLines[0].LineNum,
 		sourceLines[1].LineNum,
 		sourceLines[2].LineNum,
@@ -311,16 +319,16 @@ func formatSingleStackWithSourceCode(
 		if sourceLines[k].LineNum >= 0 {
 			if k == 2 {
 				builder.WriteString("\n  ")
-				colorer.ColoredText("→", color.BrightRed)
+				colorer.ColoredText("→", fmthelper.BrightRed)
 				builder.WriteByte(' ')
 			} else {
 				builder.WriteString("\n    ")
 			}
-			for l := 0; l < numDigits-util.DigitsInNumber(lineNum); l++ {
+			for l := 0; l < numDigits-fmthelper.DigitsInNumber(lineNum); l++ {
 				builder.WriteByte(' ')
 			}
 			if k == 2 {
-				colorer.ColoredInt(int64(lineNum), color.Bold)
+				colorer.ColoredInt(int64(lineNum), fmthelper.Bold)
 			} else {
 				builder.WriteInt(int64(lineNum))
 			}
@@ -331,7 +339,7 @@ func formatSingleStackWithSourceCode(
 			if k == 2 {
 				builder.WriteString(source)
 			} else {
-				colorer.ColoredText(source, color.Faint)
+				colorer.ColoredText(source, fmthelper.Faint)
 			}
 		}
 	}

@@ -5,11 +5,43 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"sync"
+
+	"github.com/aisbergg/go-bruh/pkg/bruh/fmthelper"
 )
 
 // New creates a new [Err] with the given message.
 func New(msg string) error {
 	return NewSkip(1, msg)
+}
+
+// NewFromPanic creates a new [Err] from the given panic value. It is intended
+// to be used in a defer statement to recover from panics and convert them into
+// errors. If the given panic value is nil, nil is returned.
+//
+// Example usage:
+//
+//	func doSomething() (err error) {
+//	    defer func() {
+//	        if r := recover(); r != nil {
+//	            err = bruh.NewFromPanic(r)
+//	        }
+//	    }()
+//		panic("something went wrong")
+//	    return nil
+//	}
+func NewFromPanic(panicValue any) error {
+	if panicValue == nil {
+		return nil
+	}
+	if err, ok := panicValue.(error); ok {
+		if berr, ok := err.(interface{ bruhError() }); ok {
+			// if the panic value is already a bruh error, we can just return it
+			return berr.(error) //nolint:revive
+		}
+		return WrapSkip(err, 3, "panic")
+	}
+	return NewSkip(3, fmt.Sprint(panicValue))
 }
 
 // NewSkip behaves like [New] but skips the given number of callers when
@@ -76,14 +108,31 @@ func WrapfSkip(err error, skip int, format string, args ...any) *Err {
 
 // Err is an easily wrappable error with a stack trace.
 type Err struct {
+	// msg is the message of this error and only this error. It does not include
+	// the messages of wrapped errors.
 	msg string
+	// fullMsg is the full message of this error, including the messages of all
+	// wrapped errors. It is lazily computed and cached when [Err.Error] is called.
+	fullMsg string
+	// fullMsgOnce is used to ensure that the full message is only built once
+	// across multiple goroutines.
+	fullMsgOnce sync.Once
+	// err is the wrapped error. It can be nil if there is no wrapped error.
 	err error
-	// we store the stack pointers inline with the error
-	stackStore [MAX_STACK_DEPTH]uintptr
+	// stackStore is the store for the stack trace of this error. It is embedded
+	// in the error struct to avoid an additional allocation for the stack
+	// trace.
+	stackStore [MaxErrorStackDepth]uintptr
 	stackSize  int
 }
 
-// Message returns the single, unformatted message of this error.
+// bruhError marks the error as a bruh error. It is used to distinguish between
+// errors created by this package and other errors. It is not intended to be
+// used by users of this package.
+func (e *Err) bruhError() {}
+
+// Message returns the single, unformatted message of this error, without the
+// messages of wrapped errors.
 func (e *Err) Message() string {
 	return e.msg
 }
@@ -91,7 +140,63 @@ func (e *Err) Message() string {
 // Error returns the formatted error message including the messages of wrapped
 // errors.
 func (e *Err) Error() string {
-	return Message(e)
+	if e == nil {
+		return ""
+	}
+	return e.buildErrorMessage(nil)
+}
+
+func (e *Err) buildErrorMessage(sb *fmthelper.StringBuilder) string {
+	e.fullMsgOnce.Do(func() {
+		if sb == nil {
+			// guess the final size of the message to avoid reallocations later on
+			numBytesToAlloc := 0
+			for uerr := error(e); uerr != nil; uerr = Unwrap(uerr) {
+				numBytesToAlloc += 64
+			}
+			sb = &fmthelper.StringBuilder{}
+			sb.Grow(numBytesToAlloc)
+		}
+
+		messageWritten := sb.Len() > 0
+		curStart := sb.Len()
+
+		// write the message of this error instance
+		if e.msg != "" {
+			if messageWritten {
+				sb.WriteString(": ")
+				curStart += 2
+			}
+			sb.WriteString(e.msg)
+			messageWritten = true
+		}
+
+		// recursive call to build the full message of the wrapped error
+		uerr := Unwrap(e)
+		if uerr == nil {
+			e.fullMsg = sb.String()[curStart:]
+			return
+		}
+
+		if berr, ok := uerr.(buildErrorMessager); ok {
+			berr.buildErrorMessage(sb)
+			e.fullMsg = sb.String()[curStart:]
+			return
+		}
+
+		msg := uerr.Error()
+		if msg != "" {
+			if messageWritten {
+				sb.WriteString(": ")
+				if e.msg == "" {
+					curStart += 2
+				}
+			}
+			sb.WriteString(msg)
+		}
+		e.fullMsg = sb.String()[curStart:]
+	})
+	return e.fullMsg
 }
 
 // Format implements the fmt.Formatter interface. Use fmt.Sprintf("%v", err) to
@@ -121,7 +226,7 @@ func (e *Err) Cause() error {
 
 // Stack returns a combined stack trace of all errors in the chain.
 func (e *Err) Stack() Stack {
-	stack := *new4xStack()
+	stack := *newChainStack()
 	stack = stack[:combinedStack(e, stack)]
 	return stack
 }
@@ -179,17 +284,49 @@ func Cause(err error) error {
 	}
 }
 
-// As finds the first error in err's tree that matches target, and if one is found, sets
+// As (same as [errors.As]) finds the first error in err's tree that matches target, and if one is found, sets
 // target to that error value and returns true. Otherwise, it returns false.
 //
-// More information can be found in Go's [errors.As] documentation.
+// For most uses, prefer [AsType]. As is equivalent to [AsType] but sets its target
+// argument rather than returning the matching error and doesn't require its target
+// argument to implement error.
+//
+// The tree consists of err itself, followed by the errors obtained by repeatedly
+// calling its Unwrap() error or Unwrap() []error method. When err wraps multiple
+// errors, As examines err followed by a depth-first traversal of its children.
+//
+// An error matches target if the error's concrete value is assignable to the value
+// pointed to by target, or if the error has a method As(any) bool such that
+// As(target) returns true. In the latter case, the As method is responsible for
+// setting target.
+//
+// An error type might provide an As method so it can be treated as if it were a
+// different error type.
+//
+// As panics if target is not a non-nil pointer to either a type that implements
+// error, or to any interface type.
 func As(err error, target any) bool {
 	return errors.As(err, target)
 }
 
-// Is reports whether any error in err's tree matches target.
+// Is (same as [errors.Is]) reports whether any error in err's tree matches target.
+// The target must be comparable.
 //
-// More information can be found in Go's [errors.Is] documentation.
+// The tree consists of err itself, followed by the errors obtained by repeatedly
+// calling its Unwrap() error or Unwrap() []error method. When err wraps multiple
+// errors, Is examines err followed by a depth-first traversal of its children.
+//
+// An error is considered to match a target if it is equal to that target or if
+// it implements a method Is(error) bool such that Is(target) returns true.
+//
+// An error type might provide an Is method so it can be treated as equivalent
+// to an existing error. For example, if MyError defines
+//
+//	func (m MyError) Is(target error) bool { return target == fs.ErrExist }
+//
+// then Is(MyError{}, fs.ErrExist) returns true. See [syscall.Errno.Is] for
+// an example in the standard library. An Is method should only shallowly
+// compare err and the target and not call [Unwrap] on either.
 func Is(err, target error) bool {
 	return errors.Is(err, target)
 }
@@ -210,4 +347,8 @@ type messager interface {
 
 type unwraper interface {
 	Unwrap() error
+}
+
+type buildErrorMessager interface {
+	buildErrorMessage(sb *fmthelper.StringBuilder)
 }
