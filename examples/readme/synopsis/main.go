@@ -13,6 +13,8 @@ func main() {
 	err = bruh.Wrapf(err, "reading file '%s'", "example.txt")
 	// using a custom error type
 	err = WrapUserError(err, "12345", "retrieving user data")
+	// recovering a panic
+	err = RecoverFromPanic()
 
 	// error formatting
 	fmt.Println(bruh.String(err))
@@ -36,4 +38,14 @@ func WrapUserError(err error, userID, message string) *UserError {
 		Err:    *bruh.WrapSkip(err, 1, message),
 		UserID: userID,
 	}
+}
+
+func RecoverFromPanic() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			// extracts the message and stack trace from the panic
+			err = bruh.NewFromPanic(r)
+		}
+	}()
+	panic("something went wrong")
 }
