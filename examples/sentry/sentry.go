@@ -3,10 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"syscall"
+	"os"
 	"time"
 
 	"github.com/aisbergg/go-bruh/pkg/bruh"
+	"github.com/aisbergg/go-bruh/pkg/ctxerror"
+	"github.com/aisbergg/go-bruh/pkg/multierror"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -20,48 +22,88 @@ func main() {
 	flag.Parse()
 	if dsn == "" {
 		fmt.Println("missing Sentry DSN, use -dsn flag to set it")
-		syscall.Exit(1)
+		os.Exit(1)
 	}
 
-	err := sentry.Init(sentry.ClientOptions{
+	if err := sentry.Init(sentry.ClientOptions{
 		Dsn: dsn,
-	})
-	if err != nil {
+	}); err != nil {
 		fmt.Printf("failed to initialize Sentry: %v\n", err)
-		syscall.Exit(1)
+		os.Exit(1)
 	}
+	defer sentry.Flush(time.Second * 5)
 
-	err = foo()
+	trackWithStackTrace()
+	trackWithStackTraceAndContext()
+	trackWithMultiError()
+
+	fmt.Println("done")
+}
+
+func trackWithStackTrace() {
+	fmt.Println("capturing error with stack trace")
+
+	err := loadConfig("config.yml")
 	if err != nil {
-		fmt.Println("capturing error")
+		// Sentry extracts the stack trace from the error automatically
 		sentry.CaptureException(err)
 	}
+}
 
-	sentry.Flush(time.Second * 5)
-	fmt.Println("done")
+func trackWithStackTraceAndContext() {
+	fmt.Println("capturing error with stack trace and context")
+
+	err := loadConfig("config.yml")
+	if err != nil {
+		sentry.WithScope(func(scope *sentry.Scope) {
+			// if any error context is available, add it to the Sentry scope.
+			scope.SetContexts(ctxerror.GetContext(err))
+			scope.SetTags(ctxerror.GetTags(err))
+			scope.SetLevel(sentry.LevelError)
+			// Sentry extracts the stack trace from the error automatically
+			sentry.CaptureException(err)
+		})
+	}
+}
+
+func trackWithMultiError() {
+	fmt.Println("capturing multi error with stack trace")
+
+	errs := []error{
+		loadConfig("config.yml"),
+		produceError(),
+	}
+	err := multierror.New("multiple errors", multierror.Options{UnwrapBehavior: multierror.UnwrapFirst})
+	err.Add(errs...)
+	sentry.CaptureException(err)
 }
 
 // -----------------------------------------------------------------------------
 // Just some functions that return errors
 // -----------------------------------------------------------------------------
 
-func foo() error {
-	err := bar()
+//go:noinline
+func loadConfig(file string) error {
+	err := parseConfig("")
 	if err != nil {
-		return bruh.Wrapf(err, "foo: reading config file")
+		// error with extra context
+		return ctxerror.Wrap(err, "reading config file").
+			SetContext("config", map[string]any{"filename": file})
 	}
 	return nil
 }
 
-func bar() error {
-	err := baz()
+//go:noinline
+func parseConfig(contents string) error {
+	err := produceError()
 	if err != nil {
-		return bruh.Wrapf(err, "bar: parsing stuff")
+		return bruh.Wrap(err, "parsing config")
 	}
 	return nil
 }
 
-func baz() error {
+//go:noinline
+func produceError() error {
 	// external error
 	return fmt.Errorf("oh no")
 }
