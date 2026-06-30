@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	emperror "emperror.dev/errors"
 	"github.com/aisbergg/go-bruh/pkg/bruh"
 	pkgerrors "github.com/pkg/errors"
 	"github.com/rotisserie/eris"
-
-	emperror "emperror.dev/errors"
 )
 
 var (
@@ -208,37 +207,4 @@ func BenchmarkCompareFormatTrace(b *testing.B) {
 			global = str
 		})
 	}
-}
-
-func BenchmarkMessage(b *testing.B) {
-	err := wrapBruh(20)
-	var str string
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		str = bruh.Message(err)
-	}
-	b.StopTimer()
-	global = str
-}
-
-func BenchmarkFormatBruh(b *testing.B) {
-	err := wrapBruh(20)
-	var str string
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		str = bruh.StringFormat(err, bruh.BruhFormatter)
-	}
-	b.StopTimer()
-	global = str
-}
-
-func BenchmarkFormatBruhStacked(b *testing.B) {
-	err := wrapBruh(20)
-	var str string
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		str = bruh.StringFormat(err, bruh.BruhStackedFormatter)
-	}
-	b.StopTimer()
-	global = str
 }
