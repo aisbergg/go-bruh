@@ -6,8 +6,14 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/aisbergg/go-bruh/internal/stringbuilder"
+	"github.com/aisbergg/go-bruh/pkg/bruh/fmthelper"
 )
+
+// MaxChainStackDepth defines the maximum number of stack frames to unpack when
+// creating stack traces. It provides an upper bound to prevent excessive memory
+// usage when serializing long error chains. If you require more stack frames,
+// simply increase MaxChainStackDepth.
+var MaxChainStackDepth = MaxErrorStackDepth * 6
 
 // StackFrame stores a frame's runtime information in a human readable format.
 type StackFrame struct {
@@ -19,7 +25,7 @@ type StackFrame struct {
 	Line int
 	// ProgramCounter, obtained from [runtime.Callers], indicates the starting
 	// point of the previous instruction before our instruction of interest.
-	// Apperently this is done for historical reasons. You can use its value
+	// Apparently this is done for historical reasons. You can use its value
 	// with [runtime.CallersFrames] to look up the corresponding symbolic
 	// information of the function (as done by Sentry for example).
 	ProgramCounter uintptr
@@ -38,7 +44,7 @@ func (s Stack) String() string {
 	// allocate a large buffer to avoid later reallocations
 	// Name: 40 per error
 	// Location: 160 per location
-	builder := stringbuilder.New([]byte{})
+	builder := fmthelper.New([]byte{})
 	builder.Grow(len(s) * (40 + 160))
 	for i, f := range s {
 		builder.WriteString(f.Name)
@@ -47,7 +53,7 @@ func (s Stack) String() string {
 		builder.WriteByte(':')
 		builder.WriteInt(int64(f.Line))
 		builder.WriteString(" pc=0x")
-		builder.WriteIntAsHex(int64(f.ProgramCounter2))
+		builder.WriteUintAsHex(uint64(f.ProgramCounter2))
 		if i < len(s)-1 {
 			builder.WriteByte('\n')
 		}
@@ -64,7 +70,7 @@ func (s Stack) RelativeTo(other Stack) Stack {
 	othIdx := len(other) - 1
 	curIdx := len(s) - 1
 	// find first common index in case the captured stack got truncated when its
-	// size exceeded MAX_STACK_DEPTH
+	// size exceeded MaxStackDepth
 	for othIdx >= 0 && curIdx >= 0 &&
 		other[othIdx].ProgramCounter2 != s[curIdx].ProgramCounter2 {
 		othIdx--
@@ -124,7 +130,7 @@ func (s Stack) GetSourceLines(ctxLines, colCap int, unindent bool) ([]SourceLine
 	// create a mapping from (file, line) combination to source lines
 	sourcesInFileLine := make(map[fileLine]SourceLines, len(s))
 	for file, lineNums := range linesInFiles {
-		sourceLines, err := getSourceLinesFromFile(file, lineNums, ctxLines, colCap, unindent)
+		sourceLines, err := getSourceLines(osFS{}, file, lineNums, ctxLines, colCap, unindent)
 		if err != nil {
 			return nil, err
 		}
@@ -142,28 +148,30 @@ func (s Stack) GetSourceLines(ctxLines, colCap int, unindent bool) ([]SourceLine
 	return sourceLines, nil
 }
 
-var stack4xPool = sync.Pool{
+var chainStackPool = sync.Pool{
 	New: func() any {
-		stack := Stack(make([]StackFrame, 4*MAX_STACK_DEPTH))
+		stack := Stack(make([]StackFrame, MaxChainStackDepth))
 		return &stack
 	},
 }
 
-// allocStack allocates a new [Stack] or grabs a cached one.
-func new4xStack() *Stack {
-	return stack4xPool.Get().(*Stack) //nolint:revive
+// newChainStack allocates a new [Stack] or grabs a cached one.
+func newChainStack() *Stack {
+	return chainStackPool.Get().(*Stack) //nolint:revive
 }
 
-// disposeStack puts the stack back into the pool.
-func dispose4xStack(stack *Stack) {
+// disposeChainStack puts the stack back into the pool.
+func disposeChainStack(stack *Stack) {
 	*stack = (*stack)[:cap(*stack)]
-	stack4xPool.Put(stack)
+	chainStackPool.Put(stack)
 }
 
 // -----------------------------------------------------------------------------
 
 // framesDouble acts as a double for [runtime.Frames] and allows us to reset the
-// private fields of [runtime.Frames].
+// private fields of [runtime.Frames]. We do this to be able to reuse the same
+// underlying buffer for multiple stack traces, which reduces memory allocations
+// and GC overhead.
 type framesDouble struct {
 	callers    []uintptr
 	nextPC     uintptr
@@ -207,7 +215,7 @@ func (s stackPC) relativeTo(other stackPC) stackPC {
 	othIdx := len(other) - 1
 	curIdx := len(s) - 1
 	// find first common index (only necessary when the stack depth is larger
-	// than the configured MAX_STACK_DEPTH)
+	// than the configured MaxStackDepth)
 	for othIdx >= 0 && curIdx >= 0 &&
 		other[othIdx] != s[curIdx] {
 		othIdx--
@@ -245,7 +253,10 @@ func (s stackPC) toStack(stack Stack) int {
 		}
 		// exclude runtime calls
 		if strings.Contains(frame.File, "runtime/") {
-			break
+			if !more {
+				break
+			}
+			continue
 		}
 		stack[i] = StackFrame{
 			Name:            frame.Function,

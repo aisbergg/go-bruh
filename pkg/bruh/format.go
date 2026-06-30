@@ -13,21 +13,38 @@ func Message(err error) string {
 	if err == nil {
 		return ""
 	}
-	// If the error implements the messager interface, we have to build the full
-	// error message ourselves.
-	if _, ok := err.(messager); ok {
-		b := formatMessageOnly(nil, err)
-		return unsafe.String(unsafe.SliceData(b), len(b)) //nolint:gosec
-	}
-	// The full concatenated error message is likely already available in the
-	// error itself, so we can just return it.
 	return err.Error()
 }
 
 // AppendMessage does the same as [Message] but appends the formatted message to
 // the provided byte slice.
 func AppendMessage(b []byte, err error) []byte {
-	return formatMessageOnly(b, err)
+	if err == nil {
+		return b
+	}
+	b = append(b, err.Error()...)
+	return b
+}
+
+// MessageLastN returns the combined error message of the last n errors in the
+// chain. If n is greater than the number of errors in the chain, the message of
+// all errors is returned.
+func MessageLastN(err error, n int) string {
+	if err == nil || n <= 0 {
+		return ""
+	}
+	lastN := make([]error, n)
+	lastNIdx := 0
+	for uerr := err; uerr != nil; uerr = Unwrap(uerr) {
+		lastN[lastNIdx] = uerr
+		lastNIdx = (lastNIdx + 1) % n
+	}
+	for i := 0; i < n; i++ {
+		if lastErr := lastN[(lastNIdx+i)%n]; lastErr != nil {
+			return lastErr.Error()
+		}
+	}
+	return ""
 }
 
 // String returns a formatted string representation of the provided error.
@@ -70,10 +87,13 @@ func AppendStringFormat(b []byte, err error, f Formatter, unpackAll ...bool) []b
 		return b
 	}
 
-	// Format error without a stack trace by simply combining all error
-	// messages. (fast path)
 	if f == nil {
-		return formatMessageOnly(b, err)
+		msg := err.Error()
+		if msg == "" {
+			return b
+		}
+		b = append(b, msg...)
+		return b
 	}
 
 	// We use an unpacker struct that provides the formatter with detailed
@@ -84,56 +104,6 @@ func AppendStringFormat(b []byte, err error, f Formatter, unpackAll ...bool) []b
 	b = f(b, unpacker)
 	disposeUnpacker(unpacker)
 	return b
-}
-
-// formatMessageOnly formats an error by concatenating all error messages.
-//
-// # Output Format
-//
-//	errorMsg1: errorMsg2: errorMsgN
-func formatMessageOnly(b []byte, err error) []byte {
-	// allocate 80 bytes per message to avoid reallocations later on
-	numBytesToAlloc := 0
-	for uerr := err; uerr != nil; uerr = Unwrap(uerr) {
-		numBytesToAlloc += 80
-	}
-	if cap(b) == 0 {
-		b = make([]byte, 0, numBytesToAlloc)
-	} else if cap(b)-len(b) < numBytesToAlloc {
-		newBuf := make([]byte, len(b), cap(b)+numBytesToAlloc)
-		copy(newBuf, b)
-		b = newBuf
-	}
-	return appendMessageToBuffer(b, err)
-}
-
-func appendMessageToBuffer(buf []byte, err error) []byte {
-	var messageWritten bool
-	for ; err != nil; err = Unwrap(err) {
-		var msg string
-		var cont bool
-		if e, ok := err.(messager); ok {
-			msg = e.Message()
-			cont = true
-		} else {
-			msg = err.Error()
-		}
-
-		if msg == "" {
-			continue
-		}
-
-		if messageWritten {
-			buf = append(buf, ": "...)
-		}
-		buf = append(buf, msg...)
-		messageWritten = true
-
-		if !cont {
-			break
-		}
-	}
-	return buf
 }
 
 // typeName returns the type of the error. e.g. `*bruh.Err`.

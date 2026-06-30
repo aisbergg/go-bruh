@@ -1,10 +1,4 @@
-// Package color provides a simple way to add ANSI color codes to strings using
-// a [stringbuilder.StringBuilder].
-package color
-
-import (
-	"github.com/aisbergg/go-bruh/internal/stringbuilder"
-)
+package fmthelper
 
 // ANSICode represents an ANSI escape code for text formatting.
 type ANSICode string
@@ -52,14 +46,14 @@ const (
 	BGBrightWhite   ANSICode = "\033[107m"
 )
 
-// Colorer adds ANSI color codes to a string builder.
+// Colorer adds ANSI color codes to [StringBuilder].
 type Colorer struct {
-	builder *stringbuilder.StringBuilder
+	builder *StringBuilder
 	enabled bool
 }
 
 // NewColorer creates a new [Colorer].
-func NewColorer(builder *stringbuilder.StringBuilder, enabled bool) Colorer {
+func NewColorer(builder *StringBuilder, enabled bool) Colorer {
 	return Colorer{
 		builder: builder,
 		enabled: enabled,

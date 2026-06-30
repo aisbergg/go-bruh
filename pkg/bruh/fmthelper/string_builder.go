@@ -1,14 +1,15 @@
-// Package stringbuilder provides a simple string builder implementation
-// that allows for efficient string concatenation and manipulation.
-package stringbuilder
+package fmthelper
 
 import (
 	"strconv"
+	"strings"
 	"unsafe"
 )
 
-// StringBuilder is a simple string builder that uses a byte slice as its
-// internal buffer. It is mostly the same as [strings.Builder] but it provides
+// StringBuilder is a simple string builder that allows for efficient string
+// concatenation and manipulation.
+//
+// It is mostly the same as [strings.Builder] but it provides
 // more specialized methods for writing integers, hexadecimal values and such.
 type StringBuilder struct {
 	buf []byte
@@ -65,6 +66,32 @@ func (b *StringBuilder) WriteString(s string) (int, error) {
 	return len(s), nil
 }
 
+// WriteStringIndent appends the contents of s to b's buffer. If the string has multiple lines, it will be indented with the given indent string. The first line will not be indented. It returns the length of s and a nil error.
+func (b *StringBuilder) WriteStringIndent(s, indent string) (int, error) {
+	// first line
+	idxNewLine := strings.IndexByte(s, '\n')
+	if idxNewLine == -1 {
+		return b.WriteString(s)
+	}
+	n, _ := b.WriteString(s[:idxNewLine+1])
+	s = s[idxNewLine+1:]
+
+	// subsequent lines
+	for {
+		idxNewLine = strings.IndexByte(s, '\n')
+		if idxNewLine == -1 {
+			n2, _ := b.WriteString(indent + s)
+			n += n2
+			break
+		}
+		n2, _ := b.WriteString(indent + s[:idxNewLine+1])
+		n += n2
+		s = s[idxNewLine+1:]
+	}
+
+	return n, nil
+}
+
 // WriteInt appends the given integer to b's buffer.
 func (b *StringBuilder) WriteInt(value int64) {
 	b.buf = strconv.AppendInt(b.buf, value, 10)
@@ -74,4 +101,15 @@ func (b *StringBuilder) WriteInt(value int64) {
 // appends it to b's buffer.
 func (b *StringBuilder) WriteIntAsHex(value int64) {
 	b.buf = strconv.AppendInt(b.buf, value, 16)
+}
+
+// WriteUint appends the given unsigned integer to b's buffer.
+func (b *StringBuilder) WriteUint(value uint64) {
+	b.buf = strconv.AppendUint(b.buf, value, 10)
+}
+
+// WriteUintAsHex formats the given unsigned integer value as hexadecimal string
+// and appends it to b's buffer.
+func (b *StringBuilder) WriteUintAsHex(value uint64) {
+	b.buf = strconv.AppendUint(b.buf, value, 16)
 }
