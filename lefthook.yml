@@ -1,0 +1,71 @@
+# Lefthook configuration file (https://lefthook.dev)
+
+pre-commit:
+  parallel: true
+  commands:
+    fmt-prettier:
+      glob: "*.{js,ts,json,md,yml,yaml}"
+      exclude:
+        - "docs/reference/**/*"
+      run: prettier --write {staged_files}
+      stage_fixed: true
+
+    check-typos:
+      exclude:
+        - "docs/reference/**/*"
+      run: typos {staged_files}
+      file_types: text
+
+    check-secrets:
+      exclude:
+        - "docs/reference/**/*"
+      run: bash .github/detect-secrets.sh
+
+    check-links:
+      glob: "*.md"
+      exclude:
+        - "docs/reference/**/*"
+        - "CHANGELOG.md"
+      run: lychee {staged_files}
+
+    # all other pre-commit tasks need to be run in sequence
+    pre-commit-serial:
+      run: lefthook run pre-commit-serial
+      env:
+        LEFTHOOK_QUIET: execution_info,meta,skips,summary
+
+# called by `pre-commit`
+pre-commit-serial:
+  parallel: false
+  commands:
+    generate:
+      run: go generate ./...
+
+    check-mod-change:
+      run: go mod tidy -go 1.25.0
+
+    fmt:
+      glob: "*.go"
+      run: golangci-lint fmt
+      stage_fixed: true
+
+    lint:
+      glob: "*.go"
+      run: golangci-lint run --fix
+      stage_fixed: true
+
+    docs:
+      # cd into "pkg" beforehand removes the "pkg" part from the generated dir
+      run: |
+        cd pkg
+        gomarkdoc -o '../docs/reference/{{.Dir}}/README.md' ./...
+      glob: "*.go"
+      stage_fixed: true
+
+pre-push:
+  follow: true
+  piped: true
+  commands:
+    tests:
+      glob: "*.go"
+      run: mise run test

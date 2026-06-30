@@ -14,8 +14,6 @@ Thank you for considering contributing to _bruh_! We appreciate your interest an
 
 </details>
 
-
-
 ## How Can I Contribute?
 
 There are several ways you can contribute to _bruh_:
@@ -38,29 +36,26 @@ If you encounter any issues with _bruh_, please report them using the following 
 We welcome contributions in the form of pull requests. To submit a pull request:
 
 1. Fork the repository.
-2. Create a new branch from the `main` branch for your changes. (`git checkout -b feat/amazing-feature main`)
-2. Install the `pre-commit` hooks and other development tools.
+2. Create a new branch from the `main` branch for your changes. (`git checkout -b fix/important-fix main`)
+3. Install development tools and hooks:
 
-    using make:
     ```sh
-    make dev-setup
+    mise install
+    lefthook install
     ```
 
-    manually:
-    ```sh
-    # install requirements
-    pip3 install -u pre-commit
-    bash tools/install.sh
+    Now before any commit _lefthook_ will run formatting and linting for you. You can also run this manually via:
 
-    # enable hooks for this repo
-    pre-commit install
+    ```sh
+    mise run fix-run-hooks
     ```
-3. Make your changes, ensuring that your code follows the coding guidelines (discussed later in this document).
-4. Write tests to cover your changes and ensure they pass successfully.
-5. Commit your changes with clear and descriptive commit messages. Please use the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) style for the messages. (`git commit -m 'feat: add amazing feature'`)
-6. Push your branch to your forked repository. (`git push origin feat/amazing-feature`)
-7. Open a pull request on the main repository and provide a detailed description of your changes.
-8. Be responsive to any feedback or review comments during the review process.
+
+4. Make your changes, ensuring that your code follows the coding guidelines (discussed later in this document).
+5. Write tests to cover your changes and ensure they pass successfully.
+6. Commit your changes with clear and descriptive commit messages. Please use the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) style for the messages. (`git commit -m 'fix: important fix'`)
+7. Push your branch to your forked repository. (`git push origin fix/important-fix`)
+8. Open a pull request on the main repository and provide a detailed description of your changes.
+9. Be responsive to any feedback or review comments during the review process.
 
 ## Coding Guidelines
 

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "enabledManagers": [
+    "dockerfile",
+    "gomod",
+    "mise",
+    "git-submodules",
+    "github-actions"
+  ],
+  "minimumReleaseAge": "7 days",
+
+  "packageRules": [
+    {
+      "managers": ["github-actions"],
+      "matchPackagePatterns": [
+        "^actions/",
+        "^github/",
+        "^codecov/",
+        "^golangci/"
+      ],
+      "groupName": "github-actions",
+      "labels": ["dependencies", "github-actions"]
+    },
+    {
+      "managers": ["gomod"],
+      "labels": ["dependencies", "go"]
+    },
+    {
+      "managers": ["dockerfile"],
+      "labels": ["dependencies", "docker"]
+    },
+    {
+      "managers": ["mise"],
+      "labels": ["dependencies", "mise"]
+    },
+    {
+      "managers": ["git-submodules"],
+      "minimumReleaseAge": null,
+      "labels": ["dependencies", "git-submodules"]
+    }
+  ],
+
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 6
+}

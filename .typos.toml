@@ -1,0 +1,7 @@
+[files]
+extend-exclude = [
+    "docs/reference/**",
+]
+
+[default.extend-words]
+Messager = "Messager"
