@@ -6,10 +6,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+
 	"github.com/aisbergg/go-bruh/pkg/bruh"
 	"github.com/aisbergg/go-bruh/pkg/ctxerror"
 	"github.com/aisbergg/go-bruh/pkg/multierror"
-	"github.com/getsentry/sentry-go"
 )
 
 var dsn string

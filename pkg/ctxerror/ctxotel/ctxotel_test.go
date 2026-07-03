@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/aisbergg/go-bruh/internal/testutils"
 	"github.com/aisbergg/go-bruh/pkg/ctxerror"
 	"github.com/aisbergg/go-bruh/pkg/ctxerror/ctxotel"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 func attrsByKey(attrs []attribute.KeyValue) map[string]attribute.Value {

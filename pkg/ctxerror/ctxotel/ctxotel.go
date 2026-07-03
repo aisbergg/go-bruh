@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aisbergg/go-bruh/pkg/ctxerror"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/aisbergg/go-bruh/pkg/ctxerror"
 )
 
 // AsAttributes converts an error (with ctxerror context/tags) into a slice of

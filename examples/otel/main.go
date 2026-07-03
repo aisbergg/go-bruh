@@ -6,9 +6,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/aisbergg/go-bruh/pkg/bruh"
-	"github.com/aisbergg/go-bruh/pkg/ctxerror"
-	"github.com/aisbergg/go-bruh/pkg/ctxerror/ctxotel"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -18,6 +15,10 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/aisbergg/go-bruh/pkg/bruh"
+	"github.com/aisbergg/go-bruh/pkg/ctxerror"
+	"github.com/aisbergg/go-bruh/pkg/ctxerror/ctxotel"
 )
 
 func recordError(span trace.Span, err error) {

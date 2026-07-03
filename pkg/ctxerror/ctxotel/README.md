@@ -16,7 +16,7 @@ Package ctxotel provides OpenTelemetry integration and helps converting errors a
 
 
 <a name="AsAttributes"></a>
-## func [AsAttributes](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/ctxotel/ctxotel.go#L15>)
+## func [AsAttributes](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/ctxotel/ctxotel.go#L16>)
 
 ```go
 func AsAttributes(err error) []attribute.KeyValue
@@ -25,7 +25,7 @@ func AsAttributes(err error) []attribute.KeyValue
 AsAttributes converts an error \(with ctxerror context/tags\) into a slice of OTEL attribute key/value pairs. The error message is stored under the "error" key. Context groups are flattened using dot notation \(group.key\).
 
 <a name="ContextToAttributes"></a>
-## func [ContextToAttributes](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/ctxotel/ctxotel.go#L47>)
+## func [ContextToAttributes](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/ctxotel/ctxotel.go#L48>)
 
 ```go
 func ContextToAttributes(ctx ctxerror.Context) []attribute.KeyValue
@@ -34,7 +34,7 @@ func ContextToAttributes(ctx ctxerror.Context) []attribute.KeyValue
 ContextToAttributes converts a ctxerror.Context into OTEL attributes.
 
 <a name="TagsToAttributes"></a>
-## func [TagsToAttributes](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/ctxotel/ctxotel.go#L67>)
+## func [TagsToAttributes](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/ctxotel/ctxotel.go#L68>)
 
 ```go
 func TagsToAttributes(tags ctxerror.Tags) []attribute.KeyValue
