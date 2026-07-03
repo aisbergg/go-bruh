@@ -67,7 +67,7 @@ run = "lefthook run pre-commit"
 description = "Generate documentation as markdown files (pkg/**/README.md)"
 run = """
 cd pkg
-gomarkdoc -o '{% raw %}{{.Dir}}{% endraw %}/README.md' ./...
+gomarkdoc -o '{% raw %}{{.Dir}}{% endraw %}/README.md' --repository.url=https://github.com/aisbergg/go-bruh --repository.default-branch=main ./...
 """
 
 [tasks.docs-serve]
@@ -131,7 +131,7 @@ run = """
 go generate ./...
 go mod tidy -go 1.25.0
 cd pkg
-gomarkdoc -o '{% raw %}{{.Dir}}{% endraw %}/README.md' ./...
+gomarkdoc -o '{% raw %}{{.Dir}}{% endraw %}/README.md' --repository.url=https://github.com/aisbergg/go-bruh --repository.default-branch=main ./...
 cd ..
 git diff --exit-code
 """

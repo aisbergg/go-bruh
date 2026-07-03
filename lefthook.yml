@@ -58,7 +58,7 @@ pre-commit-serial:
       # cd into "pkg" beforehand removes the "pkg" part from the generated dir
       run: |
         cd pkg
-        gomarkdoc -o '{{.Dir}}/README.md' ./...
+        gomarkdoc -o '{{.Dir}}/README.md' --repository.url=https://github.com/aisbergg/go-bruh --repository.default-branch=main ./...
       glob: "*.go"
       stage_fixed: true
 
