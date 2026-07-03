@@ -21,7 +21,7 @@ prettier = "3.8.3"
 lefthook = "2.1.9"
 
 # Go documentation generator that emits Markdown from package docs.
-# Used here to build the API reference files under docs/reference/ from the packages in pkg/.
+# Used here to build the API reference files under pkg/**/README.md from the packages in pkg/.
 # https://github.com/princjef/gomarkdoc
 "go:github.com/princjef/gomarkdoc/cmd/gomarkdoc" = "v1.1.0"
 
@@ -64,10 +64,10 @@ run = "lefthook run pre-commit"
 # ------------------------------------------------------------------------------
 
 [tasks.docs-make]
-description = "Generate documentation as markdown files in docs/reference/"
+description = "Generate documentation as markdown files (pkg/**/README.md)"
 run = """
 cd pkg
-gomarkdoc -o '../docs/reference/{{.Dir}}/README.md' ./...
+gomarkdoc -o '{% raw %}{{.Dir}}{% endraw %}/README.md' ./...
 """
 
 [tasks.docs-serve]
@@ -131,7 +131,7 @@ run = """
 go generate ./...
 go mod tidy -go 1.25.0
 cd pkg
-gomarkdoc -o '../docs/reference/{{.Dir}}/README.md' ./...
+gomarkdoc -o '{% raw %}{{.Dir}}{% endraw %}/README.md' ./...
 cd ..
 git diff --exit-code
 """
