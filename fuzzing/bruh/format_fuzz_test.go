@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	fuzz "github.com/AdaLogics/go-fuzz-headers"
+
 	"github.com/aisbergg/go-bruh/pkg/bruh"
 )
 

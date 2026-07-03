@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	emperror "emperror.dev/errors"
-	"github.com/aisbergg/go-bruh/pkg/bruh"
 	pkgerrors "github.com/pkg/errors"
 	"github.com/rotisserie/eris"
+
+	"github.com/aisbergg/go-bruh/pkg/bruh"
 )
 
 var (
