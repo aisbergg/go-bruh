@@ -50,7 +50,7 @@ jq = "1.8.1"
 # Auto-Fix tasks
 # ------------------------------------------------------------------------------
 
-[tasks.fix-fmt-lint]
+[tasks.fix-fmt]
 description = "Format and lint via golangci-lint"
 run = "golangci-lint fmt && golangci-lint run --fix"
 
