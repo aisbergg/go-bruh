@@ -1,0 +1,10 @@
+exclude_path = [
+    "CHANGELOG.md",
+    # Ignore generated reference docs
+    "pkg/.*/README.md",
+]
+
+exclude = [
+    "(facebook|twitter|linkedin|instagram)\\.com",
+    "bugsnag.com",
+]

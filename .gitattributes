@@ -1,1 +1,9 @@
 * text eol=lf
+
+# Treat images and other binary assets as binary to avoid CRLF/text normalization
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
