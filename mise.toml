@@ -43,7 +43,7 @@ lychee = "0.23.0"
 # JSON processor for shell scripts and CI pipelines.
 # Used in this repo to create a check-mode for the `detect-secrets` task.
 # https://github.com/jqlang/jq
-jq = "1.8.1"
+jq = "1.8.2"
 
 
 # ------------------------------------------------------------------------------
