@@ -174,9 +174,6 @@ if ! git diff-index --quiet HEAD --; then
   echo "ERR: You have uncommitted changes. Please stash them before creating a release!"
   exit 1
 fi
-git-chglog -o CHANGELOG.md --next-tag "$VERSION"
-git add CHANGELOG.md
-git commit -m "chore: update changelog for version $VERSION"
 git tag -s -a "$VERSION" -m "$VERSION"
 """
 
