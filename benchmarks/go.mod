@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	emperror.dev/errors v0.8.1
-	github.com/aisbergg/go-bruh v0.0.0
+	github.com/aisbergg/go-bruh v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/rotisserie/eris v0.5.4
 )
