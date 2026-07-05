@@ -13,7 +13,7 @@ golangci-lint = "2.12.2"
 # Opinionated formatter for various text-based files.
 # Used here to keep Markdown, TOML, and other supported project files consistently formatted.
 # https://prettier.io/
-prettier = "3.9.0"
+prettier = "3.9.1"
 
 # Git hooks runner.
 # Used here to execute pre-commit checks locally via the configured lefthook workflow.
