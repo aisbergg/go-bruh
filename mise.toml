@@ -28,7 +28,7 @@ lefthook = "2.1.9"
 # Fast spell checker for source, docs, and configuration files.
 # Used in this project to catch and prevent typos as part of the formatting/check pipeline.
 # https://github.com/crate-ci/typos
-typos = "1.47.2"
+typos = "1.48.0"
 
 # Link checker for Markdown and other text content.
 # Used here to verify that documentation links in the repository stay valid.
