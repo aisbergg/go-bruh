@@ -34,30 +34,82 @@ formatters:
       chain-split-dots: true
 
 linters:
-  default: standard
+  default: none
   enable:
+    - asciicheck
+    - bidichk
     - bodyclose
+    - contextcheck
+    - decorder
+    - dupl
+    - dupword
     - durationcheck
-    - errcheck
+    - errchkjson
+    - errname
     - exhaustive
+    - exptostd
+    - fatcontext
+    - forbidigo
+    - gocheckcompilerdirectives
+    - goconst
     - gocritic
+    - godoclint
+    - goheader
     - gosec
+    - gosmopolitan
     - govet
+    - importas
+    - inamedparam
     - ineffassign
+    - intrange
+    - ireturn
+    - loggercheck
+    - makezero
     - misspell
+    - modernize
+    - musttag
     - nakedret
     - nilerr
-    - prealloc
-    - revive
-    - staticcheck
-    - unconvert
-    - unused
-    - wastedassign
+    - noctx
     - nolintlint
+    - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - protogetter
+    - reassign
+    - recvcheck
+    - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - staticcheck
+    - tagliatelle
+    - unconvert
+    - unparam
+    - unqueryvet
+    - unused
+    - usestdlibvars
+    - usetesting
+    - wastedassign
 
   exclusions:
     paths:
       - "playground/.*"
+    presets:
+      # See https://golangci-lint.run/usage/false-positives/#exclusion-presets
+      - common-false-positives
+      - std-error-handling
+    rules:
+      - path: _test\.go
+        linters:
+          - dupl # Common false positives with table driven tests
+          - dupword # Messes with test cases more often than not
+          - gochecknoglobals # Flags and env vars
+          - goconst # Sometimes repetition is okay in tests
+          - gosec # Tests don't need security stuff
+          - prealloc # These kinds of optimisations will make no difference to test code
 
   settings:
     revive:
@@ -89,9 +141,11 @@ linters:
           disabled: true
         - name: cognitive-complexity
           disabled: true
-        - name: unhandled-error
+        - name: comment-spacings
           disabled: true
 
+        - name: unhandled-error
+          severity: warning
         - name: argument-limit
           arguments: [6]
         - name: function-result-limit
@@ -101,12 +155,10 @@ linters:
       check: [switch, map]
       default-signifies-exhaustive: false
 
-    errcheck:
-      exclude-functions:
-        - (*github.com/aisbergg/go-bruh/pkg/bruh/fmthelper.StringBuilder).WriteString
-        - (*github.com/aisbergg/go-bruh/pkg/bruh/fmthelper.StringBuilder).WriteByte
-        - (*github.com/aisbergg/go-bruh/pkg/bruh/fmthelper.StringBuilder).WriteStringIndent
-
     gosec:
       excludes:
-        - G104
+        - G104 # Errors not checked: To many irrelevant results, e.g. WriteString, WriteByte, etc.
+
+    modernize:
+      disable:
+        - slicesbackward
