@@ -2,15 +2,31 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "enabledManagers": [
+    "github-actions",
     "dockerfile",
-    "gomod",
     "mise",
-    "git-submodules",
-    "github-actions"
+    "gomod",
+    "git-submodules"
   ],
-  "minimumReleaseAge": "7 days",
+  "minimumReleaseAge": "14 days",
+  "platformAutomerge": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "enabledManagers": ["mise"],
+    "schedule": ["at 3am on Tuesday"]
+  },
 
   "packageRules": [
+    {
+      "managers": ["gomod"],
+      "labels": ["dependencies", "go"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "managers": ["git-submodules"],
+      "minimumReleaseAge": null,
+      "labels": ["dependencies", "git-submodules"]
+    },
     {
       "managers": ["github-actions"],
       "matchPackagePatterns": [
@@ -20,27 +36,24 @@
         "^golangci/"
       ],
       "groupName": "github-actions",
-      "labels": ["dependencies", "github-actions"]
-    },
-    {
-      "managers": ["gomod"],
-      "labels": ["dependencies", "go"]
+      "labels": ["dependencies", "github-actions"],
+      "automerge": true,
+      "automergeType": "pr"
     },
     {
       "managers": ["dockerfile"],
-      "labels": ["dependencies", "docker"]
+      "labels": ["dependencies", "docker"],
+      "automerge": true,
+      "automergeType": "pr"
     },
     {
       "managers": ["mise"],
-      "labels": ["dependencies", "mise"]
-    },
-    {
-      "managers": ["git-submodules"],
-      "minimumReleaseAge": null,
-      "labels": ["dependencies", "git-submodules"]
+      "labels": ["dependencies", "mise"],
+      "automerge": true,
+      "automergeType": "pr"
     }
   ],
 
-  "prHourlyLimit": 2,
-  "prConcurrentLimit": 6
+  "prHourlyLimit": 1,
+  "prConcurrentLimit": 2
 }
