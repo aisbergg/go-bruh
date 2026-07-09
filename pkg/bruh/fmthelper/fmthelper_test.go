@@ -35,16 +35,11 @@ func TestStringBuilder(t *testing.T) {
 		assert := testutils.NewAssert(t)
 		builder := New([]byte("ab"))
 
-		n, err := builder.Write([]byte("cd"))
-		assert.NoError(err)
-		assert.Equal(2, n)
+		builder.Write([]byte("cd"))
 
-		err = builder.WriteByte('e')
-		assert.NoError(err)
+		builder.WriteByte('e')
 
-		n, err = builder.WriteString("fg")
-		assert.NoError(err)
-		assert.Equal(2, n)
+		builder.WriteString("fg")
 
 		assert.Equal(7, builder.Len())
 		assert.Equal("abcdefg", builder.String())
@@ -55,8 +50,7 @@ func TestStringBuilder(t *testing.T) {
 		assert := testutils.NewAssert(t)
 		builder := New(make([]byte, 0, 1))
 
-		_, err := builder.WriteString("x")
-		assert.NoError(err)
+		builder.WriteString("x")
 
 		builder.Grow(8)
 
@@ -68,16 +62,14 @@ func TestStringBuilder(t *testing.T) {
 		assert := testutils.NewAssert(t)
 
 		singleLine := New(nil)
-		n, err := singleLine.WriteStringIndent("abc", "  ")
-		assert.NoError(err)
-		assert.Equal(3, n)
+		singleLine.WriteStringIndent("abc", "  ")
 		assert.Equal("abc", singleLine.String())
+		assert.Equal(3, singleLine.Len())
 
 		multiLine := New(nil)
-		n, err = multiLine.WriteStringIndent("a\nb\nc", "  ")
-		assert.NoError(err)
-		assert.Equal(9, n)
+		multiLine.WriteStringIndent("a\nb\nc", "  ")
 		assert.Equal("a\n  b\n  c", multiLine.String())
+		assert.Equal(9, multiLine.Len())
 	})
 
 	t.Run("IntegerWriters", func(t *testing.T) {

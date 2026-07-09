@@ -179,7 +179,6 @@ func (b *keyBuilder) Build(parts ...string) string {
 	}
 	b.buf = b.buf[:len(b.buf)+len(curBuf)]
 
-	//nolint:gosec // keyBuilder owns this byte buffer; unsafe conversion avoids allocations for slog keys.
 	return unsafe.String(unsafe.SliceData(curBuf), len(curBuf))
 }
 

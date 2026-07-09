@@ -17,7 +17,7 @@ type tHelper interface {
 type TestingT interface {
 	Name() string
 	Errorf(format string, args ...any)
-	Log(...any)
+	Log(args ...any)
 	FailNow()
 }
 

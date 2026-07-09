@@ -10,6 +10,26 @@ import (
 	"github.com/aisbergg/go-bruh/pkg/bruh/fmthelper"
 )
 
+// Err is an easily wrappable error with a stack trace.
+type Err struct { //nolint: errname
+	// msg is the message of this error and only this error. It does not include
+	// the messages of wrapped errors.
+	msg string
+	// fullMsg is the full message of this error, including the messages of all
+	// wrapped errors. It is lazily computed and cached when [Err.Error] is called.
+	fullMsg string
+	// fullMsgOnce is used to ensure that the full message is only built once
+	// across multiple goroutines.
+	fullMsgOnce sync.Once
+	// err is the wrapped error. It can be nil if there is no wrapped error.
+	err error
+	// stackStore is the store for the stack trace of this error. It is embedded
+	// in the error struct to avoid an additional allocation for the stack
+	// trace.
+	stackStore [MaxErrorStackDepth]uintptr
+	stackSize  int
+}
+
 // New creates a new [Err] with the given message.
 func New(msg string) error {
 	return NewSkip(1, msg)
@@ -105,31 +125,6 @@ func Wrapf(err error, format string, args ...any) error {
 func WrapfSkip(err error, skip int, format string, args ...any) *Err {
 	return WrapSkip(err, skip+1, fmt.Sprintf(format, args...))
 }
-
-// Err is an easily wrappable error with a stack trace.
-type Err struct {
-	// msg is the message of this error and only this error. It does not include
-	// the messages of wrapped errors.
-	msg string
-	// fullMsg is the full message of this error, including the messages of all
-	// wrapped errors. It is lazily computed and cached when [Err.Error] is called.
-	fullMsg string
-	// fullMsgOnce is used to ensure that the full message is only built once
-	// across multiple goroutines.
-	fullMsgOnce sync.Once
-	// err is the wrapped error. It can be nil if there is no wrapped error.
-	err error
-	// stackStore is the store for the stack trace of this error. It is embedded
-	// in the error struct to avoid an additional allocation for the stack
-	// trace.
-	stackStore [MaxErrorStackDepth]uintptr
-	stackSize  int
-}
-
-// bruhError marks the error as a bruh error. It is used to distinguish between
-// errors created by this package and other errors. It is not intended to be
-// used by users of this package.
-func (e *Err) bruhError() {}
 
 // Message returns the single, unformatted message of this error, without the
 // messages of wrapped errors.
@@ -252,6 +247,11 @@ func (e *Err) Callers() []uintptr {
 // func (e *Err) Redact(redacter interface{ Redact(value any) }) {
 // 	redacter.Redact(e.err)
 // }
+
+// bruhError marks the error as a bruh error. It is used to distinguish between
+// errors created by this package and other errors. It is not intended to be
+// used by users of this package.
+func (e *Err) bruhError() {}
 
 // -----------------------------------------------------------------------------
 //

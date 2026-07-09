@@ -30,7 +30,8 @@ func BruhFormatter( //nolint:revive // we keep the "Bruh" prefix to differentiat
 //
 // Parameters:
 //   - colored: enables ANSI-colored output (default: false)
-//   - sourced: enables inclusion of source code snippets from the current working directory, if available (default: false)
+//   - sourced: enables inclusion of source code snippets from the current working directory, if available
+//     (default: false)
 //
 // # Output Format
 //
@@ -314,7 +315,7 @@ func formatSingleStackWithSourceCode(
 		sourceLines[3].LineNum,
 		sourceLines[4].LineNum,
 	))
-	for k := 0; k < 5; k++ {
+	for k := range 5 {
 		lineNum := sourceLines[k].LineNum
 		if sourceLines[k].LineNum >= 0 {
 			if k == 2 {
@@ -324,7 +325,7 @@ func formatSingleStackWithSourceCode(
 			} else {
 				builder.WriteString("\n    ")
 			}
-			for l := 0; l < numDigits-fmthelper.DigitsInNumber(lineNum); l++ {
+			for range numDigits - fmthelper.DigitsInNumber(lineNum) {
 				builder.WriteByte(' ')
 			}
 			if k == 2 {

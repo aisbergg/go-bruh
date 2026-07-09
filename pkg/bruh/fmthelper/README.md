@@ -26,12 +26,12 @@ Package fmthelper contains helper functions for formatting errors.
   - [func \(b \*StringBuilder\) Grow\(n int\)](<#StringBuilder.Grow>)
   - [func \(b \*StringBuilder\) Len\(\) int](<#StringBuilder.Len>)
   - [func \(b \*StringBuilder\) String\(\) string](<#StringBuilder.String>)
-  - [func \(b \*StringBuilder\) Write\(p \[\]byte\) \(int, error\)](<#StringBuilder.Write>)
-  - [func \(b \*StringBuilder\) WriteByte\(c byte\) error](<#StringBuilder.WriteByte>)
+  - [func \(b \*StringBuilder\) Write\(p \[\]byte\)](<#StringBuilder.Write>)
+  - [func \(b \*StringBuilder\) WriteByte\(c byte\)](<#StringBuilder.WriteByte>)
   - [func \(b \*StringBuilder\) WriteInt\(value int64\)](<#StringBuilder.WriteInt>)
   - [func \(b \*StringBuilder\) WriteIntAsHex\(value int64\)](<#StringBuilder.WriteIntAsHex>)
-  - [func \(b \*StringBuilder\) WriteString\(s string\) \(int, error\)](<#StringBuilder.WriteString>)
-  - [func \(b \*StringBuilder\) WriteStringIndent\(s, indent string\) \(int, error\)](<#StringBuilder.WriteStringIndent>)
+  - [func \(b \*StringBuilder\) WriteString\(s string\)](<#StringBuilder.WriteString>)
+  - [func \(b \*StringBuilder\) WriteStringIndent\(s, indent string\)](<#StringBuilder.WriteStringIndent>)
   - [func \(b \*StringBuilder\) WriteUint\(value uint64\)](<#StringBuilder.WriteUint>)
   - [func \(b \*StringBuilder\) WriteUintAsHex\(value uint64\)](<#StringBuilder.WriteUintAsHex>)
 
@@ -233,25 +233,25 @@ func (b *StringBuilder) String() string
 String returns the accumulated string.
 
 <a name="StringBuilder.Write"></a>
-### func \(\*StringBuilder\) [Write](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L50>)
+### func \(\*StringBuilder\) [Write](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L49>)
 
 ```go
-func (b *StringBuilder) Write(p []byte) (int, error)
+func (b *StringBuilder) Write(p []byte)
 ```
 
-Write appends the contents of p to b's buffer. Write always returns len\(p\), nil.
+Write appends the contents of p to b's buffer.
 
 <a name="StringBuilder.WriteByte"></a>
-### func \(\*StringBuilder\) [WriteByte](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L57>)
+### func \(\*StringBuilder\) [WriteByte](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L54>)
 
 ```go
-func (b *StringBuilder) WriteByte(c byte) error
+func (b *StringBuilder) WriteByte(c byte)
 ```
 
-WriteByte appends the byte c to b's buffer. The returned error is always nil.
+WriteByte appends the byte c to b's buffer.
 
 <a name="StringBuilder.WriteInt"></a>
-### func \(\*StringBuilder\) [WriteInt](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L96>)
+### func \(\*StringBuilder\) [WriteInt](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L89>)
 
 ```go
 func (b *StringBuilder) WriteInt(value int64)
@@ -260,7 +260,7 @@ func (b *StringBuilder) WriteInt(value int64)
 WriteInt appends the given integer to b's buffer.
 
 <a name="StringBuilder.WriteIntAsHex"></a>
-### func \(\*StringBuilder\) [WriteIntAsHex](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L102>)
+### func \(\*StringBuilder\) [WriteIntAsHex](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L95>)
 
 ```go
 func (b *StringBuilder) WriteIntAsHex(value int64)
@@ -269,25 +269,25 @@ func (b *StringBuilder) WriteIntAsHex(value int64)
 WriteIntAsHex formats the given integer value as hexadecimal string and appends it to b's buffer.
 
 <a name="StringBuilder.WriteString"></a>
-### func \(\*StringBuilder\) [WriteString](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L64>)
+### func \(\*StringBuilder\) [WriteString](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L59>)
 
 ```go
-func (b *StringBuilder) WriteString(s string) (int, error)
+func (b *StringBuilder) WriteString(s string)
 ```
 
-WriteString appends the contents of s to b's buffer. It returns the length of s and a nil error.
+WriteString appends the contents of s to b's buffer.
 
 <a name="StringBuilder.WriteStringIndent"></a>
-### func \(\*StringBuilder\) [WriteStringIndent](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L70>)
+### func \(\*StringBuilder\) [WriteStringIndent](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L66>)
 
 ```go
-func (b *StringBuilder) WriteStringIndent(s, indent string) (int, error)
+func (b *StringBuilder) WriteStringIndent(s, indent string)
 ```
 
-WriteStringIndent appends the contents of s to b's buffer. If the string has multiple lines, it will be indented with the given indent string. The first line will not be indented. It returns the length of s and a nil error.
+WriteStringIndent appends the contents of s to b's buffer. If the string has multiple lines, it will be indented with the given indent string. The first line will not be indented.
 
 <a name="StringBuilder.WriteUint"></a>
-### func \(\*StringBuilder\) [WriteUint](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L107>)
+### func \(\*StringBuilder\) [WriteUint](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L100>)
 
 ```go
 func (b *StringBuilder) WriteUint(value uint64)
@@ -296,7 +296,7 @@ func (b *StringBuilder) WriteUint(value uint64)
 WriteUint appends the given unsigned integer to b's buffer.
 
 <a name="StringBuilder.WriteUintAsHex"></a>
-### func \(\*StringBuilder\) [WriteUintAsHex](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L113>)
+### func \(\*StringBuilder\) [WriteUintAsHex](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/fmthelper/string_builder.go#L106>)
 
 ```go
 func (b *StringBuilder) WriteUintAsHex(value uint64)

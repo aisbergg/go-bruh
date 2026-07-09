@@ -34,7 +34,7 @@ type lineToIndex struct {
 type osFS struct{}
 
 func (osFS) Open(name string) (fs.File, error) {
-	return os.Open(name) //nolint:gosec // path is derived from runtime stack frames, not user input
+	return os.Open(name)
 }
 
 // getSourceLines reads the given lines (index starting at 1) of source
@@ -107,7 +107,7 @@ func getSourceLines(
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close() //nolint:errcheck
+	defer f.Close()
 
 	// try to find the source lines in the file and store them in the sourceLines data structure
 	scanner := bufio.NewScanner(f)

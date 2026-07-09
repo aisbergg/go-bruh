@@ -361,7 +361,7 @@ func (upkErr UnpackedError) CombinedStack() Stack {
 		return Stack{}
 	}
 	numFrames := 0
-	for i := 0; i < len(upkErr); i++ {
+	for i := range upkErr {
 		numFrames += len(upkErr[i].PartialStack)
 	}
 	combinedStack := make(Stack, 0, numFrames)

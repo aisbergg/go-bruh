@@ -37,7 +37,7 @@ func (b *StringBuilder) Len() int {
 
 // String returns the accumulated string.
 func (b *StringBuilder) String() string {
-	return unsafe.String(unsafe.SliceData(b.buf), len(b.buf)) //nolint:gosec
+	return unsafe.String(unsafe.SliceData(b.buf), len(b.buf))
 }
 
 // Bytes returns the internally used bytes buffer.
@@ -46,50 +46,43 @@ func (b *StringBuilder) Bytes() []byte {
 }
 
 // Write appends the contents of p to b's buffer.
-// Write always returns len(p), nil.
-func (b *StringBuilder) Write(p []byte) (int, error) {
+func (b *StringBuilder) Write(p []byte) {
 	b.buf = append(b.buf, p...)
-	return len(p), nil
 }
 
 // WriteByte appends the byte c to b's buffer.
-// The returned error is always nil.
-func (b *StringBuilder) WriteByte(c byte) error {
+func (b *StringBuilder) WriteByte(c byte) { //nolint: govet
 	b.buf = append(b.buf, c)
-	return nil
 }
 
 // WriteString appends the contents of s to b's buffer.
-// It returns the length of s and a nil error.
-func (b *StringBuilder) WriteString(s string) (int, error) {
+func (b *StringBuilder) WriteString(s string) {
 	b.buf = append(b.buf, s...)
-	return len(s), nil
 }
 
-// WriteStringIndent appends the contents of s to b's buffer. If the string has multiple lines, it will be indented with the given indent string. The first line will not be indented. It returns the length of s and a nil error.
-func (b *StringBuilder) WriteStringIndent(s, indent string) (int, error) {
+// WriteStringIndent appends the contents of s to b's buffer. If the string has
+// multiple lines, it will be indented with the given indent string. The first
+// line will not be indented.
+func (b *StringBuilder) WriteStringIndent(s, indent string) {
 	// first line
 	idxNewLine := strings.IndexByte(s, '\n')
 	if idxNewLine == -1 {
-		return b.WriteString(s)
+		b.WriteString(s)
+		return
 	}
-	n, _ := b.WriteString(s[:idxNewLine+1])
+	b.WriteString(s[:idxNewLine+1])
 	s = s[idxNewLine+1:]
 
 	// subsequent lines
 	for {
 		idxNewLine = strings.IndexByte(s, '\n')
 		if idxNewLine == -1 {
-			n2, _ := b.WriteString(indent + s)
-			n += n2
+			b.WriteString(indent + s)
 			break
 		}
-		n2, _ := b.WriteString(indent + s[:idxNewLine+1])
-		n += n2
+		b.WriteString(indent + s[:idxNewLine+1])
 		s = s[idxNewLine+1:]
 	}
-
-	return n, nil
 }
 
 // WriteInt appends the given integer to b's buffer.

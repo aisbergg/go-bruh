@@ -112,7 +112,7 @@ type Err struct {
 ```
 
 <a name="Err.SetContext"></a>
-### func \(\*Err\) [SetContext](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L150>)
+### func \(\*Err\) [SetContext](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L113>)
 
 ```go
 func (e *Err) SetContext(key string, value map[string]any) ModifiableContextErr
@@ -153,7 +153,7 @@ r1 u1
 </details>
 
 <a name="Err.SetContexts"></a>
-### func \(\*Err\) [SetContexts](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L170>)
+### func \(\*Err\) [SetContexts](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L133>)
 
 ```go
 func (e *Err) SetContexts(context Context) ModifiableContextErr
@@ -196,7 +196,7 @@ r1 u1
 </details>
 
 <a name="Err.SetTag"></a>
-### func \(\*Err\) [SetTag](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L190>)
+### func \(\*Err\) [SetTag](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L153>)
 
 ```go
 func (e *Err) SetTag(key, value string) ModifiableContextErr
@@ -237,7 +237,7 @@ prod eu
 </details>
 
 <a name="Err.SetTags"></a>
-### func \(\*Err\) [SetTags](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L204>)
+### func \(\*Err\) [SetTags](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L167>)
 
 ```go
 func (e *Err) SetTags(tags Tags) ModifiableContextErr
@@ -289,7 +289,7 @@ prod eu
 </details>
 
 <a name="Err.Unshare"></a>
-### func \(\*Err\) [Unshare](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L221>)
+### func \(\*Err\) [Unshare](<https://github.com/aisbergg/go-bruh/blob/main/pkg/ctxerror/context_error.go#L184>)
 
 ```go
 func (e *Err) Unshare() ModifiableContextErr
@@ -345,10 +345,10 @@ ModifiableContextErr is an error that can modify its context.
 
 ```go
 type ModifiableContextErr interface {
-    SetContext(string, map[string]any) ModifiableContextErr
-    SetContexts(Context) ModifiableContextErr
-    SetTag(string, string) ModifiableContextErr
-    SetTags(Tags) ModifiableContextErr
+    SetContext(key string, value map[string]any) ModifiableContextErr
+    SetContexts(context Context) ModifiableContextErr
+    SetTag(key, value string) ModifiableContextErr
+    SetTags(tags Tags) ModifiableContextErr
     Unshare() ModifiableContextErr
     // contains filtered or unexported methods
 }

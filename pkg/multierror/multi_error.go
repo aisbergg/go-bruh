@@ -60,7 +60,7 @@ type Options struct {
 }
 
 // Err is an error that can hold multiple errors.
-type Err struct {
+type Err struct { //nolint: errname
 	bruh.Err
 	msg            string
 	errors         []error

@@ -187,7 +187,7 @@ errorMsg1: errorMsg2: externalErrorMsg
 ```
 
 <a name="BruhStackedFormatter"></a>
-## func [BruhStackedFormatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_bruh_trace.go#L84-L87>)
+## func [BruhStackedFormatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_bruh_trace.go#L85-L88>)
 
 ```go
 func BruhStackedFormatter(b []byte, unpacker *Unpacker) []byte
@@ -250,7 +250,7 @@ true
 </details>
 
 <a name="Errorf"></a>
-## func [Errorf](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L59>)
+## func [Errorf](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L79>)
 
 ```go
 func Errorf(format string, args ...any) error
@@ -478,7 +478,7 @@ func MessageLastN(err error, n int) string
 MessageLastN returns the combined error message of the last n errors in the chain. If n is greater than the number of errors in the chain, the message of all errors is returned.
 
 <a name="New"></a>
-## func [New](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L14>)
+## func [New](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L34>)
 
 ```go
 func New(msg string) error
@@ -517,7 +517,7 @@ opening file
 </details>
 
 <a name="NewFromPanic"></a>
-## func [NewFromPanic](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L33>)
+## func [NewFromPanic](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L53>)
 
 ```go
 func NewFromPanic(panicValue any) error
@@ -752,7 +752,7 @@ true
 </details>
 
 <a name="Wrap"></a>
-## func [Wrap](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L72>)
+## func [Wrap](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L92>)
 
 ```go
 func Wrap(err error, msg string) error
@@ -792,7 +792,7 @@ reading file: unexpected EOF
 </details>
 
 <a name="Wrapf"></a>
-## func [Wrapf](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L95>)
+## func [Wrapf](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L115>)
 
 ```go
 func Wrapf(err error, format string, args ...any) error
@@ -832,7 +832,7 @@ reading file "example.json": unexpected EOF
 </details>
 
 <a name="Err"></a>
-## type [Err](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L110-L127>)
+## type [Err](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L14-L31>)
 
 Err is an easily wrappable error with a stack trace.
 
@@ -843,7 +843,7 @@ type Err struct {
 ```
 
 <a name="ErrorfSkip"></a>
-### func [ErrorfSkip](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L66>)
+### func [ErrorfSkip](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L86>)
 
 ```go
 func ErrorfSkip(skip int, format string, args ...any) *Err
@@ -887,7 +887,7 @@ opening file "example.json"
 </details>
 
 <a name="NewSkip"></a>
-### func [NewSkip](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L50>)
+### func [NewSkip](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L70>)
 
 ```go
 func NewSkip(skip int, msg string) *Err
@@ -931,7 +931,7 @@ opening file
 </details>
 
 <a name="WrapSkip"></a>
-### func [WrapSkip](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L82>)
+### func [WrapSkip](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L102>)
 
 ```go
 func WrapSkip(err error, skip int, msg string) *Err
@@ -987,7 +987,7 @@ fmt.Println(clean(bruh.String(err)))
 </details>
 
 <a name="WrapfSkip"></a>
-### func [WrapfSkip](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L105>)
+### func [WrapfSkip](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L125>)
 
 ```go
 func WrapfSkip(err error, skip int, format string, args ...any) *Err
@@ -1043,7 +1043,7 @@ fmt.Println(clean(bruh.String(err)))
 </details>
 
 <a name="Err.Callers"></a>
-### func \(\*Err\) [Callers](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L246>)
+### func \(\*Err\) [Callers](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L241>)
 
 ```go
 func (e *Err) Callers() []uintptr
@@ -1052,7 +1052,7 @@ func (e *Err) Callers() []uintptr
 Callers returns the recorded caller stack. It implements Bugsnag's [ErrorWithCallers](<https://github.com/bugsnag/bugsnag-go/blob/46ba8d9aa46bb1d208bfcf408d0b5cff1fd371ab/v2/errors/error.go#L27-L30>) interface.
 
 <a name="Err.Cause"></a>
-### func \(\*Err\) [Cause](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L223>)
+### func \(\*Err\) [Cause](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L218>)
 
 ```go
 func (e *Err) Cause() error
@@ -1092,7 +1092,7 @@ true
 </details>
 
 <a name="Err.Error"></a>
-### func \(\*Err\) [Error](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L142>)
+### func \(\*Err\) [Error](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L137>)
 
 ```go
 func (e *Err) Error() string
@@ -1132,7 +1132,7 @@ reading file: unexpected EOF
 </details>
 
 <a name="Err.Format"></a>
-### func \(\*Err\) [Format](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L205>)
+### func \(\*Err\) [Format](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L200>)
 
 ```go
 func (e *Err) Format(s fmt.State, verb rune)
@@ -1172,7 +1172,7 @@ reading file: unexpected EOF
 </details>
 
 <a name="Err.Message"></a>
-### func \(\*Err\) [Message](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L136>)
+### func \(\*Err\) [Message](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L131>)
 
 ```go
 func (e *Err) Message() string
@@ -1212,7 +1212,7 @@ reading file
 </details>
 
 <a name="Err.Stack"></a>
-### func \(\*Err\) [Stack](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L228>)
+### func \(\*Err\) [Stack](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L223>)
 
 ```go
 func (e *Err) Stack() Stack
@@ -1262,7 +1262,7 @@ main.main
 </details>
 
 <a name="Err.StackFrames"></a>
-### func \(\*Err\) [StackFrames](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L238>)
+### func \(\*Err\) [StackFrames](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L233>)
 
 ```go
 func (e *Err) StackFrames() Stack
@@ -1312,7 +1312,7 @@ main.main
 </details>
 
 <a name="Err.Unwrap"></a>
-### func \(\*Err\) [Unwrap](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L217>)
+### func \(\*Err\) [Unwrap](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L212>)
 
 ```go
 func (e *Err) Unwrap() error
@@ -1361,7 +1361,7 @@ type Formatter func(b []byte, unpacker *Unpacker) []byte
 ```
 
 <a name="BruhFancyFormatter"></a>
-### func [BruhFancyFormatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_bruh_trace.go#L60-L62>)
+### func [BruhFancyFormatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_bruh_trace.go#L61-L63>)
 
 ```go
 func BruhFancyFormatter(colored, sourced bool) Formatter
@@ -1405,7 +1405,7 @@ at functionN (fileN:lineN)
 ```
 
 <a name="BruhStackedFancyFormatter"></a>
-### func [BruhStackedFancyFormatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_bruh_trace.go#L159-L161>)
+### func [BruhStackedFancyFormatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_bruh_trace.go#L160-L162>)
 
 ```go
 func BruhStackedFancyFormatter(colored, sourced, typed bool) Formatter

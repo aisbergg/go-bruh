@@ -180,11 +180,11 @@ type framesDouble struct {
 }
 
 func asRuntimeFrames(f *framesDouble) *runtime.Frames {
-	return (*runtime.Frames)(unsafe.Pointer(f)) //nolint:gosec
+	return (*runtime.Frames)(unsafe.Pointer(f))
 }
 
 func asFramesDouble(f *runtime.Frames) *framesDouble {
-	return (*framesDouble)(unsafe.Pointer(f)) //nolint:gosec
+	return (*framesDouble)(unsafe.Pointer(f))
 }
 
 var framesDoublePool = sync.Pool{

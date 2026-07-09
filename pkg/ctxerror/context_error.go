@@ -37,10 +37,10 @@ type Tags = map[string]string
 // ModifiableContextErr is an error that can modify its context.
 type ModifiableContextErr interface {
 	error
-	SetContext(string, map[string]any) ModifiableContextErr
-	SetContexts(Context) ModifiableContextErr
-	SetTag(string, string) ModifiableContextErr
-	SetTags(Tags) ModifiableContextErr
+	SetContext(key string, value map[string]any) ModifiableContextErr
+	SetContexts(context Context) ModifiableContextErr
+	SetTag(key, value string) ModifiableContextErr
+	SetTags(tags Tags) ModifiableContextErr
 	Unshare() ModifiableContextErr
 }
 
@@ -64,7 +64,7 @@ var _ ModifiableContextErr = (*Err)(nil)
 // different error chains, you should call Unshare() on it. This creates a
 // private copy of the metadata, preventing modifications in one chain from
 // affecting another.
-type Err struct {
+type Err struct { //nolint: errname
 	bruh.Err
 	context Context
 	tags    Tags
@@ -107,43 +107,6 @@ func Wrapf(err error, format string, args ...any) ModifiableContextErr {
 		return nil
 	}
 	return &Err{Err: *bruh.WrapSkip(err, 1, fmt.Sprintf(format, args...)), shared: true}
-}
-
-// privateContext returns the context of the error without merging it with the
-// context of the wrapped errors. It is used internally to implement the
-// [Context] method and should not be used directly. If no context was set, nil
-// is returned.
-func (e *Err) privateContext() Context {
-	// Ensure shared/common context map is initialized.
-	ctx := e.initContext()
-	if !e.shared {
-		if ctx == nil {
-			ctx = make(Context, ContextDefaultMapSize)
-			return ctx
-		}
-		nc := make(Context, len(ctx))
-		for g, m := range ctx {
-			nm := make(map[string]any, len(m))
-			maps.Copy(nm, m)
-			nc[g] = nm
-		}
-		return nc
-	}
-	return ctx
-}
-
-func (e *Err) privateTags() Tags {
-	tags := e.initTags()
-	if !e.shared {
-		if tags == nil {
-			tags = make(Tags, ContextDefaultMapSize)
-			return tags
-		}
-		tagsCopy := make(Tags, len(tags))
-		maps.Copy(tagsCopy, tags)
-		return tagsCopy
-	}
-	return tags
 }
 
 // SetContext adds the given key-value pairs to the context of the error.
@@ -226,6 +189,43 @@ func (e *Err) Unshare() ModifiableContextErr {
 	// through privateContext/privateTags.
 	e.shared = false
 	return e
+}
+
+// privateContext returns the context of the error without merging it with the
+// context of the wrapped errors. It is used internally to implement the
+// [Context] method and should not be used directly. If no context was set, nil
+// is returned.
+func (e *Err) privateContext() Context {
+	// Ensure shared/common context map is initialized.
+	ctx := e.initContext()
+	if !e.shared {
+		if ctx == nil {
+			ctx = make(Context, ContextDefaultMapSize)
+			return ctx
+		}
+		nc := make(Context, len(ctx))
+		for g, m := range ctx {
+			nm := make(map[string]any, len(m))
+			maps.Copy(nm, m)
+			nc[g] = nm
+		}
+		return nc
+	}
+	return ctx
+}
+
+func (e *Err) privateTags() Tags {
+	tags := e.initTags()
+	if !e.shared {
+		if tags == nil {
+			tags = make(Tags, ContextDefaultMapSize)
+			return tags
+		}
+		tagsCopy := make(Tags, len(tags))
+		maps.Copy(tagsCopy, tags)
+		return tagsCopy
+	}
+	return tags
 }
 
 // initContext initializes the context of the error. It tries to get the

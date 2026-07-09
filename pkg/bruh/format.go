@@ -39,7 +39,7 @@ func MessageLastN(err error, n int) string {
 		lastN[lastNIdx] = uerr
 		lastNIdx = (lastNIdx + 1) % n
 	}
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if lastErr := lastN[(lastNIdx+i)%n]; lastErr != nil {
 			return lastErr.Error()
 		}
@@ -77,7 +77,7 @@ func StringFormat(err error, f Formatter, unpackAll ...bool) string {
 		return ""
 	}
 	b := AppendStringFormat(nil, err, f, unpackAll...)
-	return unsafe.String(unsafe.SliceData(b), len(b)) //nolint:gosec
+	return unsafe.String(unsafe.SliceData(b), len(b))
 }
 
 // AppendStringFormat does the same as [StringFormat] but appends the formatted
