@@ -146,8 +146,14 @@ git diff --exit-code
 """
 
 [tasks.check-lint]
-description = "Run golangci-lint against the library packages"
-run = "golangci-lint run ./pkg/..."
+description = "Run golangci-lint against the library packages (accepts arbitrary args)"
+usage = 'arg "[args]" var=#true'
+run = """
+#!/usr/bin/env bash
+set -eo pipefail
+eval "args=($usage_args)"
+golangci-lint run ./pkg/... "${args[@]}"
+"""
 
 [tasks.check-secrets]
 description = "Check repository for newly introduced secrets"
