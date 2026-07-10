@@ -33,7 +33,7 @@ typos = "1.47.2"
 # Link checker for Markdown and other text content.
 # Used here to verify that documentation links in the repository stay valid.
 # https://github.com/lycheeverse/lychee
-lychee = "0.23.0"
+lychee = "0.24.2"
 
 # Secret scanner for finding hardcoded credentials and tokens.
 # Used in this project to detect committed secrets before they land in the repository history.
