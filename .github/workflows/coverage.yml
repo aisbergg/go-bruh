@@ -15,15 +15,15 @@ jobs:
     name: go-coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: 1.26.x
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Check test coverage
         run: |
           go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' $(go list ./pkg/... | grep -v testutils)
       - name: Upload coverage report to CodeCov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./cover.out

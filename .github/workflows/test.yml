@@ -17,10 +17,10 @@ jobs:
   hygiene:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: 1.26.x
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
       - run: mise run check-generated
       - run: mise run check-format
@@ -36,9 +36,9 @@ jobs:
     name: go-test
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go-version }}
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Run the tests
         run: go test -race -v -gcflags '-N -l' ./pkg/...
