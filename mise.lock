@@ -197,7 +197,7 @@ version = "1.5.0"
 backend = "pipx:detect-secrets"
 
 [[tools.prettier]]
-version = "3.9.4"
+version = "3.9.5"
 backend = "npm:prettier"
 
 [[tools.typos]]
