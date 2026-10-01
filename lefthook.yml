@@ -3,13 +3,6 @@
 pre-commit:
   parallel: true
   commands:
-    fmt-prettier:
-      glob: "*.{js,ts,json,md,yml,yaml}"
-      exclude:
-        - "pkg/**/*.md"
-      run: mise run format-prettier -- {staged_files}
-      stage_fixed: true
-
     check-typos:
       exclude:
         - "pkg/**/*.md"
@@ -44,15 +37,19 @@ pre-commit-serial:
     check-mod-change:
       run: mise run mod-tidy
 
-    fmt:
+    format:
       glob: "*.go"
       run: mise run format
       stage_fixed: true
 
-    docs:
+    make-docs:
       glob: "*.go"
       run: mise run docs-make
       stage_fixed: true
+
+    check-vulns:
+      glob: "go.mod"
+      run: mise run check-vulns
 
 pre-push:
   follow: true
