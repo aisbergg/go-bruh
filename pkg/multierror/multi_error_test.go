@@ -656,7 +656,7 @@ func TestErrorFormatting(t *testing.T) {
 
 	t.Run("ErrorPadsErrorNumbersCorrectly", func(t *testing.T) {
 		me := New("test", Options{})
-		for i := 0; i < 15; i++ {
+		for i := range 15 {
 			me.Add(fmt.Errorf("error %d", i))
 		}
 		msg := me.Error()
