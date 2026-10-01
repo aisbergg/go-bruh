@@ -57,7 +57,7 @@ func BenchmarkCompareWrap(b *testing.B) {
 	for _, tc := range cases {
 		b.Run(fmt.Sprintf("pkg=bruh/layers=%v", tc.layers), func(b *testing.B) {
 			var err error
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				err = wrapBruh(tc.layers)
 			}
 			b.StopTimer()
@@ -66,7 +66,7 @@ func BenchmarkCompareWrap(b *testing.B) {
 
 		b.Run(fmt.Sprintf("pkg=pkgerrors/layers=%v", tc.layers), func(b *testing.B) {
 			var err error
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				err = wrapPkgErrors(tc.layers)
 			}
 			b.StopTimer()
@@ -75,7 +75,7 @@ func BenchmarkCompareWrap(b *testing.B) {
 
 		b.Run(fmt.Sprintf("pkg=eris/layers=%v", tc.layers), func(b *testing.B) {
 			var err error
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				err = wrapEris(tc.layers)
 			}
 			b.StopTimer()
@@ -84,7 +84,7 @@ func BenchmarkCompareWrap(b *testing.B) {
 
 		b.Run(fmt.Sprintf("pkg=emperror/layers=%v", tc.layers), func(b *testing.B) {
 			var err error
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				err = wrapEmperror(tc.layers)
 			}
 			b.StopTimer()
@@ -99,7 +99,7 @@ func BenchmarkCompareFormatMessageOnly(b *testing.B) {
 			err := wrapBruh(tc.layers)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = bruh.Message(err)
 			}
 			b.StopTimer()
@@ -110,7 +110,7 @@ func BenchmarkCompareFormatMessageOnly(b *testing.B) {
 			err := wrapPkgErrors(tc.layers)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = fmt.Sprint(err)
 			}
 			b.StopTimer()
@@ -121,7 +121,7 @@ func BenchmarkCompareFormatMessageOnly(b *testing.B) {
 			err := wrapEris(tc.layers)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = eris.ToString(err, false)
 			}
 			b.StopTimer()
@@ -132,7 +132,7 @@ func BenchmarkCompareFormatMessageOnly(b *testing.B) {
 			err := wrapEmperror(tc.layers)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = fmt.Sprintf("%s", err)
 			}
 			b.StopTimer()
@@ -147,7 +147,7 @@ func BenchmarkCompareFormatTrace(b *testing.B) {
 			err := wrapBruh(tc.layers)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = bruh.StringFormat(err, bruh.BruhFormatter)
 			}
 			b.StopTimer()
@@ -158,7 +158,7 @@ func BenchmarkCompareFormatTrace(b *testing.B) {
 			err := wrapBruh(tc.layers)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = bruh.StringFormat(err, bruh.BruhStackedFormatter)
 			}
 			b.StopTimer()
@@ -169,7 +169,7 @@ func BenchmarkCompareFormatTrace(b *testing.B) {
 			err := wrapPkgErrors(tc.layers)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = fmt.Sprintf("%+v", err)
 			}
 			b.StopTimer()
@@ -190,7 +190,7 @@ func BenchmarkCompareFormatTrace(b *testing.B) {
 			}
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = eris.ToCustomString(err, format)
 			}
 			b.StopTimer()
@@ -201,7 +201,7 @@ func BenchmarkCompareFormatTrace(b *testing.B) {
 			err := wrapEmperror(tc.layers)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = fmt.Sprintf("%+v", err)
 			}
 			b.StopTimer()

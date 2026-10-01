@@ -346,7 +346,7 @@ func BenchmarkFormatters(b *testing.B) {
 			err := wrappedError(20)
 			b.ResetTimer()
 			var str string
-			for n := 0; n < b.N; n++ {
+			for b.Loop() {
 				str = bruh.StringFormat(err, tc.fmt)
 			}
 			_ = str
