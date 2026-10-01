@@ -7,26 +7,26 @@ pre-commit:
       glob: "*.{js,ts,json,md,yml,yaml}"
       exclude:
         - "pkg/**/*.md"
-      run: prettier --write {staged_files}
+      run: mise run format-prettier -- {staged_files}
       stage_fixed: true
 
     check-typos:
       exclude:
         - "pkg/**/*.md"
-      run: typos {staged_files}
+      run: mise run check-typos -- {staged_files}
       file_types: text
 
     check-secrets:
       exclude:
         - "pkg/**/*.md"
-      run: bash .github/detect-secrets.sh
+      run: mise run check-secrets
 
     check-links:
       glob: "*.md"
       exclude:
         - "pkg/**/*.md"
         - "CHANGELOG.md"
-      run: lychee {staged_files}
+      run: mise run check-links -- {staged_files}
 
     # all other pre-commit tasks need to be run in sequence
     pre-commit-serial:
@@ -39,27 +39,19 @@ pre-commit-serial:
   parallel: false
   commands:
     generate:
-      run: go generate ./...
+      run: mise run generate
 
     check-mod-change:
-      run: go mod tidy -go 1.25.0
+      run: mise run mod-tidy
 
     fmt:
       glob: "*.go"
-      run: golangci-lint fmt
-      stage_fixed: true
-
-    lint:
-      glob: "*.go"
-      run: golangci-lint run --fix
+      run: mise run format
       stage_fixed: true
 
     docs:
-      # cd into "pkg" beforehand removes the "pkg" part from the generated dir
-      run: |
-        cd pkg
-        gomarkdoc -o '{{.Dir}}/README.md' --repository.url=https://github.com/aisbergg/go-bruh --repository.default-branch=main ./...
       glob: "*.go"
+      run: mise run docs-make
       stage_fixed: true
 
 pre-push:

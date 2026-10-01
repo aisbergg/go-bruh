@@ -45,18 +45,47 @@ lychee = "0.24.2"
 # https://github.com/jqlang/jq
 jq = "1.8.2"
 
+# Go vulnerability checker that scans dependencies against known CVEs.
+# Used here to audit the project for security vulnerabilities before release.
+# https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck
+"go:golang.org/x/vuln/cmd/govulncheck" = "v1.8.0"
+
 
 # ------------------------------------------------------------------------------
 # Auto-Fix tasks
 # ------------------------------------------------------------------------------
 
-[tasks.fix-fmt]
+[tasks.format]
+description = "Format all"
+depends = [
+    "format-go",
+    "format-prettier",
+]
+
+[tasks.format-go]
 description = "Format and lint via golangci-lint"
 run = "golangci-lint fmt && golangci-lint run --fix"
 
-[tasks.fix-run-hooks]
-description = "Run pre-commit hooks"
-run = "lefthook run pre-commit"
+[tasks.format-prettier]
+description = "Auto-format text files with prettier (accepts files)"
+run = """
+#!/usr/bin/env bash
+set -e
+prettier --write "${@-.}"
+"""
+
+
+# ------------------------------------------------------------------------------
+# Generation tasks
+# ------------------------------------------------------------------------------
+
+[tasks.generate]
+description = "Run go generate for all packages"
+run = "go generate ./..."
+
+[tasks.mod-tidy]
+description = "Tidy go modules for Go 1.25.0"
+run = "go mod tidy -go 1.25.0"
 
 
 # ------------------------------------------------------------------------------
@@ -125,6 +154,18 @@ bash benchmarks/benchstat.sh "${PREVIOUS}"
 # Check tasks
 # ------------------------------------------------------------------------------
 
+[tasks.check-hygiene]
+description =  "Run all repository checks"
+depends = [
+    "check-generated",
+    "check-format",
+    "check-lint",
+    "check-links",
+    "check-secrets",
+    "check-vulns",
+    "check-typos",
+]
+
 [tasks.check-generated]
 description = "Regenerate derived files and fail if the repo changes"
 run = """
@@ -155,13 +196,38 @@ eval "args=($usage_args)"
 golangci-lint run ./pkg/... "${args[@]}"
 """
 
+[tasks.check-vulns]
+description = "Scan Go dependencies for known vulnerabilities"
+run = "govulncheck ./..."
+
 [tasks.check-secrets]
 description = "Check repository for newly introduced secrets"
 run = "bash .github/detect-secrets.sh"
 
 [tasks.check-links]
-description = "Verify repository links resolve successfully"
-run = "lychee --no-progress ."
+description = "Verify repository links resolve (accepts files)"
+run = """
+#!/usr/bin/env bash
+set -e
+lychee --no-progress "${@-.}"
+"""
+
+[tasks.check-typos]
+description = "Check spelling with typos (accepts files)"
+run = """
+#!/usr/bin/env bash
+set -e
+typos "${@-.}"
+"""
+
+
+# ------------------------------------------------------------------------------
+# Template tasks
+# ------------------------------------------------------------------------------
+
+[tasks.update-template]
+description = "Update project from copier template"
+run = "copier update --defaults"
 
 
 # ------------------------------------------------------------------------------
@@ -170,7 +236,7 @@ run = "lychee --no-progress ."
 
 [tasks.release-tag]
 description = "Stage a release (requires VERSION env var)"
-depends = ["fix-run-hooks", "test"]
+depends = ["run-hooks", "test"]
 run = """
 if [ -z "$VERSION" ]; then
   echo "ERR: You have to specify the next release version (e.g. 'VERSION=v0.0.0')!"

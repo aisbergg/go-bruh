@@ -36,6 +36,10 @@ url = "https://dl.google.com/go/go1.26.4.windows-amd64.zip"
 version = "1.1.0"
 backend = "go:github.com/princjef/gomarkdoc/cmd/gomarkdoc"
 
+[[tools."go:golang.org/x/vuln/cmd/govulncheck"]]
+version = "1.8.0"
+backend = "go:golang.org/x/vuln/cmd/govulncheck"
+
 [[tools.golangci-lint]]
 version = "2.12.2"
 backend = "aqua:golangci/golangci-lint"

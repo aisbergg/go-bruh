@@ -44,12 +44,6 @@ We welcome contributions in the form of pull requests. To submit a pull request:
     lefthook install
     ```
 
-    Now before any commit _lefthook_ will run formatting and linting for you. You can also run this manually via:
-
-    ```sh
-    mise run fix-run-hooks
-    ```
-
 4. Make your changes, ensuring that your code follows the coding guidelines (discussed later in this document).
 5. Write tests to cover your changes and ensure they pass successfully.
 6. Commit your changes with clear and descriptive commit messages. Please use the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) style for the messages. (`git commit -m 'fix: important fix'`)
