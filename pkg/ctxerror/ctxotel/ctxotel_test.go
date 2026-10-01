@@ -7,7 +7,7 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 
-	"github.com/aisbergg/go-bruh/internal/testutils"
+	"github.com/aisbergg/go-bruh/internal/lib/test/assert"
 	"github.com/aisbergg/go-bruh/pkg/ctxerror"
 	"github.com/aisbergg/go-bruh/pkg/ctxerror/ctxotel"
 )
@@ -22,7 +22,6 @@ func attrsByKey(attrs []attribute.KeyValue) map[string]attribute.Value {
 
 func TestContextToAttributes(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	now := time.Unix(1700000000, 0).UTC()
 	ctx := ctxerror.Context{
@@ -41,40 +40,38 @@ func TestContextToAttributes(t *testing.T) {
 
 	attrs := attrsByKey(ctxotel.ContextToAttributes(ctx))
 
-	assert.Equal("s", fmt.Sprint(attrs["grp.str"].AsInterface()))
-	assert.True(attrs["grp.bool"].AsInterface().(bool))
+	assert.Equal(t, fmt.Sprint(attrs["grp.str"].AsInterface()), "s")
+	assert.True(t, attrs["grp.bool"].AsInterface().(bool))
 	// numeric attrs: compare stringified values to avoid type differences
-	assert.Equal("7", fmt.Sprint(attrs["grp.int"].AsInterface()))
-	assert.Equal("8", fmt.Sprint(attrs["grp.int64"].AsInterface()))
-	assert.Equal("1.25", fmt.Sprint(attrs["grp.float"].AsInterface()))
+	assert.Equal(t, fmt.Sprint(attrs["grp.int"].AsInterface()), "7")
+	assert.Equal(t, fmt.Sprint(attrs["grp.int64"].AsInterface()), "8")
+	assert.Equal(t, fmt.Sprint(attrs["grp.float"].AsInterface()), "1.25")
 
 	// time stored as RFC3339Nano string
 	gotTimeStr := fmt.Sprint(attrs["grp.time"].AsInterface())
 	parsed, err := time.Parse(time.RFC3339Nano, gotTimeStr)
-	assert.NoError(err)
-	assert.Equal(now, parsed)
+	assert.NoError(t, err)
+	assert.Equal(t, parsed, now)
 
 	// duration stored as string
-	assert.Equal((3 * time.Second).String(), fmt.Sprint(attrs["grp.dur"].AsInterface()))
+	assert.Equal(t, fmt.Sprint(attrs["grp.dur"].AsInterface()), (3 * time.Second).String())
 
-	assert.Equal("x", fmt.Sprint(attrs["grp.nested.leaf"].AsInterface()))
-	assert.Equal("b", fmt.Sprint(attrs["grp.labels.a"].AsInterface()))
+	assert.Equal(t, fmt.Sprint(attrs["grp.nested.leaf"].AsInterface()), "x")
+	assert.Equal(t, fmt.Sprint(attrs["grp.labels.a"].AsInterface()), "b")
 }
 
 func TestTagsToAttributes(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	tags := ctxerror.Tags{"env": "prod", "op": "write"}
 	attrs := attrsByKey(ctxotel.TagsToAttributes(tags))
 
-	assert.Equal("prod", fmt.Sprint(attrs["env"].AsInterface()))
-	assert.Equal("write", fmt.Sprint(attrs["op"].AsInterface()))
+	assert.Equal(t, fmt.Sprint(attrs["env"].AsInterface()), "prod")
+	assert.Equal(t, fmt.Sprint(attrs["op"].AsInterface()), "write")
 }
 
 func TestAsAttributes(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	baseErr := ctxerror.New("base error").SetContext("user", map[string]any{"id": "123"}).SetTag("region", "us-west")
 	wrappedErr := ctxerror.Wrap(baseErr, "wrapped error").SetContext("request", map[string]any{"id": "req-abc"})
@@ -90,6 +87,6 @@ func TestAsAttributes(t *testing.T) {
 
 	for k, v := range expected {
 		got := fmt.Sprint(attrs[k].AsInterface())
-		assert.Equal(v, got)
+		assert.Equal(t, got, v)
 	}
 }

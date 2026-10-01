@@ -24,7 +24,10 @@ formatters:
         - github.com/aisbergg/go-bruh
 
     gofumpt:
-      extra-rules: true
+      extra:
+        group-params: true
+        clothe-returns: true
+        balance-calls: true
 
     golines:
       max-len: 120

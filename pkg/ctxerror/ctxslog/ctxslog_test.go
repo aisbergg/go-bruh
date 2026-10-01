@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aisbergg/go-bruh/internal/testutils"
+	"github.com/aisbergg/go-bruh/internal/lib/test/assert"
 	"github.com/aisbergg/go-bruh/pkg/ctxerror"
 	"github.com/aisbergg/go-bruh/pkg/ctxerror/ctxslog"
 )
@@ -33,23 +33,22 @@ func attrsByKey(attrs []slog.Attr) map[string]slog.Value {
 
 func TestAsAttributes(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("NilErrorReturnsZeroSlogValue", func(t *testing.T) {
-		assert.Equal([]slog.Attr{}, ctxslog.AsAttributes(nil))
+		assert.Equal(t, ctxslog.AsAttributes(nil), []slog.Attr{})
 	})
 
 	t.Run("ErrorMessageIsPresentUnderErrorKey", func(t *testing.T) {
 		err := ctxerror.New("boom")
 		attrs := attrsByKey(ctxslog.AsAttributes(err))
-		assert.Equal("boom", attrs["error"].String())
+		assert.Equal(t, attrs["error"].String(), "boom")
 	})
 
 	t.Run("ContextGroupsAreFlattenedAsGroupKeyAttributes", func(t *testing.T) {
 		err := ctxerror.New("x").SetContext("req", map[string]any{"id": "r1", "path": "/v1"})
 		attrs := attrsByKey(ctxslog.AsAttributes(err))
-		assert.Equal("r1", attrs["req.id"].String())
-		assert.Equal("/v1", attrs["req.path"].String())
+		assert.Equal(t, attrs["req.id"].String(), "r1")
+		assert.Equal(t, attrs["req.path"].String(), "/v1")
 	})
 
 	t.Run("TagsAppearAsTopLevelStringAttributes", func(t *testing.T) {
@@ -57,8 +56,8 @@ func TestAsAttributes(t *testing.T) {
 			SetTag("env", "prod").
 			SetTag("op", "write")
 		attrs := attrsByKey(ctxslog.AsAttributes(err))
-		assert.Equal("prod", attrs["env"].String())
-		assert.Equal("write", attrs["op"].String())
+		assert.Equal(t, attrs["env"].String(), "prod")
+		assert.Equal(t, attrs["op"].String(), "write")
 	})
 
 	t.Run("AllSlogTypedContextValuesAreConvertedCorrectly", func(t *testing.T) {
@@ -78,16 +77,16 @@ func TestAsAttributes(t *testing.T) {
 			},
 		)
 		attrs := attrsByKey(ctxslog.AsAttributes(err))
-		assert.Equal("s", attrs["ctx.str"].String())
-		assert.True(attrs["ctx.bool"].Bool())
-		assert.Equal(int64(7), attrs["ctx.int"].Int64())
-		assert.Equal(int64(8), attrs["ctx.int64"].Int64())
-		assert.Equal(1.25, attrs["ctx.float"].Float64())
-		assert.Equal(now, attrs["ctx.time"].Time())
-		assert.Equal(3*time.Second, attrs["ctx.dur"].Duration())
-		assert.Equal("x", attrs["ctx.nested.leaf"].String())
-		assert.Equal("b", attrs["ctx.labels.a"].String())
-		assert.True(reflect.DeepEqual(attrs["ctx.any"].Any(), struct{ N int }{N: 9}), "unexpected Any value")
+		assert.Equal(t, attrs["ctx.str"].String(), "s")
+		assert.True(t, attrs["ctx.bool"].Bool())
+		assert.Equal(t, attrs["ctx.int"].Int64(), int64(7))
+		assert.Equal(t, attrs["ctx.int64"].Int64(), int64(8))
+		assert.Equal(t, attrs["ctx.float"].Float64(), 1.25)
+		assert.Equal(t, attrs["ctx.time"].Time(), now)
+		assert.Equal(t, attrs["ctx.dur"].Duration(), 3*time.Second)
+		assert.Equal(t, attrs["ctx.nested.leaf"].String(), "x")
+		assert.Equal(t, attrs["ctx.labels.a"].String(), "b")
+		assert.True(t, reflect.DeepEqual(attrs["ctx.any"].Any(), struct{ N int }{N: 9}), "unexpected Any value")
 	})
 
 	t.Run("GroupLogValuerAttrsAreAppended", func(t *testing.T) {
@@ -97,7 +96,7 @@ func TestAsAttributes(t *testing.T) {
 			value: slog.GroupValue(slog.String("extra", "yes")),
 		}
 		attrs := attrsByKey(ctxslog.AsAttributes(wrapped))
-		assert.Equal("yes", attrs["extra"].String())
+		assert.Equal(t, attrs["extra"].String(), "yes")
 	})
 
 	t.Run("NonGroupLogValuerValueIsIgnored", func(t *testing.T) {
@@ -108,11 +107,10 @@ func TestAsAttributes(t *testing.T) {
 		}
 		attrs := attrsByKey(ctxslog.AsAttributes(wrapped))
 		_, hasIgnored := attrs["ignored"]
-		assert.False(hasIgnored, "non-group LogValuer value must not be appended")
+		assert.False(t, hasIgnored, "non-group LogValuer value must not be appended")
 	})
 
 	t.Run("AsAttributes", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		baseErr := ctxerror.New("base error").
 			SetContext("user", map[string]any{"id": "123"}).
 			SetTag("region", "us-west")
@@ -137,15 +135,14 @@ func TestAsAttributes(t *testing.T) {
 		// Check for expected attributes
 		for key, val := range expectedAttrs {
 			got, ok := actualAttrs[key]
-			assert.True(ok, "expected attribute %s not found", key)
-			assert.Equal(val, got)
+			assert.Truef(t, ok, "expected attribute %s not found", key)
+			assert.Equal(t, got, val)
 		}
 	})
 }
 
 func TestContextToAttributes(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	now := time.Unix(1700000000, 0).UTC()
 	ctx := ctxerror.Context{
@@ -164,24 +161,23 @@ func TestContextToAttributes(t *testing.T) {
 
 	attrs := attrsByKey(ctxslog.ContextToAttributes(ctx))
 
-	assert.Equal("s", attrs["grp.str"].String())
-	assert.True(attrs["grp.bool"].Bool())
-	assert.Equal(int64(7), attrs["grp.int"].Int64())
-	assert.Equal(int64(8), attrs["grp.int64"].Int64())
-	assert.Equal(1.25, attrs["grp.float"].Float64())
-	assert.Equal(now, attrs["grp.time"].Time())
-	assert.Equal(3*time.Second, attrs["grp.dur"].Duration())
-	assert.Equal("x", attrs["grp.nested.leaf"].String())
-	assert.Equal("b", attrs["grp.labels.a"].String())
+	assert.Equal(t, attrs["grp.str"].String(), "s")
+	assert.True(t, attrs["grp.bool"].Bool())
+	assert.Equal(t, attrs["grp.int"].Int64(), int64(7))
+	assert.Equal(t, attrs["grp.int64"].Int64(), int64(8))
+	assert.Equal(t, attrs["grp.float"].Float64(), 1.25)
+	assert.Equal(t, attrs["grp.time"].Time(), now)
+	assert.Equal(t, attrs["grp.dur"].Duration(), 3*time.Second)
+	assert.Equal(t, attrs["grp.nested.leaf"].String(), "x")
+	assert.Equal(t, attrs["grp.labels.a"].String(), "b")
 }
 
 func TestTagsToAttributes(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	tags := ctxerror.Tags{"env": "prod", "op": "write"}
 	attrs := attrsByKey(ctxslog.TagsToAttributes(tags))
 
-	assert.Equal("prod", attrs["env"].String())
-	assert.Equal("write", attrs["op"].String())
+	assert.Equal(t, attrs["env"].String(), "prod")
+	assert.Equal(t, attrs["op"].String(), "write")
 }

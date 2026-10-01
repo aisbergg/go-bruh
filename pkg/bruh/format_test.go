@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/aisbergg/go-bruh/internal/testutils"
+	"github.com/aisbergg/go-bruh/internal/lib/test/assert"
 	"github.com/aisbergg/go-bruh/pkg/bruh"
 )
 
@@ -116,11 +116,10 @@ func TestFormatMessageOnly(t *testing.T) {
 	t.Parallel()
 	assertFormatMessage := func(name string, input error, exp string) {
 		t.Run(name, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
-			assert.Equal(exp, bruh.StringFormat(input, nil))
-			assert.Equal(exp, bruh.Message(input))
+			assert.Equal(t, bruh.StringFormat(input, nil), exp)
+			assert.Equal(t, bruh.Message(input), exp)
 			if input != nil {
-				assert.Equal(exp, fmt.Sprintf("%v", input))
+				assert.Equal(t, fmt.Sprintf("%v", input), exp)
 			}
 		})
 	}
@@ -169,9 +168,8 @@ func TestAppendMessage(t *testing.T) {
 	t.Parallel()
 	assertAppendMessage := func(name, prefix string, input error, exp string) {
 		t.Run(name, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
 			result := bruh.AppendMessage([]byte(prefix), input)
-			assert.Equal(exp, string(result))
+			assert.Equal(t, string(result), exp)
 		})
 	}
 
@@ -189,8 +187,7 @@ func TestMessageLastN(t *testing.T) {
 	t.Parallel()
 	assertMessageLastN := func(name string, input error, n int, exp string) {
 		t.Run(name, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
-			assert.Equal(exp, bruh.MessageLastN(input, n))
+			assert.Equal(t, bruh.MessageLastN(input, n), exp)
 		})
 	}
 
@@ -210,8 +207,7 @@ func TestString(t *testing.T) {
 	t.Parallel()
 	assertString := func(name string, input error, exp string) {
 		t.Run(name, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
-			assert.Equal(exp, bruh.String(input))
+			assert.Equal(t, bruh.String(input), exp)
 		})
 	}
 
@@ -224,9 +220,8 @@ func TestAppendString(t *testing.T) {
 	t.Parallel()
 	assertAppendString := func(name, prefix string, input error, exp string) {
 		t.Run(name, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
 			result := bruh.AppendString([]byte(prefix), input)
-			assert.Equal(exp, string(result))
+			assert.Equal(t, string(result), exp)
 		})
 	}
 
@@ -251,8 +246,7 @@ func TestStringFormat(t *testing.T) {
 	)
 	assertStringFormat := func(name string, input error, formatter bruh.Formatter, unpackAll bool, exp string) {
 		t.Run(name, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
-			assert.Equal(exp, bruh.StringFormat(input, formatter, unpackAll))
+			assert.Equal(t, bruh.StringFormat(input, formatter, unpackAll), exp)
 		})
 	}
 
@@ -285,9 +279,8 @@ func TestAppendStringFormat(t *testing.T) {
 		exp string,
 	) {
 		t.Run(name, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
 			result := bruh.AppendStringFormat([]byte(prefix), input, formatter, unpackAll)
-			assert.Equal(exp, string(result))
+			assert.Equal(t, string(result), exp)
 		})
 	}
 

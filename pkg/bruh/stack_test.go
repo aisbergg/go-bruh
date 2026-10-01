@@ -8,7 +8,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/aisbergg/go-bruh/internal/testutils"
+	"github.com/aisbergg/go-bruh/internal/lib/test/assert"
+	"github.com/aisbergg/go-bruh/internal/lib/test/require"
 )
 
 const (
@@ -65,25 +66,25 @@ func ProcessFile(fname string, global, external bool) error {
 func TestCombinedStack(t *testing.T) {
 	tfname := prefix + t.Name()
 	expectedCombinedStack0 := []StackFrame{
-		{Name: readFunc, File: file, Line: 31},
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
-		{Name: processFunc, File: file, Line: 56},
-		{Name: tfname, File: file, Line: 89},
+		{Name: readFunc, File: file, Line: 32},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: processFunc, File: file, Line: 57},
+		{Name: tfname, File: file, Line: 90},
 	}
 	expectedCombinedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 31},
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
-		{Name: tfname, File: file, Line: 89},
+		{Name: readFunc, File: file, Line: 32},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: tfname, File: file, Line: 90},
 	}
 	expectedCombinedStack2 := []StackFrame{
-		{Name: readFunc, File: file, Line: 31},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
-		{Name: tfname, File: file, Line: 89},
+		{Name: readFunc, File: file, Line: 32},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: tfname, File: file, Line: 90},
 	}
 
 	err := ProcessFile("example.json", false, false)
@@ -94,19 +95,18 @@ func TestCombinedStack(t *testing.T) {
 }
 
 func TestCombinedStackGlobal(t *testing.T) {
-	required := testutils.NewRequire(t)
 	tfname := prefix + t.Name()
 	expectedCombinedStack0 := []StackFrame{
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
-		{Name: processFunc, File: file, Line: 56},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: processFunc, File: file, Line: 57},
 		{Name: tfname, File: file, Line: 115},
 	}
 	expectedCombinedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 		{Name: tfname, File: file, Line: 115},
 	}
 	expectedCombinedStack2 := []StackFrame{}
@@ -120,7 +120,7 @@ func TestCombinedStackGlobal(t *testing.T) {
 
 	bruhErr := errorFn1().(*Err)
 	stack := bruhErr.Stack()
-	required.Equal(101, len(stack))
+	require.Equal(t, len(stack), 101)
 	if !strings.HasSuffix(stack[0].Name, "errorFn50") {
 		t.Errorf("Expected name to end with '%s', name was '%s'", "errorFn50", stack[0].Name)
 	}
@@ -133,19 +133,18 @@ func TestCombinedStackGlobal(t *testing.T) {
 }
 
 func TestPartialStack(t *testing.T) {
-	assert := testutils.NewAssert(t)
 	tfname := prefix + t.Name()
 	expectedPartialStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 56},
-		{Name: tfname, File: file, Line: 151},
+		{Name: processFunc, File: file, Line: 57},
+		{Name: tfname, File: file, Line: 150},
 	}
 	expectedPartialStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 	}
 	expectedPartialStack2 := []StackFrame{
-		{Name: readFunc, File: file, Line: 31},
+		{Name: readFunc, File: file, Line: 32},
 	}
 
 	err := ProcessFile("example.json", false, false)
@@ -157,10 +156,11 @@ func TestPartialStack(t *testing.T) {
 	// error with call stack that is larger than MaxStackDepth
 	err = errorFn1()
 	uerr = newUnpacker(err, true).Unpack()
-	assert.Equal(len(uerr), 50)
-	assert.Equal(len(uerr[0].PartialStack), 3) // same as the original stack
+	assert.Equal(t, len(uerr), 50)
+	assert.Equal(t, len(uerr[0].PartialStack), 3) // same as the original stack
 	for i := len(uerr) - 1; i > 0; i-- {
-		assert.Equal(
+		assert.Equalf(
+			t,
 			len(uerr[i].PartialStack),
 			2,
 			"Expected a partial stack length of %d, got %d; The Stack:\n: %s",
@@ -174,19 +174,19 @@ func TestPartialStack(t *testing.T) {
 func TestLocalStack(t *testing.T) {
 	tfname := prefix + t.Name()
 	expectedStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 56},
+		{Name: processFunc, File: file, Line: 57},
 		{Name: tfname, File: file, Line: 193},
 	}
 	expectedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 		{Name: tfname, File: file, Line: 193},
 	}
 	expectedStack2 := []StackFrame{
-		{Name: readFunc, File: file, Line: 31},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 32},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 		{Name: tfname, File: file, Line: 193},
 	}
 
@@ -200,13 +200,13 @@ func TestLocalStack(t *testing.T) {
 func TestExtLocalStack(t *testing.T) {
 	tfname := prefix + t.Name()
 	expectedStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 56},
+		{Name: processFunc, File: file, Line: 57},
 		{Name: tfname, File: file, Line: 214},
 	}
 	expectedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 		{Name: tfname, File: file, Line: 214},
 	}
 	expectedStack2 := []StackFrame{}
@@ -221,13 +221,13 @@ func TestExtLocalStack(t *testing.T) {
 func TestGlobalStack(t *testing.T) {
 	tfname := prefix + t.Name()
 	expectedStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 56},
+		{Name: processFunc, File: file, Line: 57},
 		{Name: tfname, File: file, Line: 235},
 	}
 	expectedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 		{Name: tfname, File: file, Line: 235},
 	}
 	expectedStack2 := []StackFrame{}
@@ -242,13 +242,13 @@ func TestGlobalStack(t *testing.T) {
 func TestExtGlobalStack(t *testing.T) {
 	tfname := prefix + t.Name()
 	expectedStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 56},
+		{Name: processFunc, File: file, Line: 57},
 		{Name: tfname, File: file, Line: 256},
 	}
 	expectedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 		{Name: tfname, File: file, Line: 256},
 	}
 	expectedStack2 := []StackFrame{}
@@ -292,24 +292,24 @@ func validateStack(t *testing.T, expected, actual []StackFrame) {
 func TestGoRoutines(t *testing.T) {
 	tfname := prefix + t.Name() + ".func1"
 	expectedCombinedStack0 := []StackFrame{
-		{Name: readFunc, File: file, Line: 31},
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
-		{Name: processFunc, File: file, Line: 56},
+		{Name: readFunc, File: file, Line: 32},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
+		{Name: processFunc, File: file, Line: 57},
 		{Name: tfname, File: file, Line: 322},
 	}
 	expectedCombinedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 31},
-		{Name: readFunc, File: file, Line: 39},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 32},
+		{Name: readFunc, File: file, Line: 40},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 		{Name: tfname, File: file, Line: 322},
 	}
 	expectedCombinedStack2 := []StackFrame{
-		{Name: readFunc, File: file, Line: 31},
-		{Name: parseFunc, File: file, Line: 44},
-		{Name: processFunc, File: file, Line: 54},
+		{Name: readFunc, File: file, Line: 32},
+		{Name: parseFunc, File: file, Line: 45},
+		{Name: processFunc, File: file, Line: 55},
 		{Name: tfname, File: file, Line: 322},
 	}
 
@@ -357,9 +357,8 @@ func TestStackFirst(t *testing.T) {
 		StackFrame{Name: "main", File: "main.go", Line: 10, ProgramCounter2: 0x123},
 	}
 
-	assert := testutils.NewAssert(t)
-	assert.Equal(expectedFirstTwo, stack.First(2))
-	assert.Equal(expectedFirstOne, stack.First(1))
+	assert.Equal(t, stack.First(2), expectedFirstTwo)
+	assert.Equal(t, stack.First(1), expectedFirstOne)
 }
 
 func TestStackLast(t *testing.T) {
@@ -376,9 +375,8 @@ func TestStackLast(t *testing.T) {
 		StackFrame{Name: "bar", File: "bar.go", Line: 30, ProgramCounter2: 0x789},
 	}
 
-	assert := testutils.NewAssert(t)
-	assert.Equal(expectedLastTwo, stack.Last(2))
-	assert.Equal(expectedLastOne, stack.Last(1))
+	assert.Equal(t, stack.Last(2), expectedLastTwo)
+	assert.Equal(t, stack.Last(1), expectedLastOne)
 }
 
 func TestStackPCRelativeTo(t *testing.T) {
@@ -455,9 +453,8 @@ func TestStackPCRelativeTo(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert := testutils.NewAssert(t)
 			relStk := test.stack.relativeTo(test.otherStack)
-			assert.Equal(test.expectedStack, relStk)
+			assert.Equal(t, relStk, test.expectedStack)
 		})
 	}
 }

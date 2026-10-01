@@ -3,16 +3,15 @@ package fmthelper
 import (
 	"testing"
 
-	"github.com/aisbergg/go-bruh/internal/testutils"
+	"github.com/aisbergg/go-bruh/internal/lib/test/assert"
 )
 
 func TestDigitsInNumber(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	assertDigits := func(n, exp int) {
 		t.Helper()
-		assert.Equal(exp, DigitsInNumber(n))
+		assert.Equal(t, DigitsInNumber(n), exp)
 	}
 
 	assertDigits(0, 1)
@@ -32,7 +31,6 @@ func TestStringBuilder(t *testing.T) {
 	t.Parallel()
 
 	t.Run("WriteMethods", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		builder := New([]byte("ab"))
 
 		builder.Write([]byte("cd"))
@@ -41,39 +39,35 @@ func TestStringBuilder(t *testing.T) {
 
 		builder.WriteString("fg")
 
-		assert.Equal(7, builder.Len())
-		assert.Equal("abcdefg", builder.String())
-		assert.Equal([]byte("abcdefg"), builder.Bytes())
+		assert.Equal(t, builder.Len(), 7)
+		assert.Equal(t, builder.String(), "abcdefg")
+		assert.Equal(t, builder.Bytes(), []byte("abcdefg"))
 	})
 
 	t.Run("GrowPreservesContent", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		builder := New(make([]byte, 0, 1))
 
 		builder.WriteString("x")
 
 		builder.Grow(8)
 
-		assert.Equal("x", builder.String())
-		assert.True(cap(builder.Bytes()) >= builder.Len()+8)
+		assert.Equal(t, builder.String(), "x")
+		assert.True(t, cap(builder.Bytes()) >= builder.Len()+8)
 	})
 
 	t.Run("WriteStringIndent", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
-
 		singleLine := New(nil)
 		singleLine.WriteStringIndent("abc", "  ")
-		assert.Equal("abc", singleLine.String())
-		assert.Equal(3, singleLine.Len())
+		assert.Equal(t, singleLine.String(), "abc")
+		assert.Equal(t, singleLine.Len(), 3)
 
 		multiLine := New(nil)
 		multiLine.WriteStringIndent("a\nb\nc", "  ")
-		assert.Equal("a\n  b\n  c", multiLine.String())
-		assert.Equal(9, multiLine.Len())
+		assert.Equal(t, multiLine.String(), "a\n  b\n  c")
+		assert.Equal(t, multiLine.Len(), 9)
 	})
 
 	t.Run("IntegerWriters", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		builder := New(nil)
 
 		builder.WriteInt(-42)
@@ -84,7 +78,7 @@ func TestStringBuilder(t *testing.T) {
 		builder.WriteByte('|')
 		builder.WriteUintAsHex(255)
 
-		assert.Equal("-42|ff|42|ff", builder.String())
+		assert.Equal(t, builder.String(), "-42|ff|42|ff")
 	})
 }
 
@@ -92,7 +86,6 @@ func TestColorer(t *testing.T) {
 	t.Parallel()
 
 	t.Run("DisabledSkipsAnsiCodes", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		builder := New(nil)
 		colorer := NewColorer(builder, false)
 
@@ -103,11 +96,10 @@ func TestColorer(t *testing.T) {
 		colorer.ColoredText("hello", Green)
 		colorer.ColoredInt(7, Blue)
 
-		assert.Equal("hello7", builder.String())
+		assert.Equal(t, builder.String(), "hello7")
 	})
 
 	t.Run("EnabledWritesAnsiCodes", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		builder := New(nil)
 		colorer := NewColorer(builder, true)
 
@@ -118,14 +110,11 @@ func TestColorer(t *testing.T) {
 		colorer.BGColorRGB(1, 2, 3)
 		colorer.Reset()
 
-		assert.Equal(
-			string(Red)+string(Bold)+
-				string(Green)+"hello"+string(Reset)+
-				string(Blue)+"7"+string(Reset)+
-				"\033[38;2;0;42;255m"+
-				"\033[48;2;1;2;3m"+
-				string(Reset),
-			builder.String(),
-		)
+		assert.Equal(t, builder.String(), string(Red)+string(Bold)+
+			string(Green)+"hello"+string(Reset)+
+			string(Blue)+"7"+string(Reset)+
+			"\033[38;2;0;42;255m"+
+			"\033[48;2;1;2;3m"+
+			string(Reset))
 	})
 }

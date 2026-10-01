@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aisbergg/go-bruh/internal/testutils"
+	"github.com/aisbergg/go-bruh/internal/lib/test/assert"
+	"github.com/aisbergg/go-bruh/internal/lib/test/require"
 	"github.com/aisbergg/go-bruh/pkg/bruh"
 	"github.com/aisbergg/go-bruh/pkg/ctxerror"
 )
@@ -14,10 +15,9 @@ import (
 // not possible.
 func mustErr(t *testing.T, err MultiErrorer) *Err {
 	t.Helper()
-	require := testutils.NewRequire(t)
-	require.NotNil(err, "expected error to be non-nil")
+	require.NotNil(t, err, "expected error to be non-nil")
 	e, ok := err.(*Err)
-	require.True(ok, "expected *Err, got %T", err)
+	require.Truef(t, ok, "expected *Err, got %T", err)
 	return e
 }
 
@@ -27,20 +27,19 @@ func mustErr(t *testing.T, err MultiErrorer) *Err {
 
 func TestConstructors(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("NewCreatesEmptyMultiErrorerWithMessage", func(t *testing.T) {
 		me := New("test message", Options{})
-		assert.NotNil(me)
-		assert.True(me.IsNil(), "expected empty error to be nil")
-		assert.Equal("test message", me.(*Err).msg)
+		assert.NotNil(t, me)
+		assert.True(t, me.IsNil(), "expected empty error to be nil")
+		assert.Equal(t, me.(*Err).msg, "test message")
 	})
 
 	t.Run("ErrorfCreatesEmptyMultiErrorerWithFormattedMessage", func(t *testing.T) {
 		me := Errorf(Options{}, "error %d", 42)
-		assert.NotNil(me)
-		assert.True(me.IsNil())
-		assert.Equal("error 42", me.(*Err).msg)
+		assert.NotNil(t, me)
+		assert.True(t, me.IsNil())
+		assert.Equal(t, me.(*Err).msg, "error 42")
 	})
 }
 
@@ -50,7 +49,6 @@ func TestConstructors(t *testing.T) {
 
 func TestOptUnwrapBehavior(t *testing.T) {
 	t.Parallel()
-	require := testutils.NewRequire(t)
 
 	errs := []error{errors.New("a"), errors.New("b"), errors.New("c")}
 
@@ -59,7 +57,7 @@ func TestOptUnwrapBehavior(t *testing.T) {
 		for _, e := range errs {
 			me.Add(e)
 		}
-		require.Equal(errs[0], me.Unwrap())
+		require.Equal(t, me.Unwrap(), errs[0])
 	})
 
 	t.Run("UnwrapLast", func(t *testing.T) {
@@ -67,7 +65,7 @@ func TestOptUnwrapBehavior(t *testing.T) {
 		for _, e := range errs {
 			me.Add(e)
 		}
-		require.Equal(errs[2], me.Unwrap())
+		require.Equal(t, me.Unwrap(), errs[2])
 	})
 
 	t.Run("UnwrapNone", func(t *testing.T) {
@@ -75,13 +73,13 @@ func TestOptUnwrapBehavior(t *testing.T) {
 		for _, e := range errs {
 			me.Add(e)
 		}
-		require.Nil(me.Unwrap())
+		require.Nil(t, me.Unwrap())
 	})
 
 	assertEmptyReturnsNil := func(name string, behavior UnwrapBehavior) {
 		t.Run(name, func(t *testing.T) {
 			me := New("test", Options{UnwrapBehavior: behavior})
-			require.Nil(me.Unwrap())
+			require.Nil(t, me.Unwrap())
 		})
 	}
 
@@ -92,7 +90,6 @@ func TestOptUnwrapBehavior(t *testing.T) {
 
 func TestOptLimitPrint(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	errs := []error{
 		errors.New("error1"),
@@ -109,8 +106,8 @@ func TestOptLimitPrint(t *testing.T) {
 		}
 		msg := me.Error()
 		// With limit 2 and 5 errors, should print 2 + "and 3 more"
-		assert.True(len(msg) > 0)
-		assert.True(len(msg) > 0, "expected error message")
+		assert.True(t, len(msg) > 0)
+		assert.True(t, len(msg) > 0, "expected error message")
 	})
 
 	assertLimitShowsAllErrors := func(name string, limit int) {
@@ -121,6 +118,7 @@ func TestOptLimitPrint(t *testing.T) {
 			}
 			msg := me.Error()
 			assert.True(
+				t,
 				len(msg) > 0,
 				"expected error message to contain error text",
 			)
@@ -133,7 +131,6 @@ func TestOptLimitPrint(t *testing.T) {
 
 func TestOptFilter(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	errFoo := errors.New("foo error")
 	errBar := errors.New("bar error")
@@ -144,9 +141,9 @@ func TestOptFilter(t *testing.T) {
 			return !errors.Is(e, errBar)
 		}})
 		me.Add(errFoo, errBar, errBaz)
-		assert.Len(me.Errors(), 2)
-		assert.Equal(errFoo, me.Errors()[0])
-		assert.Equal(errBaz, me.Errors()[1])
+		assert.Len(t, me.Errors(), 2)
+		assert.Equal(t, me.Errors()[0], errFoo)
+		assert.Equal(t, me.Errors()[1], errBaz)
 	})
 
 	t.Run("FilterAcceptsAllErrorsIfAlwaysTrue", func(t *testing.T) {
@@ -154,7 +151,7 @@ func TestOptFilter(t *testing.T) {
 			return true
 		}})
 		me.Add(errFoo, errBar, errBaz)
-		assert.Len(me.Errors(), 3)
+		assert.Len(t, me.Errors(), 3)
 	})
 }
 
@@ -164,61 +161,60 @@ func TestOptFilter(t *testing.T) {
 
 func TestIsNil(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("EmptyMultiErrorerIsNil", func(t *testing.T) {
 		me := New("test", Options{})
-		assert.True(me.IsNil())
+		assert.True(t, me.IsNil())
 	})
 
 	t.Run("NilReceiverIsNil", func(t *testing.T) {
 		var me *Err
-		assert.True(me.IsNil())
+		assert.True(t, me.IsNil())
 	})
 
 	t.Run("MultiErrorerWithErrorsIsNotNil", func(t *testing.T) {
 		me := New("test", Options{})
 		me.Add(errors.New("error"))
-		assert.False(me.IsNil())
+		assert.False(t, me.IsNil())
 	})
 }
 
 func TestErrorOrNil(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("EmptyMultiErrorerReturnsNil", func(t *testing.T) {
 		me := New("test", Options{})
-		assert.Nil(me.ErrorOrNil())
+		assert.Nil(t, me.ErrorOrNil())
 	})
 
 	t.Run("MultiErrorerWithErrorsReturnsItself", func(t *testing.T) {
 		me := New("test", Options{})
 		me.Add(errors.New("error"))
-		assert.Equal(me, me.ErrorOrNil())
+		assert.Equal(t, me.ErrorOrNil(), me)
 	})
 }
 
 func TestSingleOrNil(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("EmptyMultiErrorerReturnsNil", func(t *testing.T) {
 		me := New("test", Options{})
-		assert.Nil(me.SingleOrNil())
+		assert.Nil(t, me.SingleOrNil())
 	})
 
 	t.Run("MultiErrorerWithSingleErrorReturnsThatError", func(t *testing.T) {
 		err := errors.New("single error")
 		me := New("test", Options{})
 		me.Add(err)
-		assert.Equal(err, me.SingleOrNil())
+		assert.Equal(t, me.SingleOrNil(), err)
 	})
 
 	t.Run("MultiErrorerWithMultipleErrorsReturnsItself", func(t *testing.T) {
 		me := New("test", Options{})
 		me.Add(errors.New("a"), errors.New("b"))
-		assert.Equal(me, me.SingleOrNil())
+		got, ok := me.SingleOrNil().(*Err)
+		assert.True(t, ok)
+		assert.Equal[any](t, got, me)
 	})
 }
 
@@ -228,30 +224,29 @@ func TestSingleOrNil(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("AddAppendsErrors", func(t *testing.T) {
 		me := New("test", Options{})
 		e1 := errors.New("e1")
 		e2 := errors.New("e2")
 		me.Add(e1, e2)
-		assert.Len(me.Errors(), 2)
-		assert.Equal(e1, me.Errors()[0])
-		assert.Equal(e2, me.Errors()[1])
+		assert.Len(t, me.Errors(), 2)
+		assert.Equal(t, me.Errors()[0], e1)
+		assert.Equal(t, me.Errors()[1], e2)
 	})
 
 	t.Run("AddIgnoresNilErrors", func(t *testing.T) {
 		me := New("test", Options{})
 		e1 := errors.New("e1")
 		me.Add(nil, e1, nil)
-		assert.Len(me.Errors(), 1)
-		assert.Equal(e1, me.Errors()[0])
+		assert.Len(t, me.Errors(), 1)
+		assert.Equal(t, me.Errors()[0], e1)
 	})
 
 	t.Run("AddReturnsEarlyIfAllErrorsAreNil", func(t *testing.T) {
 		me := New("test", Options{})
 		me.Add(nil, nil)
-		assert.Len(me.Errors(), 0)
+		assert.Len(t, me.Errors(), 0)
 	})
 
 	t.Run("AddRespectsFilter", func(t *testing.T) {
@@ -262,22 +257,21 @@ func TestAdd(t *testing.T) {
 		e2 := errors.New("skip")
 		e3 := errors.New("e3")
 		me.Add(e1, e2, e3)
-		assert.Len(me.Errors(), 2)
-		assert.Equal(e1, me.Errors()[0])
-		assert.Equal(e3, me.Errors()[1])
+		assert.Len(t, me.Errors(), 2)
+		assert.Equal(t, me.Errors()[0], e1)
+		assert.Equal(t, me.Errors()[1], e3)
 	})
 }
 
 func TestGrow(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("GrowPreAllocatesCapacity", func(t *testing.T) {
 		me := New("test", Options{})
 		me.Grow(10)
-		assert.NotNil(me.Errors())
+		assert.NotNil(t, me.Errors())
 		oldCap := cap(me.Errors())
-		assert.True(oldCap >= 10)
+		assert.True(t, oldCap >= 10)
 	})
 
 	t.Run("GrowDoesNothingIfCapacityAlreadySufficient", func(t *testing.T) {
@@ -286,7 +280,7 @@ func TestGrow(t *testing.T) {
 		me.Add(errors.New("e1"))
 		oldCap := cap(me.Errors())
 		me.Grow(5)
-		assert.Equal(oldCap, cap(me.Errors()), "capacity should not shrink")
+		assert.Equal(t, cap(me.Errors()), oldCap, "capacity should not shrink")
 	})
 
 	t.Run("GrowInitializesSliceIfNilAndGrowsOnFurtherCalls", func(t *testing.T) {
@@ -294,9 +288,9 @@ func TestGrow(t *testing.T) {
 		// Initial state: errors is nil
 		me.Grow(5)
 		// After grow, should be empty slice with capacity >= 5
-		assert.NotNil(me.Errors())
-		assert.Len(me.Errors(), 0)
-		assert.True(cap(me.Errors()) >= 5)
+		assert.NotNil(t, me.Errors())
+		assert.Len(t, me.Errors(), 0)
+		assert.True(t, cap(me.Errors()) >= 5)
 	})
 }
 
@@ -306,7 +300,6 @@ func TestGrow(t *testing.T) {
 
 func TestMerge(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("MergeCombinesErrorsFromOtherMultiErrorers", func(t *testing.T) {
 		me1 := New("test1", Options{})
@@ -316,7 +309,7 @@ func TestMerge(t *testing.T) {
 		me2.Add(errors.New("c"), errors.New("d"))
 
 		me1.Merge(me2)
-		assert.Len(me1.Errors(), 4)
+		assert.Len(t, me1.Errors(), 4)
 	})
 
 	t.Run("MergeWithEmptyMultiErrorerIsANoOp", func(t *testing.T) {
@@ -324,7 +317,7 @@ func TestMerge(t *testing.T) {
 		me1.Add(errors.New("a"))
 		me2 := New("test2", Options{})
 		me1.Merge(me2)
-		assert.Len(me1.Errors(), 1)
+		assert.Len(t, me1.Errors(), 1)
 	})
 
 	t.Run("MergeHandlesMultipleNonEmptyMultiErrorers", func(t *testing.T) {
@@ -338,7 +331,7 @@ func TestMerge(t *testing.T) {
 		me3.Add(errors.New("d"))
 
 		me1.Merge(me2, me3)
-		assert.Len(me1.Errors(), 4)
+		assert.Len(t, me1.Errors(), 4)
 	})
 }
 
@@ -354,14 +347,17 @@ func (ce customErr) Error() string { return ce.msg }
 
 func TestAs(t *testing.T) {
 	t.Parallel()
-	require := testutils.NewRequire(t)
 
 	t.Run("UnwrapFirstNotFound", func(t *testing.T) {
 		me := New("test", Options{UnwrapBehavior: UnwrapFirst})
 		me.Add(errors.New("a"), errors.New("b"), errors.New("c"))
 
 		var target customErr
-		require.False(bruh.As(me, &target), "expected As to return false when target type not found with UnwrapFirst")
+		require.False(
+			t,
+			bruh.As(me, &target),
+			"expected As to return false when target type not found with UnwrapFirst",
+		)
 	})
 
 	t.Run("UnwrapFirstAtFirst", func(t *testing.T) {
@@ -375,8 +371,8 @@ func TestAs(t *testing.T) {
 		)
 
 		var target customErr
-		require.True(bruh.As(me, &target), "expected As to find customErr in multierror with UnwrapFirst")
-		require.Equal("a", target.Error())
+		require.True(t, bruh.As(me, &target), "expected As to find customErr in multierror with UnwrapFirst")
+		require.Equal(t, target.Error(), "a")
 	})
 
 	t.Run("UnwrapFirstAtLast", func(t *testing.T) {
@@ -388,8 +384,8 @@ func TestAs(t *testing.T) {
 		)
 
 		var target customErr
-		require.True(bruh.As(me, &target), "expected As to find customErr in multierror with UnwrapFirst")
-		require.Equal("c", target.Error())
+		require.True(t, bruh.As(me, &target), "expected As to find customErr in multierror with UnwrapFirst")
+		require.Equal(t, target.Error(), "c")
 	})
 
 	t.Run("UnwrapLastNotFound", func(t *testing.T) {
@@ -397,7 +393,7 @@ func TestAs(t *testing.T) {
 		me.Add(errors.New("a"), errors.New("b"), errors.New("c"))
 
 		var target customErr
-		require.False(bruh.As(me, &target), "expected As to return false when target type not found with UnwrapLast")
+		require.False(t, bruh.As(me, &target), "expected As to return false when target type not found with UnwrapLast")
 	})
 
 	t.Run("UnwrapLastAtLast", func(t *testing.T) {
@@ -411,8 +407,8 @@ func TestAs(t *testing.T) {
 		)
 
 		var target customErr
-		require.True(bruh.As(me, &target), "expected As to find customErr in multierror with UnwrapLast")
-		require.Equal("e", target.Error())
+		require.True(t, bruh.As(me, &target), "expected As to find customErr in multierror with UnwrapLast")
+		require.Equal(t, target.Error(), "e")
 	})
 
 	t.Run("UnwrapLastAtFirst", func(t *testing.T) {
@@ -424,8 +420,8 @@ func TestAs(t *testing.T) {
 		)
 
 		var target customErr
-		require.True(bruh.As(me, &target), "expected As to find customErr in multierror with UnwrapLast")
-		require.Equal("a", target.Error())
+		require.True(t, bruh.As(me, &target), "expected As to find customErr in multierror with UnwrapLast")
+		require.Equal(t, target.Error(), "a")
 	})
 
 	t.Run("UnwrapNone", func(t *testing.T) {
@@ -440,6 +436,7 @@ func TestAs(t *testing.T) {
 
 		var target customErr
 		require.False(
+			t,
 			bruh.As(me, &target),
 			"expected As to return false with UnwrapNone since it should not unwrap to find target type",
 		)
@@ -458,20 +455,19 @@ func TestAs(t *testing.T) {
 		me.Add(wrappedErr)
 
 		// errors.As can unwrap to find the base error
-		require.True(bruh.As(me, &baseErr), "expected As to find base error deep in wrapped chain")
+		require.True(t, bruh.As(me, &baseErr), "expected As to find base error deep in wrapped chain")
 	})
 }
 
 func TestIs(t *testing.T) {
 	t.Parallel()
-	require := testutils.NewRequire(t)
 
 	t.Run("UnwrapFirstNotFound", func(t *testing.T) {
 		me := New("test", Options{UnwrapBehavior: UnwrapFirst})
 		me.Add(errors.New("a"), errors.New("b"), errors.New("c"))
 
 		want := errors.New("missing")
-		require.False(bruh.Is(me, want), "expected Is to return false when target is not present with UnwrapFirst")
+		require.False(t, bruh.Is(me, want), "expected Is to return false when target is not present with UnwrapFirst")
 	})
 
 	t.Run("UnwrapFirstAtFirst", func(t *testing.T) {
@@ -479,7 +475,7 @@ func TestIs(t *testing.T) {
 		first := errors.New("a")
 		me.Add(first, errors.New("b"), errors.New("c"))
 
-		require.True(bruh.Is(me, first), "expected Is to find first error in multierror with UnwrapFirst")
+		require.True(t, bruh.Is(me, first), "expected Is to find first error in multierror with UnwrapFirst")
 	})
 
 	t.Run("UnwrapFirstAtLast", func(t *testing.T) {
@@ -487,7 +483,7 @@ func TestIs(t *testing.T) {
 		last := errors.New("c")
 		me.Add(errors.New("a"), errors.New("b"), last)
 
-		require.True(bruh.Is(me, last), "expected Is to find last error in multierror with UnwrapFirst")
+		require.True(t, bruh.Is(me, last), "expected Is to find last error in multierror with UnwrapFirst")
 	})
 
 	t.Run("UnwrapLastNotFound", func(t *testing.T) {
@@ -495,7 +491,7 @@ func TestIs(t *testing.T) {
 		me.Add(errors.New("a"), errors.New("b"), errors.New("c"))
 
 		want := errors.New("missing")
-		require.False(bruh.Is(me, want), "expected Is to return false when target is not present with UnwrapLast")
+		require.False(t, bruh.Is(me, want), "expected Is to return false when target is not present with UnwrapLast")
 	})
 
 	t.Run("UnwrapLastAtLast", func(t *testing.T) {
@@ -503,7 +499,7 @@ func TestIs(t *testing.T) {
 		last := errors.New("e")
 		me.Add(errors.New("a"), errors.New("b"), errors.New("c"), last)
 
-		require.True(bruh.Is(me, last), "expected Is to find last error in multierror with UnwrapLast")
+		require.True(t, bruh.Is(me, last), "expected Is to find last error in multierror with UnwrapLast")
 	})
 
 	t.Run("UnwrapLastAtFirst", func(t *testing.T) {
@@ -511,7 +507,7 @@ func TestIs(t *testing.T) {
 		first := errors.New("a")
 		me.Add(first, errors.New("b"), errors.New("c"))
 
-		require.True(bruh.Is(me, first), "expected Is to find first error in multierror with UnwrapLast")
+		require.True(t, bruh.Is(me, first), "expected Is to find first error in multierror with UnwrapLast")
 	})
 
 	t.Run("UnwrapNone", func(t *testing.T) {
@@ -519,7 +515,7 @@ func TestIs(t *testing.T) {
 		me.Add(errors.New("a"), errors.New("b"), errors.New("c"))
 
 		want := errors.New("missing")
-		require.False(bruh.Is(me, want), "expected Is to return false with UnwrapNone")
+		require.False(t, bruh.Is(me, want), "expected Is to return false with UnwrapNone")
 	})
 
 	t.Run("WrappedDeep", func(t *testing.T) {
@@ -533,7 +529,7 @@ func TestIs(t *testing.T) {
 		me := New("test", Options{})
 		me.Add(wrappedErr)
 
-		require.True(bruh.Is(me, baseErr), "expected Is to find base error deep in wrapped chain")
+		require.True(t, bruh.Is(me, baseErr), "expected Is to find base error deep in wrapped chain")
 	})
 }
 
@@ -543,7 +539,6 @@ func TestIs(t *testing.T) {
 
 func TestContextIntegration(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("ContextCombinesContextsFromAllErrors", func(t *testing.T) {
 		e1 := ctxerror.New("error1")
@@ -556,8 +551,8 @@ func TestContextIntegration(t *testing.T) {
 		me.Add(e1, e2)
 
 		ctx := me.Context()
-		assert.Equal("1", ctx["req"]["id"])
-		assert.Equal("u1", ctx["user"]["id"])
+		assert.Equal(t, ctx["req"]["id"], "1")
+		assert.Equal(t, ctx["user"]["id"], "u1")
 	})
 
 	t.Run("ContextReturnsEmptyMapForNoContextErrors", func(t *testing.T) {
@@ -565,7 +560,7 @@ func TestContextIntegration(t *testing.T) {
 		me.Add(errors.New("plain"), errors.New("errors"))
 
 		ctx := me.Context()
-		assert.Len(ctx, 0)
+		assert.Len(t, ctx, 0)
 	})
 
 	t.Run("ContextMergesGroupsWithMapsCopyLaterOverwritesEntireGroup", func(t *testing.T) {
@@ -580,16 +575,15 @@ func TestContextIntegration(t *testing.T) {
 
 		ctx := me.Context()
 		// maps.Copy overwrites entire groups, so e2's req completely replaces e1's req
-		assert.Equal("2", ctx["req"]["id"])
+		assert.Equal(t, ctx["req"]["id"], "2")
 		// status from e1 is lost because e2's group overwrote it
 		_, hasStatus := ctx["req"]["status"]
-		assert.False(hasStatus, "expected status to be overwritten by e2's group")
+		assert.False(t, hasStatus, "expected status to be overwritten by e2's group")
 	})
 }
 
 func TestTagsIntegration(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("TagsCombinesTagsFromAllErrors", func(t *testing.T) {
 		e1 := ctxerror.New("error1")
@@ -602,8 +596,8 @@ func TestTagsIntegration(t *testing.T) {
 		me.Add(e1, e2)
 
 		tags := me.Tags()
-		assert.Equal("prod", tags["env"])
-		assert.Equal("eu", tags["zone"])
+		assert.Equal(t, tags["env"], "prod")
+		assert.Equal(t, tags["zone"], "eu")
 	})
 
 	t.Run("TagsReturnsEmptyMapForNoTagErrors", func(t *testing.T) {
@@ -611,7 +605,7 @@ func TestTagsIntegration(t *testing.T) {
 		me.Add(errors.New("plain"), errors.New("errors"))
 
 		tags := me.Tags()
-		assert.Len(tags, 0)
+		assert.Len(t, tags, 0)
 	})
 
 	t.Run("TagsMergesOverlappingKeysWithLaterValues", func(t *testing.T) {
@@ -627,8 +621,8 @@ func TestTagsIntegration(t *testing.T) {
 
 		tags := me.Tags()
 		// Later value should win
-		assert.Equal("staging", tags["env"])
-		assert.Equal("read", tags["op"])
+		assert.Equal(t, tags["env"], "staging")
+		assert.Equal(t, tags["op"], "read")
 	})
 }
 
@@ -638,20 +632,19 @@ func TestTagsIntegration(t *testing.T) {
 
 func TestErrorFormatting(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("ErrorIncludesMessageAndFormattedErrors", func(t *testing.T) {
 		me := New("main error", Options{})
 		me.Add(errors.New("error1"), errors.New("error2"))
 
 		msg := me.Error()
-		assert.True(len(msg) > 0)
-		assert.True(len(msg) > 0 && msg != "")
+		assert.True(t, len(msg) > 0)
+		assert.True(t, len(msg) > 0 && msg != "")
 	})
 
 	t.Run("ErrorReturnsEmptyStringForNilMultiErrorer", func(t *testing.T) {
 		me := New("test", Options{})
-		assert.Equal("", me.Error())
+		assert.Equal(t, me.Error(), "")
 	})
 
 	t.Run("ErrorPadsErrorNumbersCorrectly", func(t *testing.T) {
@@ -661,13 +654,13 @@ func TestErrorFormatting(t *testing.T) {
 		}
 		msg := me.Error()
 		// Should have 2-digit padding like #00, #01, etc.
-		assert.True(len(msg) > 0)
+		assert.True(t, len(msg) > 0)
 	})
 
 	t.Run("MessageReturnsSameAsError", func(t *testing.T) {
 		me := New("test", Options{})
 		me.Add(errors.New("e1"))
-		assert.Equal(me.Error(), me.Message())
+		assert.Equal(t, me.Message(), me.Error())
 	})
 }
 
@@ -677,15 +670,14 @@ func TestErrorFormatting(t *testing.T) {
 
 func TestBruhIntegration(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("MultiErrorerWrapsBruhErrors", func(t *testing.T) {
 		bruhErr := bruh.New("bruh error")
 		me := New("wrapper", Options{})
 		me.Add(bruhErr)
 
-		assert.Len(me.Errors(), 1)
-		assert.Equal(bruhErr, me.Errors()[0])
+		assert.Len(t, me.Errors(), 1)
+		assert.Equal(t, me.Errors()[0], bruhErr)
 	})
 
 	t.Run("MultiErrorerIntegratesWithBruhWrap", func(t *testing.T) {
@@ -693,8 +685,8 @@ func TestBruhIntegration(t *testing.T) {
 		me.Add(errors.New("a"), errors.New("b"))
 
 		wrapped := bruh.Wrap(me, "outer wrapper")
-		assert.NotNil(wrapped)
-		assert.True(errors.Is(wrapped, me))
+		assert.NotNil(t, wrapped)
+		assert.True(t, errors.Is(wrapped, me))
 	})
 }
 
@@ -704,13 +696,12 @@ func TestBruhIntegration(t *testing.T) {
 
 func TestEdgeCases(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("UnwrapWithSingleError", func(t *testing.T) {
 		me := New("test", Options{UnwrapBehavior: UnwrapFirst})
 		err := errors.New("single")
 		me.Add(err)
-		assert.Equal(err, me.Unwrap())
+		assert.Equal(t, me.Unwrap(), err)
 	})
 
 	t.Run("FilterAppliedDuringAdd", func(t *testing.T) {
@@ -718,7 +709,7 @@ func TestEdgeCases(t *testing.T) {
 			return e.Error() != "filtered"
 		}})
 		me.Add(errors.New("keep"), errors.New("filtered"), errors.New("keep"))
-		assert.Len(me.Errors(), 2)
+		assert.Len(t, me.Errors(), 2)
 	})
 
 	t.Run("MultipleOptionsCombineCorrectly", func(t *testing.T) {
@@ -730,17 +721,17 @@ func TestEdgeCases(t *testing.T) {
 		e1 := errors.New("a")
 		e2 := errors.New("b")
 		me.Add(e1, e2)
-		assert.Equal(e2, me.Unwrap())
-		assert.Len(me.Errors(), 2)
+		assert.Equal(t, me.Unwrap(), e2)
+		assert.Len(t, me.Errors(), 2)
 	})
 
 	t.Run("ErrorsReflectsCurrentState", func(t *testing.T) {
 		me := New("test", Options{})
-		assert.Len(me.Errors(), 0)
+		assert.Len(t, me.Errors(), 0)
 		me.Add(errors.New("a"))
-		assert.Len(me.Errors(), 1)
+		assert.Len(t, me.Errors(), 1)
 		me.Add(errors.New("b"))
-		assert.Len(me.Errors(), 2)
+		assert.Len(t, me.Errors(), 2)
 	})
 
 	t.Run("GrowCanBeCalledMultipleTimes", func(t *testing.T) {
@@ -748,6 +739,6 @@ func TestEdgeCases(t *testing.T) {
 		me.Grow(5)
 		me.Grow(10)
 		me.Grow(15)
-		assert.True(cap(me.Errors()) >= 15)
+		assert.True(t, cap(me.Errors()) >= 15)
 	})
 }

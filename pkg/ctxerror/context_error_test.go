@@ -5,7 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/aisbergg/go-bruh/internal/testutils"
+	"github.com/aisbergg/go-bruh/internal/lib/test/assert"
+	"github.com/aisbergg/go-bruh/internal/lib/test/require"
 	"github.com/aisbergg/go-bruh/pkg/bruh"
 )
 
@@ -33,22 +34,21 @@ func isSameObject(x, y any) bool {
 
 func TestConstructors(t *testing.T) {
 	t.Parallel()
-	require := testutils.NewRequire(t)
 
 	root := errors.New("root")
 
 	assertConstructor := func(name string, build func() error, expMsg string) {
 		t.Run(name, func(t *testing.T) {
 			got := build()
-			require.NotNil(got, "expected non-nil")
-			require.Equal(expMsg, got.Error(), "unexpected error message")
+			require.NotNil(t, got, "expected non-nil")
+			require.Equal(t, got.Error(), expMsg, "unexpected error message")
 		})
 	}
 
 	assertNilConstructor := func(name string, build func() error) {
 		t.Run(name, func(t *testing.T) {
 			got := build()
-			require.Nil(got, "expected nil")
+			require.Nil(t, got, "expected nil")
 		})
 	}
 
@@ -66,14 +66,13 @@ func TestConstructors(t *testing.T) {
 
 func TestNilReceiverModifiers(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	var e *Err
-	assert.Nil(e.SetContext("group", map[string]any{"k": "v"}))
-	assert.Nil(e.SetContexts(Context{"group": {"k": "v"}}))
-	assert.Nil(e.SetTag("k", "v"))
-	assert.Nil(e.SetTags(Tags{"k": "v"}))
-	assert.Nil(e.Unshare())
+	assert.Nil(t, e.SetContext("group", map[string]any{"k": "v"}))
+	assert.Nil(t, e.SetContexts(Context{"group": {"k": "v"}}))
+	assert.Nil(t, e.SetTag("k", "v"))
+	assert.Nil(t, e.SetTags(Tags{"k": "v"}))
+	assert.Nil(t, e.Unshare())
 }
 
 // -----------------------------------------------------------------------------
@@ -82,19 +81,18 @@ func TestNilReceiverModifiers(t *testing.T) {
 
 func TestContextModifiers(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("SetContextCreatesGroupWhenMissing", func(t *testing.T) {
 		e := mustErr(t, New("x"))
 		e.SetContext("req", map[string]any{"id": "1"})
-		assert.Equal(Context{"req": {"id": "1"}}, GetContext(e))
+		assert.Equal(t, GetContext(e), Context{"req": {"id": "1"}})
 	})
 
 	t.Run("SetContextMergesIntoExistingGroupAndOverwritesDuplicateKeys", func(t *testing.T) {
 		e := mustErr(t, New("x"))
 		e.SetContext("req", map[string]any{"id": "a", "retry": false})
 		e.SetContext("req", map[string]any{"id": "b", "path": "/x"})
-		assert.Equal(Context{"req": {"id": "b", "retry": false, "path": "/x"}}, GetContext(e))
+		assert.Equal(t, GetContext(e), Context{"req": {"id": "b", "retry": false, "path": "/x"}})
 	})
 
 	t.Run("SetContextsCreatesMissingGroupsAndMergesExistingOnes", func(t *testing.T) {
@@ -104,10 +102,10 @@ func TestContextModifiers(t *testing.T) {
 			"req":  {"method": "GET"},
 			"user": {"id": "u1"},
 		})
-		assert.Equal(Context{
+		assert.Equal(t, GetContext(e), Context{
 			"req":  {"id": "1", "method": "GET"},
 			"user": {"id": "u1"},
-		}, GetContext(e))
+		})
 	})
 }
 
@@ -117,20 +115,19 @@ func TestContextModifiers(t *testing.T) {
 
 func TestTagModifiers(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("AddTagInsertsAndOverwrites", func(t *testing.T) {
 		e := mustErr(t, New("x"))
 		e.SetTag("k", "v1")
 		e.SetTag("k", "v2")
-		assert.Equal(Tags{"k": "v2"}, GetTags(e))
+		assert.Equal(t, GetTags(e), Tags{"k": "v2"})
 	})
 
 	t.Run("AddTagsMergesIntoExistingTags", func(t *testing.T) {
 		e := mustErr(t, New("x"))
 		e.SetTag("a", "1")
 		e.SetTags(Tags{"b": "2", "a": "overwritten"})
-		assert.Equal(Tags{"a": "overwritten", "b": "2"}, GetTags(e))
+		assert.Equal(t, GetTags(e), Tags{"a": "overwritten", "b": "2"})
 	})
 }
 
@@ -140,7 +137,6 @@ func TestTagModifiers(t *testing.T) {
 
 func TestChainOwnsContextAndTagsByDefault(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	inner := mustErr(t, New("inner")).
 		SetContext("req", map[string]any{"id": "1"}).
@@ -153,20 +149,19 @@ func TestChainOwnsContextAndTagsByDefault(t *testing.T) {
 	innerCtx := GetContext(inner)
 	outerCtx := GetContext(outer)
 	// Default is shared: outer mutates same context object visible to inner.
-	assert.True(isSameObject(innerCtx, outerCtx), "expected same context object by default")
-	assert.Equal(Context{"req": {"id": "1", "path": "/v1"}}, innerCtx)
-	assert.Equal(Context{"req": {"id": "1", "path": "/v1"}}, outerCtx)
+	assert.True(t, isSameObject(innerCtx, outerCtx), "expected same context object by default")
+	assert.Equal(t, innerCtx, Context{"req": {"id": "1", "path": "/v1"}})
+	assert.Equal(t, outerCtx, Context{"req": {"id": "1", "path": "/v1"}})
 
 	innerTags := GetTags(inner)
 	outerTags := GetTags(outer)
-	assert.True(isSameObject(innerTags, outerTags), "expected same tags object by default")
-	assert.Equal(Tags{"id": "1", "path": "/v1"}, innerTags)
-	assert.Equal(Tags{"id": "1", "path": "/v1"}, outerTags)
+	assert.True(t, isSameObject(innerTags, outerTags), "expected same tags object by default")
+	assert.Equal(t, innerTags, Tags{"id": "1", "path": "/v1"})
+	assert.Equal(t, outerTags, Tags{"id": "1", "path": "/v1"})
 }
 
 func TestUnshare(t *testing.T) {
 	t.Parallel()
-	require := testutils.NewRequire(t)
 
 	base := mustErr(t, New("base")).
 		SetContext("req", map[string]any{"id": "1"}).
@@ -188,28 +183,32 @@ func TestUnshare(t *testing.T) {
 
 	// wrappedUnshared should have its own context map, while wrappedOuter should still share with base
 	require.True(
+		t,
 		isSameObject(wrappedUnshared.(*Err).context, base.(*Err).context),
 		"expected wrappedUnshared to have same context object as base before unshare takes effect",
 	)
 	require.False(
+		t,
 		isSameObject(wrappedOuter.(*Err).context, base.(*Err).context),
 		"expected wrappedOuter to have different context object than base due to unshare",
 	)
 	require.True(
+		t,
 		isSameObject(wrappedUnshared.(*Err).tags, base.(*Err).tags),
 		"expected wrappedUnshared to have same tags object as base before unshare takes effect",
 	)
 	require.False(
+		t,
 		isSameObject(wrappedOuter.(*Err).tags, base.(*Err).tags),
 		"expected wrappedOuter to have different tags object than base due to unshare",
 	)
 
-	require.Equal(Context{"req": {"id": "1", "path": "/v1"}}, wrappedInnterCtx)
-	require.Equal(Tags{"id": "1", "kind": "foo"}, wrappedInnerTags)
+	require.Equal(t, wrappedInnterCtx, Context{"req": {"id": "1", "path": "/v1"}})
+	require.Equal(t, wrappedInnerTags, Tags{"id": "1", "kind": "foo"})
 
 	// wrappedOuter should reflect latest mutations to base since it shares metadata
-	require.Equal(Context{"req": {"id": "1", "path": "/v2"}}, wrappedOuterCtx)
-	require.Equal(Tags{"id": "1", "kind": "foo"}, wrappedOuterTags)
+	require.Equal(t, wrappedOuterCtx, Context{"req": {"id": "1", "path": "/v2"}})
+	require.Equal(t, wrappedOuterTags, Tags{"id": "1", "kind": "foo"})
 
 	// mutation of unshared should not affect outer
 	wrappedUnshared.SetContext("req", map[string]any{"path": "/v3"})
@@ -218,10 +217,10 @@ func TestUnshare(t *testing.T) {
 	wrappedInnerTags = GetTags(wrappedUnshared)
 	wrappedOuterCtx = GetContext(wrappedOuter)
 	wrappedOuterTags = GetTags(wrappedOuter)
-	require.Equal(Context{"req": {"id": "1", "path": "/v3"}}, wrappedInnterCtx)
-	require.Equal(Tags{"id": "1", "kind": "bar"}, wrappedInnerTags)
-	require.Equal(Context{"req": {"id": "1", "path": "/v2"}}, wrappedOuterCtx)
-	require.Equal(Tags{"id": "1", "kind": "foo"}, wrappedOuterTags)
+	require.Equal(t, wrappedInnterCtx, Context{"req": {"id": "1", "path": "/v3"}})
+	require.Equal(t, wrappedInnerTags, Tags{"id": "1", "kind": "bar"})
+	require.Equal(t, wrappedOuterCtx, Context{"req": {"id": "1", "path": "/v2"}})
+	require.Equal(t, wrappedOuterTags, Tags{"id": "1", "kind": "foo"})
 }
 
 // -----------------------------------------------------------------------------
@@ -232,36 +231,31 @@ func TestGetContext(t *testing.T) {
 	t.Parallel()
 
 	t.Run("NilErrorReturnsEmptyMap", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
-		assert.Len(GetContext(nil), 0)
+		assert.Len(t, GetContext(nil), 0)
 	})
 
 	t.Run("ExternalErrorReturnsEmptyMap", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
-		assert.Len(GetContext(errors.New("x")), 0)
+		assert.Len(t, GetContext(errors.New("x")), 0)
 	})
 
 	t.Run("NoContextOnSingleErrorReturnsEmptyMap", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		e := mustErr(t, New("x"))
-		assert.Len(GetContext(e), 0)
+		assert.Len(t, GetContext(e), 0)
 	})
 
 	t.Run("SingleContextMapIsReturnedWithoutAllocatingAMergedCopy", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		baseCtx := Context{"req": {"id": "1"}}
 		e := mustErr(t, New("x")).SetContexts(baseCtx)
 		got := GetContext(e)
-		assert.Equal(baseCtx, got)
-		assert.True(isSameObject(baseCtx, got), "expected same map object, not a copy")
+		assert.Equal(t, got, baseCtx)
+		assert.True(t, isSameObject(baseCtx, got), "expected same map object, not a copy")
 	})
 
 	t.Run("BruhWrappedCtxerrorExposesInnerContext", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		inner := mustErr(t, New("inner")).
 			SetContexts(Context{"req": {"id": "1"}})
 		outer := bruh.Wrap(inner, "outer")
-		assert.Equal(Context{"req": {"id": "1"}}, GetContext(outer))
+		assert.Equal(t, GetContext(outer), Context{"req": {"id": "1"}})
 	})
 }
 
@@ -280,32 +274,27 @@ func TestGetTags(t *testing.T) {
 	t.Parallel()
 
 	t.Run("NilErrorReturnsEmptyMap", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
-		assert.Len(GetTags(nil), 0)
+		assert.Len(t, GetTags(nil), 0)
 	})
 
 	t.Run("ExternalErrorReturnsEmptyMap", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
-		assert.Len(GetTags(errors.New("x")), 0)
+		assert.Len(t, GetTags(errors.New("x")), 0)
 	})
 
 	t.Run("NoTagsOnSingleErrorReturnsEmptyMap", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		e := mustErr(t, New("x"))
-		assert.Len(GetTags(e), 0)
+		assert.Len(t, GetTags(e), 0)
 	})
 
 	t.Run("SingleTagsMapIsReturnedWithoutAllocatingAMergedCopy", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		baseTags := Tags{"a": "1"}
 		e := mustErr(t, New("x")).SetTags(baseTags)
 		got := GetTags(e)
-		assert.Equal(baseTags, got)
-		assert.True(isSameObject(baseTags, got), "expected same map object, not a copy")
+		assert.Equal(t, got, baseTags)
+		assert.True(t, isSameObject(baseTags, got), "expected same map object, not a copy")
 	})
 
 	t.Run("DistinctMapsInChainAreMergedWithOuterPrecedence", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		inner := mustErr(t, New("inner")).
 			SetTags(Tags{"env": "prod", "zone": "eu"})
 		outer := mustErr(t, Wrap(inner, "outer")).
@@ -313,12 +302,14 @@ func TestGetTags(t *testing.T) {
 		got := GetTags(outer)
 		outerTags := outer.(*Err).tags
 		innerTags := inner.(*Err).tags
-		assert.Equal(Tags{"env": "staging", "op": "write", "zone": "eu"}, got)
+		assert.Equal(t, got, Tags{"env": "staging", "op": "write", "zone": "eu"})
 		assert.True(
+			t,
 			isSameObject(got, outerTags),
 			"expected the merged map to be the same object as outer.tags for efficiency",
 		)
 		assert.True(
+			t,
 			isSameObject(got, innerTags),
 			"expected the merged map to be the same object as inner.tags for efficiency",
 		)
@@ -326,7 +317,6 @@ func TestGetTags(t *testing.T) {
 
 	// three-level merge: inner <- mid <- outer; outer should have precedence
 	t.Run("ThreeLevelMergeOuterPrecedence", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
 		inner := mustErr(t, New("inner"))
 		inner.SetTags(Tags{"a": "1", "b": "inner"})
 		mid := mustErr(t, Wrap(inner, "mid"))
@@ -336,21 +326,19 @@ func TestGetTags(t *testing.T) {
 
 		got := GetTags(outer)
 		exp := Tags{"a": "1", "b": "mid", "c": "outer", "d": "out"}
-		assert.Equal(exp, got)
+		assert.Equal(t, got, exp)
 	})
 
 	// TagsAppender: a wrapped error implementing AppendTags should not unexpectedly
 	// mutate the returned map (covers tagsAppender branch in GetTags).
 	t.Run("TagsAppenderBehaviour", func(t *testing.T) {
-		assert := testutils.NewAssert(t)
-
 		inner := testTagsDumper{err: errors.New("inner")}
 		outer := mustErr(t, Wrap(inner, "outer"))
 		// allocationRequired should be true because inner implements tagsAppender
 		got := GetTags(outer)
 		val, has := got["dumped"]
-		assert.True(has, "AppendTags must have contributed an entry into merged tags")
-		assert.Equal("yes", val)
+		assert.True(t, has, "AppendTags must have contributed an entry into merged tags")
+		assert.Equal(t, val, "yes")
 	})
 }
 
@@ -385,47 +373,45 @@ func (w nilPrivateWrapper) privateTags() Tags       { return nil }
 
 func TestGetContextAndTagsWithForeignError(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("ForeignContexter", func(t *testing.T) {
 		inner := foreignContexter{err: errors.New("inner")}
 		outer := Wrap(inner, "outer")
 		expCtx := Context{"foreign": {"contexter": "yes"}}
-		assert.Equal(expCtx, GetContext(outer))
+		assert.Equal(t, GetContext(outer), expCtx)
 		expTags := Tags{"foreign": "tagser"}
-		assert.Equal(expTags, GetTags(outer))
+		assert.Equal(t, GetTags(outer), expTags)
 	})
 
 	t.Run("ForeignDumper", func(t *testing.T) {
 		inner := foreignContexter2{err: errors.New("inner")}
 		outer := Wrap(inner, "outer")
 		expCtx := Context{"foreign": {"dumper": "yes"}}
-		assert.Equal(expCtx, GetContext(outer))
+		assert.Equal(t, GetContext(outer), expCtx)
 		expTags := Tags{"foreign": "dumper"}
-		assert.Equal(expTags, GetTags(outer))
+		assert.Equal(t, GetTags(outer), expTags)
 	})
 }
 
 func TestGetContextAndTagsWithForeignErrorThroughBruhWrap(t *testing.T) {
 	t.Parallel()
-	assert := testutils.NewAssert(t)
 
 	t.Run("ContexterAndTagserAreCollectedWithoutCtxerrorInChain", func(t *testing.T) {
 		err := bruh.Wrap(foreignContexter{err: errors.New("inner")}, "outer")
-		assert.Equal(Context{"foreign": {"contexter": "yes"}}, GetContext(err))
-		assert.Equal(Tags{"foreign": "tagser"}, GetTags(err))
+		assert.Equal(t, GetContext(err), Context{"foreign": {"contexter": "yes"}})
+		assert.Equal(t, GetTags(err), Tags{"foreign": "tagser"})
 	})
 
 	t.Run("ContextAppenderAndTagsAppenderAreCollectedWithoutCtxerrorInChain", func(t *testing.T) {
 		err := bruh.Wrap(foreignContexter2{err: errors.New("inner")}, "outer")
-		assert.Equal(Context{"foreign": {"dumper": "yes"}}, GetContext(err))
-		assert.Equal(Tags{"foreign": "dumper"}, GetTags(err))
+		assert.Equal(t, GetContext(err), Context{"foreign": {"dumper": "yes"}})
+		assert.Equal(t, GetTags(err), Tags{"foreign": "dumper"})
 	})
 
 	t.Run("StandaloneTagsAppenderAllocatesAndAppends", func(t *testing.T) {
 		err := bruh.Wrap(testTagsDumper{err: errors.New("inner")}, "outer")
 		got := GetTags(err)
-		assert.Equal("yes", got["dumped"])
+		assert.Equal(t, got["dumped"], "yes")
 	})
 
 	t.Run("InitContextMergesContexterAfterNilPrivateWrapper", func(t *testing.T) {
@@ -438,7 +424,7 @@ func TestGetContextAndTagsWithForeignErrorThroughBruhWrap(t *testing.T) {
 			"req":     {"id": "1"},
 			"foreign": {"contexter": "yes"},
 		}
-		assert.Equal(exp, got)
+		assert.Equal(t, got, exp)
 	})
 
 	t.Run("InitTagsMergesTagserAfterNilPrivateWrapper", func(t *testing.T) {
@@ -447,7 +433,7 @@ func TestGetContextAndTagsWithForeignErrorThroughBruhWrap(t *testing.T) {
 			SetTag("k", "v")
 
 		got := GetTags(outer)
-		assert.Equal(Tags{"k": "v", "foreign": "tagser"}, got)
+		assert.Equal(t, got, Tags{"k": "v", "foreign": "tagser"})
 	})
 
 	t.Run("InitTagsMergesTagsAppenderAfterNilPrivateWrapper", func(t *testing.T) {
@@ -456,6 +442,6 @@ func TestGetContextAndTagsWithForeignErrorThroughBruhWrap(t *testing.T) {
 			SetTag("k", "v")
 
 		got := GetTags(outer)
-		assert.Equal(Tags{"k": "v", "foreign": "dumper"}, got)
+		assert.Equal(t, got, Tags{"k": "v", "foreign": "dumper"})
 	})
 }

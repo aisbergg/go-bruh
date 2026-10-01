@@ -193,7 +193,7 @@ run = """
 #!/usr/bin/env bash
 set -eo pipefail
 eval "args=($usage_args)"
-golangci-lint run ./pkg/... "${args[@]}"
+golangci-lint run "${args[@]}"
 """
 
 [tasks.check-vulns]
