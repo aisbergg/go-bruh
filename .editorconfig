@@ -17,5 +17,8 @@ indent_style = tab
 [*.md]
 trim_trailing_whitespace = false
 
-[{*.yaml,*.yml,*.json}]
+[{*.yaml,*.yml,*.json,*.toml,*.js,*.css,*.html}]
+indent_size = 2
+
+[{*.yaml.jinja,*.yml.jinja,*.json.jinja,*.toml.jinja,*.js.jinja,*.css.jinja,*.html.jinja}]
 indent_size = 2

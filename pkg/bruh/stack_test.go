@@ -118,7 +118,7 @@ func TestCombinedStackGlobal(t *testing.T) {
 	validateStack(t, expectedCombinedStack1, uerr[1].Err.(*Err).Stack())
 	validateStack(t, expectedCombinedStack2, uerr[2].Err.(*Err).Stack())
 
-	bruhErr := (errorFn1()).(*Err)
+	bruhErr := errorFn1().(*Err)
 	stack := bruhErr.Stack()
 	required.Equal(101, len(stack))
 	if !strings.HasSuffix(stack[0].Name, "errorFn50") {

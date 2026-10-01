@@ -4,12 +4,12 @@ on:
   push:
     branches:
       - main
-      - dev
+      - development
   pull_request:
     # The branches below must be a subset of the branches above
     branches:
       - main
-      - dev
+      - development
   schedule:
     - cron: "45 1 * * 5"
 

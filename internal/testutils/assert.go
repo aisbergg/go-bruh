@@ -169,7 +169,8 @@ func (a Assertions) IsType(expType, obj any, msgAndArgs ...any) bool {
 				reflect.TypeOf(expType),
 				reflect.TypeOf(obj),
 			),
-			msgAndArgs...)
+			msgAndArgs...,
+		)
 		return false
 	}
 	return true
@@ -210,7 +211,8 @@ func (a Assertions) Len(obj any, length int, msgAndArgs ...any) bool {
 		if rv.Len() != length {
 			a.log(
 				fmt.Sprintf("expected object to have length %v, was %v", length, rv.Len()),
-				msgAndArgs...)
+				msgAndArgs...,
+			)
 			return false
 		}
 	default:
@@ -219,7 +221,8 @@ func (a Assertions) Len(obj any, length int, msgAndArgs ...any) bool {
 				"expected object to be of type array, chan, map, slice or string, was %v",
 				rv.Kind(),
 			),
-			msgAndArgs...)
+			msgAndArgs...,
+		)
 		return false
 	}
 	return true
