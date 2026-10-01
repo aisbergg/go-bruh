@@ -356,7 +356,7 @@ func BenchmarkFormatters(b *testing.B) {
 
 func wrappedError(layers int) error {
 	err := bruh.New("error")
-	for i := 0; i < layers; i++ {
+	for range layers {
 		err = bruh.Wrap(err, "wrap")
 	}
 	return err

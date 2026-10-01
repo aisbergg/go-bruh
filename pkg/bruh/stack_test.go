@@ -276,7 +276,7 @@ func validateStack(t *testing.T, expected, actual []StackFrame) {
 	if len(expected) != len(filtered) {
 		t.Fatalf("expected %v stack frames, got %v", len(expected), len(actual))
 	}
-	for i := 0; i < len(expected); i++ {
+	for i := range expected {
 		if expected[i].Name != actual[i].Name {
 			t.Errorf("expected func name %v, got %v", expected[i].Name, actual[i].Name)
 		}
@@ -314,7 +314,7 @@ func TestGoRoutines(t *testing.T) {
 	}
 
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
