@@ -18,7 +18,7 @@ prettier = "3.9.9"
 # Git hooks runner.
 # Used here to execute pre-commit checks locally via the configured lefthook workflow.
 # https://lefthook.dev/
-lefthook = "2.1.9"
+lefthook = "2.1.14"
 
 # Go documentation generator that emits Markdown from package docs.
 # Used here to build the API reference files under pkg/**/README.md from the packages in pkg/.
