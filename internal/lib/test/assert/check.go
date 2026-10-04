@@ -204,7 +204,7 @@ func formatMsgArgs(defaultMsg string, msgAndArgs ...any) string {
 }
 
 // equal reports deep equality of two values, comparing byte slices by content.
-func equal(expected, actual any) bool {
+func equal(expected, actual any) bool { //nolint: revive
 	if expected == nil || actual == nil {
 		return expected == actual
 	}
