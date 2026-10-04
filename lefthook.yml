@@ -6,18 +6,21 @@ pre-commit:
     check-typos:
       exclude:
         - "pkg/**/*.md"
+        - "docs/reference/**/README.md"
       run: mise run check-typos -- {staged_files}
       file_types: text
 
     check-secrets:
       exclude:
         - "pkg/**/*.md"
+        - "docs/reference/**/README.md"
       run: mise run check-secrets
 
     check-links:
       glob: "*.md"
       exclude:
         - "pkg/**/*.md"
+        - "docs/reference/**/README.md"
         - "CHANGELOG.md"
       run: mise run check-links -- {staged_files}
 

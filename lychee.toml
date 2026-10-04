@@ -1,7 +1,8 @@
 exclude_path = [
     "CHANGELOG.md",
     # Ignore generated reference docs
-    "pkg/.*/README.md",
+    "pkg(/.*)?/README.md",
+    "docs/reference(/.*)?/README.md",
 ]
 
 exclude = [
