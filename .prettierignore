@@ -1,2 +1,3 @@
 # Ignore generated reference docs
 pkg/**/README.md
+docs/reference/**/README.md

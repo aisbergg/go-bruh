@@ -87,6 +87,13 @@ run = "go generate ./..."
 description = "Tidy go modules for Go 1.25.0"
 run = "go mod tidy -go 1.25.0"
 
+[tasks.create-secrets-baseline]
+description = "Creates the secrets baseline for detecting secrets added to the repository"
+run = """
+git add .
+detect-secrets scan --exclude-files .secrets.baseline --exclude-files .copier-answers.yml > .secrets.baseline
+"""
+
 
 # ------------------------------------------------------------------------------
 # Docs tasks
@@ -96,7 +103,7 @@ run = "go mod tidy -go 1.25.0"
 description = "Generate documentation as markdown files (pkg/**/README.md)"
 run = """
 cd pkg
-gomarkdoc -o '{% raw %}{{.Dir}}{% endraw %}/README.md' --repository.url=https://github.com/aisbergg/go-bruh --repository.default-branch=main ./...
+gomarkdoc -o '../docs/reference/{% raw %}{{.Dir}}{% endraw %}/README.md' --repository.url=https://github.com/aisbergg/go-bruh --repository.default-branch=main ./...
 """
 
 [tasks.docs-serve]
