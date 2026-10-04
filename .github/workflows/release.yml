@@ -18,13 +18,23 @@ jobs:
         id: extract-release-notes
         uses: ffurrer2/extract-release-notes@v3
 
+      - name: Detect prerelease
+        id: detect-prerelease
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ "$TAG" =~ -rc|-beta|-alpha|-dev|-pre ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.tagger.outputs.version }}
           name: Release v${{ steps.tagger.outputs.version }}
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.detect-prerelease.outputs.prerelease }}
           body: ${{ steps.extract-release-notes.outputs.release_notes }}
 
       - name: Trigger pkg.go.dev update
