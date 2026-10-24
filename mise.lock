@@ -222,7 +222,7 @@ version = "1.5.0"
 backend = "pipx:detect-secrets"
 
 [[tools.prettier]]
-version = "3.9.9"
+version = "3.9.10"
 backend = "npm:prettier"
 
 [[tools.typos]]
