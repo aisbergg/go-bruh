@@ -1,30 +1,27 @@
 <a name="readme-top"></a>
 
-[![GoDoc](https://pkg.go.dev/badge/github.com/aisbergg/go-bruh)](https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh)
-[![Coverage Status](https://codecov.io/gh/aisbergg/go-bruh/branch/main/graph/badge.svg)](https://codecov.io/gh/aisbergg/go-bruh)
-[![CodeQL](https://github.com/aisbergg/go-bruh/actions/workflows/codeql.yml/badge.svg)](https://github.com/aisbergg/go-bruh/actions/workflows/codeql.yml)
-[![License](https://img.shields.io/github/license/aisbergg/go-bruh)](https://pkg.go.dev/github.com/aisbergg/go-bruh)
-[![LinkedIn](https://img.shields.io/badge/-LinkedIn-green.svg?logo=linkedin&colorB=555)](https://www.linkedin.com/in/andre-lehmann-97408221a/)
-
-<br />
-<br />
 <div align="center">
-  <a href="https://github.com/aisbergg/go-bruh">
-    <img src="assets/logo.png" alt="Logo" width="256" height="256">
-  </a>
-
-  <h2 align="center"><b>bruh - Error Handling</b></h2>
-
-  <p align="center">
-    Having a bruh moment? No problem! Handle errors like a pro with <i>bruh</i> - the Go error handling library that simplifies error management and beautifies stack traces.
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/logo.png">
+        <img src="assets/logo.png" alt="Bruh" width="480">
+    </picture>
+    <h1>Bruh</h1>
+    <h4>Having a bruh moment? Handle errors like a pro! — Go error handling library with stack traces and error catcher support.</h4>
     <br />
-    <br />
-    <a href="https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh">View Docs</a>
-    ·
-    <a href="https://github.com/aisbergg/go-bruh/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/aisbergg/go-bruh/issues">Request Feature</a>
-  </p>
+    <p>
+        <a href="#"><img src="https://img.shields.io/badge/Go-%2300ADD8.svg?&logo=go&logoColor=white&style=for-the-badge" alt="GoDoc"></a>
+        <a href="#"><img src="https://img.shields.io/badge/📦%20Library-00aed8?style=for-the-badge" alt="License"></a>
+        <a href="https://pkg.go.dev/github.com/aisbergg/go-bruh/pkg/bruh"><img src="https://img.shields.io/badge/-reference-grey?logo=go&style=for-the-badge" alt="GoDoc"></a>
+        <a href="https://pkg.go.dev/github.com/aisbergg/go-bruh"><img src="https://img.shields.io/github/license/aisbergg/go-bruh?style=for-the-badge" alt="License"></a>
+        <a href="https://codecov.io/gh/aisbergg/go-bruh"><img src="https://img.shields.io/codecov/c/github/aisbergg/go-bruh?style=for-the-badge" alt="Coverage"></a>
+        <a href="https://github.com/aisbergg/go-bruh/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/aisbergg/go-bruh/test.yml?label=Tests&style=for-the-badge" alt="Tests"></a>
+        <a href="https://github.com/aisbergg/go-bruh/actions/workflows/codeql.yml"><img src="https://img.shields.io/github/actions/workflow/status/aisbergg/go-bruh/codeql.yml?label=CodeQL&style=for-the-badge" alt="CodeQL"></a>
+    </p>
+    <p>
+        <a href="https://github.com/aisbergg/go-bruh/issues/new?labels=bug&template=bug_report.yml"><img src="https://img.shields.io/badge/Report%20Bug-C2301B?style=for-the-badge" alt="Report Bug"></a>
+        <a href="https://github.com/aisbergg/go-bruh/issues/new?labels=enhancement&template=feature_request.yml"><img src="https://img.shields.io/badge/Request%20Feature-108C8C?style=for-the-badge" alt="Request Feature"></a>
+    </p>
+    <hr />
 </div>
 
 <details open="open">

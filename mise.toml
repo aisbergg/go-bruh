@@ -83,7 +83,7 @@ run = "go generate ./..."
 
 [tasks.mod-tidy]
 description = "Tidy go modules for Go 1.25"
-run = "go mod tidy -go 1.25"
+run = "go mod tidy -go 1.25.0"
 
 [tasks.create-secrets-baseline]
 description = "Creates the secrets baseline for detecting secrets added to the repository"
@@ -168,7 +168,7 @@ depends = [
 description = "Regenerate derived files and fail if the repo changes"
 run = """
 go generate ./...
-go mod tidy -go 1.25
+go mod tidy -go 1.25.0
 cd pkg
 gomarkdoc -o '../docs/reference/{% raw %}{{.Dir}}{% endraw %}/README.md' --repository.url=https://github.com/aisbergg/go-bruh --repository.default-branch=main ./...
 cd ..
