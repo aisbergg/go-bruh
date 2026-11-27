@@ -1,8 +1,10 @@
 [files]
 extend-exclude = [
-    "go.mod",
-    "go.sum",
-    "docs/reference/**",
+  ".git",
+  ".golangci.yml",
+  "go.mod",
+  "go.sum",
+  "docs/reference/**",
 ]
 
 [default.extend-words]

@@ -46,7 +46,7 @@ const DefaultErrorsCapacity = 12
 ```
 
 <a name="Err"></a>
-## type [Err](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L63-L70>)
+## type [Err](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L64-L71>)
 
 Err is an error that can hold multiple errors.
 
@@ -58,7 +58,7 @@ type Err struct {
 ```
 
 <a name="Err.Add"></a>
-### func \(\*Err\) [Add](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L234>)
+### func \(\*Err\) [Add](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L235>)
 
 ```go
 func (me *Err) Add(err ...error)
@@ -99,7 +99,7 @@ func main() {
 </details>
 
 <a name="Err.AppendContext"></a>
-### func \(\*Err\) [AppendContext](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L351>)
+### func \(\*Err\) [AppendContext](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L352>)
 
 ```go
 func (me *Err) AppendContext(context ctxerror.Context)
@@ -108,7 +108,7 @@ func (me *Err) AppendContext(context ctxerror.Context)
 AppendContext implements \[ctxerror.contextAppender\] by combining the contexts of all contained errors. If multiple errors have the same context key, the value of the last error with that key is used.
 
 <a name="Err.AppendTags"></a>
-### func \(\*Err\) [AppendTags](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L379>)
+### func \(\*Err\) [AppendTags](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L380>)
 
 ```go
 func (me *Err) AppendTags(tags ctxerror.Tags)
@@ -117,7 +117,7 @@ func (me *Err) AppendTags(tags ctxerror.Tags)
 AppendTags implements \[ctxerror.tagsAppender\] by combining the tags of all contained errors. If multiple errors have the same tag key, the value of the last error with that key is used.
 
 <a name="Err.As"></a>
-### func \(\*Err\) [As](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L286>)
+### func \(\*Err\) [As](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L287>)
 
 ```go
 func (me *Err) As(target any) bool
@@ -128,7 +128,7 @@ As implements [errors.As](<https://pkg.go.dev/errors/#As>) and attempts to map t
 It respects the UnwrapBehavior option. If UnwrapFirst is set, the errors are checked in the order they were added. If UnwrapLast is set, the errors are checked in reverse order. If UnwrapNone is set, the target is not mapped to any of the contained errors and false is returned.
 
 <a name="Err.Context"></a>
-### func \(\*Err\) [Context](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L339>)
+### func \(\*Err\) [Context](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L340>)
 
 ```go
 func (me *Err) Context() map[string]map[string]any
@@ -137,7 +137,7 @@ func (me *Err) Context() map[string]map[string]any
 Context implements \[ctxerror.contexter\] by combining the contexts of all contained errors. If multiple errors have the same context key, the value of the last error with that key is used.
 
 <a name="Err.Error"></a>
-### func \(\*Err\) [Error](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L122>)
+### func \(\*Err\) [Error](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L123>)
 
 ```go
 func (me *Err) Error() string
@@ -179,7 +179,7 @@ batch
 </details>
 
 <a name="Err.ErrorOrNil"></a>
-### func \(\*Err\) [ErrorOrNil](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L188>)
+### func \(\*Err\) [ErrorOrNil](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L189>)
 
 ```go
 func (me *Err) ErrorOrNil() MultiErrorer
@@ -224,7 +224,7 @@ true
 </details>
 
 <a name="Err.Errors"></a>
-### func \(\*Err\) [Errors](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L118>)
+### func \(\*Err\) [Errors](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L119>)
 
 ```go
 func (me *Err) Errors() []error
@@ -265,7 +265,7 @@ func main() {
 </details>
 
 <a name="Err.Format"></a>
-### func \(\*Err\) [Format](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L176>)
+### func \(\*Err\) [Format](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L177>)
 
 ```go
 func (me *Err) Format(s fmt.State, verb rune)
@@ -274,7 +274,7 @@ func (me *Err) Format(s fmt.State, verb rune)
 Format implements the fmt.Formatter interface. Use fmt.Sprintf\("%v", err\) to get a string representation of the error without an stack trace and fmt.Sprintf\("%\+v", err\) with a stack trace included.
 
 <a name="Err.Grow"></a>
-### func \(\*Err\) [Grow](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L102>)
+### func \(\*Err\) [Grow](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L103>)
 
 ```go
 func (me *Err) Grow(capacity int)
@@ -314,7 +314,7 @@ true
 </details>
 
 <a name="Err.Is"></a>
-### func \(\*Err\) [Is](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L315>)
+### func \(\*Err\) [Is](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L316>)
 
 ```go
 func (me *Err) Is(target error) bool
@@ -325,7 +325,7 @@ Is implements [errors.Is](<https://pkg.go.dev/errors/#Is>) and compares the targ
 It respects the UnwrapBehavior option. If UnwrapFirst is set, the errors are checked in the order they were added. If UnwrapLast is set, the errors are checked in reverse order. If UnwrapNone is set, the target is not compared to any of the contained errors and false is returned.
 
 <a name="Err.IsNil"></a>
-### func \(\*Err\) [IsNil](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L229>)
+### func \(\*Err\) [IsNil](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L230>)
 
 ```go
 func (me *Err) IsNil() bool
@@ -369,7 +369,7 @@ false
 </details>
 
 <a name="Err.Merge"></a>
-### func \(\*Err\) [Merge](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L254>)
+### func \(\*Err\) [Merge](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L255>)
 
 ```go
 func (me *Err) Merge(errs ...MultiErrorer)
@@ -415,7 +415,7 @@ func main() {
 </details>
 
 <a name="Err.Message"></a>
-### func \(\*Err\) [Message](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L169>)
+### func \(\*Err\) [Message](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L170>)
 
 ```go
 func (me *Err) Message() string
@@ -457,7 +457,7 @@ batch
 </details>
 
 <a name="Err.SingleOrNil"></a>
-### func \(\*Err\) [SingleOrNil](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L199>)
+### func \(\*Err\) [SingleOrNil](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L200>)
 
 ```go
 func (me *Err) SingleOrNil() error
@@ -507,7 +507,7 @@ true
 </details>
 
 <a name="Err.Tags"></a>
-### func \(\*Err\) [Tags](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L367>)
+### func \(\*Err\) [Tags](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L368>)
 
 ```go
 func (me *Err) Tags() map[string]string
@@ -516,7 +516,7 @@ func (me *Err) Tags() map[string]string
 Tags implements \[ctxerror.contexter\] by combining the tags of all contained errors. If multiple errors have the same tag key, the value of the last error with that key is used.
 
 <a name="Err.Unwrap"></a>
-### func \(\*Err\) [Unwrap](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L212>)
+### func \(\*Err\) [Unwrap](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L213>)
 
 ```go
 func (me *Err) Unwrap() error
@@ -557,7 +557,7 @@ e1
 </details>
 
 <a name="FilterFunc"></a>
-## type [FilterFunc](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L32>)
+## type [FilterFunc](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L33>)
 
 FilterFunc is a predicate used to filter errors.
 
@@ -566,7 +566,7 @@ type FilterFunc func(error) bool
 ```
 
 <a name="MultiErrorer"></a>
-## type [MultiErrorer](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L37-L53>)
+## type [MultiErrorer](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L38-L54>)
 
 MultiErrorer is an interface that is implemented by the [Err](<#Err>) type. It is used to distinguish between errors created by this package and other errors. It is not intended to be used by users of this package.
 
@@ -590,7 +590,7 @@ type MultiErrorer interface {
 ```
 
 <a name="Errorf"></a>
-### func [Errorf](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L90>)
+### func [Errorf](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L91>)
 
 ```go
 func Errorf(options Options, format string, args ...any) MultiErrorer
@@ -629,7 +629,7 @@ true
 </details>
 
 <a name="New"></a>
-### func [New](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L74>)
+### func [New](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L75>)
 
 ```go
 func New(msg string, options ...Options) MultiErrorer
@@ -668,7 +668,7 @@ true
 </details>
 
 <a name="Options"></a>
-## type [Options](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L56-L60>)
+## type [Options](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L57-L61>)
 
 Options configures behavior of an [Err](<#Err>) created by [New](<#New>) or [Errorf](<#Errorf>).
 
@@ -788,7 +788,7 @@ last
 </details>
 
 <a name="UnwrapBehavior"></a>
-## type [UnwrapBehavior](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L17>)
+## type [UnwrapBehavior](<https://github.com/aisbergg/go-bruh/blob/main/pkg/multierror/multi_error.go#L18>)
 
 UnwrapBehavior controls how multiple wrapped errors are unwrapped.
 

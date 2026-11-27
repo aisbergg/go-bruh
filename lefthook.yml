@@ -1,28 +1,18 @@
 # Lefthook configuration file (https://lefthook.dev)
+colors: false
 
 pre-commit:
   parallel: true
   commands:
     check-typos:
-      exclude:
-        - "pkg/**/*.md"
-        - "docs/reference/**/README.md"
-      run: mise run check-typos -- {staged_files}
+      run: mise run check-typos
       file_types: text
 
     check-secrets:
-      exclude:
-        - "pkg/**/*.md"
-        - "docs/reference/**/README.md"
       run: mise run check-secrets
 
     check-links:
-      glob: "*.md"
-      exclude:
-        - "pkg/**/*.md"
-        - "docs/reference/**/README.md"
-        - "CHANGELOG.md"
-      run: mise run check-links -- {staged_files}
+      run: mise run check-links
 
     # all other pre-commit tasks need to be run in sequence
     pre-commit-serial:

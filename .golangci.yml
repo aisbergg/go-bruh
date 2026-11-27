@@ -115,6 +115,18 @@ linters:
           - prealloc # These kinds of optimisations will make no difference to test code
 
   settings:
+    exhaustive:
+      check: [switch, mapliteral]
+      default-signifies-exhaustive: false
+
+    gosec:
+      excludes:
+        - G104 # Errors not checked: Handled via Revive
+
+    modernize:
+      disable:
+        - slicesbackward
+
     revive:
       severity: "warning"
       confidence: 0.8
@@ -146,27 +158,25 @@ linters:
           disabled: true
         - name: comment-spacings
           disabled: true
-
         - name: unhandled-error
           severity: warning
+          arguments:
+            # Builder/Buffer writes never fail; the error is a nil-able
+            # leftover from the io.Writer contract.
+            - '^(strings\.Builder|bytes\.Buffer)\.Write(String|Byte|Rune)$'
         - name: argument-limit
           arguments: [6]
         - name: function-result-limit
           arguments: [3]
 
-    exhaustive:
-      check: [switch, map]
-      default-signifies-exhaustive: false
-
-    gosec:
-      excludes:
-        - G104 # Errors not checked: To many irrelevant results, e.g. WriteString, WriteByte, etc.
-
-    modernize:
-      disable:
-        - slicesbackward
-
-    nolintlint:
-      # Workaround for golangci-lint cache bug that causes false "unused nolint" reports.
-      # See: https://github.com/golangci/golangci-lint/issues/3228
-      allow-unused: true
+    tagliatelle:
+      # Checks the struct tag name case.
+      case:
+        rules:
+          json: snake
+          yaml: snake
+          toml: snake
+          mapstructure: snake
+          env: upperSnake
+          envconfig: upperSnake
+          xml: kebab

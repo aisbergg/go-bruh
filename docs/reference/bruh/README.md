@@ -25,7 +25,7 @@ Package bruh is an error handling library that simplifies error management and a
 - [func Is\(err, target error\) bool](<#Is>)
 - [func JavaStackTraceFormatter\(b \[\]byte, unpacker \*Unpacker\) \[\]byte](<#JavaStackTraceFormatter>)
 - [func Message\(err error\) string](<#Message>)
-- [func MessageLastN\(err error, n int\) string](<#MessageLastN>)
+- [func MessageSummary\(err error, head, tail int, ellipsis string\) string](<#MessageSummary>)
 - [func New\(msg string\) error](<#New>)
 - [func NewFromPanic\(panicValue any\) error](<#NewFromPanic>)
 - [func PythonTracebackFormatter\(b \[\]byte, unpacker \*Unpacker\) \[\]byte](<#PythonTracebackFormatter>)
@@ -87,7 +87,7 @@ var MaxChainStackDepth = MaxErrorStackDepth * 6
 ```
 
 <a name="AppendMessage"></a>
-## func [AppendMessage](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L21>)
+## func [AppendMessage](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L22>)
 
 ```go
 func AppendMessage(b []byte, err error) []byte
@@ -96,7 +96,7 @@ func AppendMessage(b []byte, err error) []byte
 AppendMessage does the same as [Message](<#Message>) but appends the formatted message to the provided byte slice.
 
 <a name="AppendString"></a>
-## func [AppendString](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L64>)
+## func [AppendString](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L89>)
 
 ```go
 func AppendString(b []byte, err error) []byte
@@ -105,7 +105,7 @@ func AppendString(b []byte, err error) []byte
 AppendString does the same as [String](<#String>) but appends the formatted string to the provided byte slice.
 
 <a name="AppendStringFormat"></a>
-## func [AppendStringFormat](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L85>)
+## func [AppendStringFormat](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L110>)
 
 ```go
 func AppendStringFormat(b []byte, err error, f Formatter, unpackAll ...bool) []byte
@@ -289,7 +289,7 @@ opening file "example.json"
 </details>
 
 <a name="FormatPythonTracebackSourced"></a>
-## func [FormatPythonTracebackSourced](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_python_traceback.go#L55>)
+## func [FormatPythonTracebackSourced](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_python_traceback.go#L57>)
 
 ```go
 func FormatPythonTracebackSourced(b []byte, unpacker *Unpacker) []byte
@@ -423,7 +423,7 @@ Caused by: <typeName1>: <errorMsg1>
 ```
 
 <a name="Message"></a>
-## func [Message](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L12>)
+## func [Message](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L13>)
 
 ```go
 func Message(err error) string
@@ -468,14 +468,19 @@ reading file 'example.json': unexpected EOF
 </p>
 </details>
 
-<a name="MessageLastN"></a>
-## func [MessageLastN](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L32>)
+<a name="MessageSummary"></a>
+## func [MessageSummary](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L37>)
 
 ```go
-func MessageLastN(err error, n int) string
+func MessageSummary(err error, head, tail int, ellipsis string) string
 ```
 
-MessageLastN returns the combined error message of the last n errors in the chain. If n is greater than the number of errors in the chain, the message of all errors is returned.
+MessageSummary returns the messages of the first head and last tail errors in the chain, joined by ": ". If errors in between are skipped, ellipsis is inserted in their place. An empty ellipsis inserts nothing. Errors with an empty message are not counted.
+
+```
+err := bruh.Wrap(bruh.Wrap(io.ErrUnexpectedEOF, "decoding data"), "reading config")
+bruh.MessageSummary(err, 1, 1, "...") // "reading config: ...: unexpected EOF"
+```
 
 <a name="New"></a>
 ## func [New](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/error.go#L34>)
@@ -577,7 +582,7 @@ something went wrong
 </details>
 
 <a name="PythonTracebackFormatter"></a>
-## func [PythonTracebackFormatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_python_traceback.go#L25>)
+## func [PythonTracebackFormatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format_python_traceback.go#L27>)
 
 ```go
 func PythonTracebackFormatter(b []byte, unpacker *Unpacker) []byte
@@ -604,7 +609,7 @@ Traceback (most recent call last):
 ```
 
 <a name="String"></a>
-## func [String](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L58>)
+## func [String](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L83>)
 
 ```go
 func String(err error) string
@@ -661,7 +666,7 @@ reading file 'example.json': unexpected EOF
 </details>
 
 <a name="StringFormat"></a>
-## func [StringFormat](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L75>)
+## func [StringFormat](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L100>)
 
 ```go
 func StringFormat(err error, f Formatter, unpackAll ...bool) string
@@ -1352,7 +1357,7 @@ true
 </details>
 
 <a name="Formatter"></a>
-## type [Formatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L9>)
+## type [Formatter](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/format.go#L10>)
 
 Formatter turns an unpacked error into a formatted string.
 
@@ -1589,7 +1594,7 @@ type StackFrame struct {
 ```
 
 <a name="UnpackedElement"></a>
-## type [UnpackedElement](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L317-L329>)
+## type [UnpackedElement](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L318-L330>)
 
 UnpackedElement represents a single error frame and the accompanying message.
 
@@ -1610,7 +1615,7 @@ type UnpackedElement struct {
 ```
 
 <a name="UnpackedError"></a>
-## type [UnpackedError](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L334>)
+## type [UnpackedError](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L335>)
 
 UnpackedError represents an unpacked error which is quite useful for formatting purposes and other error processing. Use \[Unpack\] to unpack any kind of error that supports it.
 
@@ -1619,7 +1624,7 @@ type UnpackedError []UnpackedElement
 ```
 
 <a name="UnpackedError.CombinedStack"></a>
-### func \(UnpackedError\) [CombinedStack](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L359>)
+### func \(UnpackedError\) [CombinedStack](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L360>)
 
 ```go
 func (upkErr UnpackedError) CombinedStack() Stack
@@ -1628,7 +1633,7 @@ func (upkErr UnpackedError) CombinedStack() Stack
 CombinedStack returns a combined stack trace of all errors in the chain.
 
 <a name="Unpacker"></a>
-## type [Unpacker](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L13-L19>)
+## type [Unpacker](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L14-L20>)
 
 Unpacker holds information about an error chain and provides methods to unpack and process it.
 
@@ -1641,7 +1646,7 @@ type Unpacker struct {
 ```
 
 <a name="Unpacker.ChainLen"></a>
-### func \(\*Unpacker\) [ChainLen](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L66>)
+### func \(\*Unpacker\) [ChainLen](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L67>)
 
 ```go
 func (u *Unpacker) ChainLen() int
@@ -1650,7 +1655,7 @@ func (u *Unpacker) ChainLen() int
 ChainLen returns the length of the error chain \(number of wrapped errors\).
 
 <a name="Unpacker.CombinedStack"></a>
-### func \(\*Unpacker\) [CombinedStack](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L157>)
+### func \(\*Unpacker\) [CombinedStack](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L158>)
 
 ```go
 func (u *Unpacker) CombinedStack() Stack
@@ -1659,7 +1664,7 @@ func (u *Unpacker) CombinedStack() Stack
 CombinedStack returns a combined stack trace of all errors in the chain.
 
 <a name="Unpacker.Error"></a>
-### func \(\*Unpacker\) [Error](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L61>)
+### func \(\*Unpacker\) [Error](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L62>)
 
 ```go
 func (u *Unpacker) Error() error
@@ -1668,7 +1673,7 @@ func (u *Unpacker) Error() error
 Error returns the root error in the chain.
 
 <a name="Unpacker.GetSourceLines"></a>
-### func \(\*Unpacker\) [GetSourceLines](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L179>)
+### func \(\*Unpacker\) [GetSourceLines](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L180>)
 
 ```go
 func (u *Unpacker) GetSourceLines(ctxLines, colCap int, unindent bool) ([][]SourceLines, error)
@@ -1677,7 +1682,7 @@ func (u *Unpacker) GetSourceLines(ctxLines, colCap int, unindent bool) ([][]Sour
 GetSourceLines returns the source lines for the given unpacked error. The output is in the same order as the unpacked errors and stack frames \(\`\[upkErrIdx\]\[partialStackIdx\]SourceLines\`\). If the source code is not available, an error is returned. ctxLines is the number of lines before and after the requested lines that should be included. colCap is the maximum number of characters per line. If unindent is true, the source lines are unindented.
 
 <a name="Unpacker.Unpack"></a>
-### func \(\*Unpacker\) [Unpack](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L71>)
+### func \(\*Unpacker\) [Unpack](<https://github.com/aisbergg/go-bruh/blob/main/pkg/bruh/unpacker.go#L72>)
 
 ```go
 func (u *Unpacker) Unpack() UnpackedError

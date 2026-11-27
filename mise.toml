@@ -3,12 +3,10 @@
 # This file defines the tools and tasks for the project.
 
 [tools]
-go = "1.26"
-
 # Go linter and formatter aggregator.
 # Used in this repo to format code, run lint checks, and apply safe auto-fixes.
 # https://golangci-lint.run/
-golangci-lint = "2.14.0"
+golangci-lint = "2.15.0"
 
 # Opinionated formatter for various text-based files.
 # Used here to keep Markdown, TOML, and other supported project files consistently formatted.
@@ -18,7 +16,7 @@ prettier = "3.9.10"
 # Git hooks runner.
 # Used here to execute pre-commit checks locally via the configured lefthook workflow.
 # https://lefthook.dev/
-lefthook = "2.2.1"
+lefthook = "2.2.2"
 
 # Go documentation generator that emits Markdown from package docs.
 # Used here to build the API reference files under docs/reference/**/README.md from the packages in pkg/.
@@ -28,7 +26,7 @@ lefthook = "2.2.1"
 # Fast spell checker for source, docs, and configuration files.
 # Used in this project to catch and prevent typos as part of the formatting/check pipeline.
 # https://github.com/crate-ci/typos
-typos = "1.51.1"
+typos = "1.52.1"
 
 # Link checker for Markdown and other text content.
 # Used here to verify that documentation links in the repository stay valid.
@@ -48,7 +46,7 @@ jq = "1.8.2"
 # Go vulnerability checker that scans dependencies against known CVEs.
 # Used here to audit the project for security vulnerabilities before release.
 # https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck
-"go:golang.org/x/vuln/cmd/govulncheck" = "v1.8.0"
+"go:golang.org/x/vuln/cmd/govulncheck" = "v1.9.0"
 
 
 # ------------------------------------------------------------------------------
@@ -84,8 +82,8 @@ description = "Run go generate for all packages"
 run = "go generate ./..."
 
 [tasks.mod-tidy]
-description = "Tidy go modules for Go 1.25.0"
-run = "go mod tidy -go 1.25.0"
+description = "Tidy go modules for Go 1.25"
+run = "go mod tidy -go 1.25"
 
 [tasks.create-secrets-baseline]
 description = "Creates the secrets baseline for detecting secrets added to the repository"
@@ -117,14 +115,11 @@ run = "go doc -http"
 
 [tasks.test]
 description = "Run tests with race detector and optimizations disabled"
-run = "go test -race -v -gcflags '-N -l' ./pkg/..."
+run = "go test -race -v -gcflags '-N -l' ./..."
 
 [tasks.test-coverage]
 description = "Run tests with coverage"
-run = """
-go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' \
-  $(go list ./pkg/... | grep -v testutils)
-"""
+run = "go test -short -coverprofile cover.out -covermode=atomic -gcflags '-N -l' ./pkg/... ./internal/..."
 
 [tasks.test-display-coverage]
 description = "Display test coverage in browser"
@@ -134,26 +129,22 @@ run = "go tool cover -html=cover.out"
 [tasks.test-fuzz]
 description = "Run fuzz tests"
 run = """
-cd fuzzing && ./fuzz_all.sh "${FUZZ_TIME:-1m}"
+./tools/fuzz_all.sh "${FUZZ_TIME:-1m}"
 """
-
-
-# ------------------------------------------------------------------------------
-# Benchmarking tasks
-# ------------------------------------------------------------------------------
 
 [tasks.bench]
 description = "Run benchmarks (set BENCHMARK env var to filter)"
 run = """
-BENCHMARK=${BENCHMARK:-BenchmarkCompare}
-cd benchmarks
-go test -benchmem -bench="^${BENCHMARK}"
+BENCHMARK=${BENCHMARK:-.}
+go test -benchmem -bench="^${BENCHMARK}" ./...
 """
 
 [tasks.bench-compare]
-description = "Compare benchmarks against previous run (use PREVIOUS env var)"
+description = "Run comparative benchmarks in `./benchmarks` dir"
 run = """
-bash benchmarks/benchstat.sh "${PREVIOUS}"
+BENCHMARK=${BENCHMARK:-BenchmarkCompare}
+cd benchmarks
+go test -benchmem -bench="^${BENCHMARK}" ./...
 """
 
 
@@ -177,7 +168,7 @@ depends = [
 description = "Regenerate derived files and fail if the repo changes"
 run = """
 go generate ./...
-go mod tidy -go 1.25.0
+go mod tidy -go 1.25
 cd pkg
 gomarkdoc -o '../docs/reference/{% raw %}{{.Dir}}{% endraw %}/README.md' --repository.url=https://github.com/aisbergg/go-bruh --repository.default-branch=main ./...
 cd ..
@@ -189,7 +180,7 @@ description = "Verify formatting and spelling checks without changing tracked fi
 run = """
 golangci-lint fmt
 prettier --check .
-typos .
+typos --hidden .
 git diff --exit-code
 """
 
@@ -243,7 +234,7 @@ run = "copier update --defaults"
 
 [tasks.release-tag]
 description = "Stage a release (requires VERSION env var)"
-depends = ["run-hooks", "test"]
+depends = ["check-hygiene", "test"]
 run = """
 if [ -z "$VERSION" ]; then
   echo "ERR: You have to specify the next release version (e.g. 'VERSION=v0.0.0')!"
@@ -258,4 +249,4 @@ git tag -s -a "$VERSION" -m "$VERSION"
 
 [tasks.release-push]
 description = "Push a release to remote (warning: ensure release was staged properly)"
-run = "git push --follow-tags"
+run = "git push && git push --follow-tags"
