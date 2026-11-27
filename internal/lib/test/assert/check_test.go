@@ -166,24 +166,3 @@ func TestCheckPanic(t *testing.T) {
 	assertPanic("Panics", func() { panic("boom") }, true)
 	assertPanic("NoPanic", func() {}, false)
 }
-
-func TestFormatMsg(t *testing.T) {
-	assertFormat := func(name, defaultMsg, want, msg string, args ...any) {
-		t.Run(name, func(t *testing.T) {
-			if got := formatMsg(defaultMsg, msg, args...); got != want {
-				t.Fatalf("formatMsg(%q, %q, %v) = %q, want %q", defaultMsg, msg, args, got, want)
-			}
-		})
-	}
-	assertFormat("NoMsg", "default", "default", "")
-	assertFormat("FormatArgs", "default", "ctx 42\ndefault", "ctx %d", 42)
-	assertFormat("BareMsg", "default", "done\ndefault", "done")
-	assertFormat("EmptyDefault", "", "", "ctx %d", 42)
-
-	t.Run("BareMsgVerbatimPercent", func(t *testing.T) {
-		msg := "100% done"
-		if got := formatMsgArgs("default", msg); got != "100% done\ndefault" {
-			t.Fatalf("got %q", got)
-		}
-	})
-}

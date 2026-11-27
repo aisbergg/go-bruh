@@ -183,23 +183,37 @@ func TestAppendMessage(t *testing.T) {
 	)
 }
 
-func TestMessageLastN(t *testing.T) {
+func TestMessageSummary(t *testing.T) {
 	t.Parallel()
-	assertMessageLastN := func(name string, input error, n int, exp string) {
+	assertMessageSummary := func(name string, input error, head, tail int, ellipsis, exp string) {
 		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, bruh.MessageLastN(input, n), exp)
+			assert.Equal(t, bruh.MessageSummary(input, head, tail, ellipsis), exp)
 		})
 	}
 
-	assertMessageLastN("NilError", nil, 1, "")
-	assertMessageLastN("NonPositiveN", wrappedError3(), 0, "")
-	assertMessageLastN("LastOne", wrappedError3(), 1, "root error")
-	assertMessageLastN("LastTwo", wrappedError3(), 2, "wrapped 1: root error")
-	assertMessageLastN(
-		"ChainShorterThanN",
+	assertMessageSummary("NilError", nil, 1, 1, "...", "")
+	assertMessageSummary("ZeroHeadAndTail", wrappedError3(), 0, 0, "", "")
+	assertMessageSummary("NegativeHeadAndTail", wrappedError3(), -1, -1, "", "")
+	assertMessageSummary("HeadAndTailWithEllipsis", wrappedError3(), 1, 1, "...", "wrapped 3: ...: root error")
+	assertMessageSummary("HeadAndTailNoEllipsis", wrappedError3(), 1, 1, "", "wrapped 3: root error")
+	assertMessageSummary("HeadOnly", wrappedError3(), 2, 0, "...", "wrapped 3: wrapped 2: ...")
+	assertMessageSummary("TailOnly", wrappedError3(), 0, 2, "...", "...: wrapped 1: root error")
+	assertMessageSummary(
+		"ChainShorterThanHeadAndTail",
 		wrappedError3(),
-		10,
+		2,
+		2,
+		"...",
 		"wrapped 3: wrapped 2: wrapped 1: root error",
+	)
+	assertMessageSummary("SkipsEmptyMessages", bruh.Wrap(wrappedEmptyMessageError(), "outer"), 1, 1, "...", "outer")
+	assertMessageSummary(
+		"ExternalWrappedError",
+		bruh.Wrap(fmt.Errorf("parse step: %w", errors.New("unexpected EOF")), "reading config"),
+		1,
+		1,
+		"...",
+		"reading config: ...: unexpected EOF",
 	)
 }
 

@@ -17,7 +17,7 @@ func mustErr(t *testing.T, err MultiErrorer) *Err {
 	t.Helper()
 	require.NotNil(t, err, "expected error to be non-nil")
 	e, ok := err.(*Err)
-	require.Truef(t, ok, "expected *Err, got %T", err)
+	require.True(t, ok, fmt.Sprintf("expected *Err, got %T", err))
 	return e
 }
 
@@ -214,7 +214,7 @@ func TestSingleOrNil(t *testing.T) {
 		me.Add(errors.New("a"), errors.New("b"))
 		got, ok := me.SingleOrNil().(*Err)
 		assert.True(t, ok)
-		assert.Equal[any](t, got, me)
+		assert.Equal(t, any(got), any(me))
 	})
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -11,6 +12,12 @@ import (
 	"github.com/aisbergg/go-bruh/internal/lib/test/assert"
 	"github.com/aisbergg/go-bruh/internal/lib/test/require"
 )
+
+// currentLine returns the line of the caller's call to currentLine.
+func currentLine() int {
+	_, _, line, _ := runtime.Caller(1)
+	return line
+}
 
 const (
 	file        = "bruh/stack_test.go"
@@ -65,29 +72,30 @@ func ProcessFile(fname string, global, external bool) error {
 
 func TestCombinedStack(t *testing.T) {
 	tfname := prefix + t.Name()
+	callLine := currentLine() + 1
+	err := ProcessFile("example.json", false, false)
 	expectedCombinedStack0 := []StackFrame{
-		{Name: readFunc, File: file, Line: 32},
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: processFunc, File: file, Line: 57},
-		{Name: tfname, File: file, Line: 90},
+		{Name: readFunc, File: file, Line: 39},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: processFunc, File: file, Line: 64},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedCombinedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 32},
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 90},
+		{Name: readFunc, File: file, Line: 39},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedCombinedStack2 := []StackFrame{
-		{Name: readFunc, File: file, Line: 32},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 90},
+		{Name: readFunc, File: file, Line: 39},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: tfname, File: file, Line: callLine},
 	}
 
-	err := ProcessFile("example.json", false, false)
 	uerr := newUnpacker(err, true).Unpack()
 	validateStack(t, expectedCombinedStack0, uerr[0].Err.(*Err).Stack())
 	validateStack(t, expectedCombinedStack1, uerr[1].Err.(*Err).Stack())
@@ -96,23 +104,24 @@ func TestCombinedStack(t *testing.T) {
 
 func TestCombinedStackGlobal(t *testing.T) {
 	tfname := prefix + t.Name()
+	MaxChainStackDepth = 150
+	callLine := currentLine() + 1
+	err := ProcessFile("example.json", true, false)
 	expectedCombinedStack0 := []StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: processFunc, File: file, Line: 57},
-		{Name: tfname, File: file, Line: 115},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: processFunc, File: file, Line: 64},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedCombinedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 115},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedCombinedStack2 := []StackFrame{}
 
-	MaxChainStackDepth = 150
-	err := ProcessFile("example.json", true, false)
 	uerr := newUnpacker(err, true).Unpack()
 	validateStack(t, expectedCombinedStack0, uerr[0].Err.(*Err).Stack())
 	validateStack(t, expectedCombinedStack1, uerr[1].Err.(*Err).Stack())
@@ -134,20 +143,21 @@ func TestCombinedStackGlobal(t *testing.T) {
 
 func TestPartialStack(t *testing.T) {
 	tfname := prefix + t.Name()
+	callLine := currentLine() + 1
+	err := ProcessFile("example.json", false, false)
 	expectedPartialStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 57},
-		{Name: tfname, File: file, Line: 150},
+		{Name: processFunc, File: file, Line: 64},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedPartialStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
 	}
 	expectedPartialStack2 := []StackFrame{
-		{Name: readFunc, File: file, Line: 32},
+		{Name: readFunc, File: file, Line: 39},
 	}
 
-	err := ProcessFile("example.json", false, false)
 	uerr := newUnpacker(err, true).Unpack()
 	validateStack(t, expectedPartialStack0, uerr[0].PartialStack)
 	validateStack(t, expectedPartialStack1, uerr[1].PartialStack)
@@ -159,38 +169,41 @@ func TestPartialStack(t *testing.T) {
 	assert.Equal(t, len(uerr), 50)
 	assert.Equal(t, len(uerr[0].PartialStack), 3) // same as the original stack
 	for i := len(uerr) - 1; i > 0; i-- {
-		assert.Equalf(
+		assert.Equal(
 			t,
 			len(uerr[i].PartialStack),
 			2,
-			"Expected a partial stack length of %d, got %d; The Stack:\n: %s",
-			2,
-			len(uerr[i].PartialStack),
-			uerr[i].PartialStack,
+			fmt.Sprintf(
+				"Expected a partial stack length of %d, got %d; The Stack:\n: %s",
+				2,
+				len(uerr[i].PartialStack),
+				uerr[i].PartialStack,
+			),
 		)
 	}
 }
 
 func TestLocalStack(t *testing.T) {
 	tfname := prefix + t.Name()
+	callLine := currentLine() + 1
+	err := ProcessFile("example.json", false, false)
 	expectedStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 57},
-		{Name: tfname, File: file, Line: 193},
+		{Name: processFunc, File: file, Line: 64},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 193},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedStack2 := []StackFrame{
-		{Name: readFunc, File: file, Line: 32},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 193},
+		{Name: readFunc, File: file, Line: 39},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: tfname, File: file, Line: callLine},
 	}
 
-	err := ProcessFile("example.json", false, false)
 	uerr := newUnpacker(err, true).Unpack()
 	validateStack(t, expectedStack0, uerr[0].Stack)
 	validateStack(t, expectedStack1, uerr[1].Stack)
@@ -199,19 +212,20 @@ func TestLocalStack(t *testing.T) {
 
 func TestExtLocalStack(t *testing.T) {
 	tfname := prefix + t.Name()
+	callLine := currentLine() + 1
+	err := ProcessFile("example.json", false, true)
 	expectedStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 57},
-		{Name: tfname, File: file, Line: 214},
+		{Name: processFunc, File: file, Line: 64},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 214},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedStack2 := []StackFrame{}
 
-	err := ProcessFile("example.json", false, true)
 	uerr := newUnpacker(err, true).Unpack()
 	validateStack(t, expectedStack0, uerr[0].Stack)
 	validateStack(t, expectedStack1, uerr[1].Stack)
@@ -220,19 +234,20 @@ func TestExtLocalStack(t *testing.T) {
 
 func TestGlobalStack(t *testing.T) {
 	tfname := prefix + t.Name()
+	callLine := currentLine() + 1
+	err := ProcessFile("example.json", true, false)
 	expectedStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 57},
-		{Name: tfname, File: file, Line: 235},
+		{Name: processFunc, File: file, Line: 64},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 235},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedStack2 := []StackFrame{}
 
-	err := ProcessFile("example.json", true, false)
 	uerr := newUnpacker(err, true).Unpack()
 	validateStack(t, expectedStack0, uerr[0].Stack)
 	validateStack(t, expectedStack1, uerr[1].Stack)
@@ -241,19 +256,20 @@ func TestGlobalStack(t *testing.T) {
 
 func TestExtGlobalStack(t *testing.T) {
 	tfname := prefix + t.Name()
+	callLine := currentLine() + 1
+	err := ProcessFile("example.json", true, true)
 	expectedStack0 := []StackFrame{
-		{Name: processFunc, File: file, Line: 57},
-		{Name: tfname, File: file, Line: 256},
+		{Name: processFunc, File: file, Line: 64},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 256},
+		{Name: readFunc, File: file, Line: 47},
+		{Name: parseFunc, File: file, Line: 52},
+		{Name: processFunc, File: file, Line: 62},
+		{Name: tfname, File: file, Line: callLine},
 	}
 	expectedStack2 := []StackFrame{}
 
-	err := ProcessFile("example.json", true, true)
 	uerr := newUnpacker(err, true).Unpack()
 	validateStack(t, expectedStack0, uerr[0].Stack)
 	validateStack(t, expectedStack1, uerr[1].Stack)
@@ -291,35 +307,36 @@ func validateStack(t *testing.T, expected, actual []StackFrame) {
 
 func TestGoRoutines(t *testing.T) {
 	tfname := prefix + t.Name() + ".func1"
-	expectedCombinedStack0 := []StackFrame{
-		{Name: readFunc, File: file, Line: 32},
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: processFunc, File: file, Line: 57},
-		{Name: tfname, File: file, Line: 322},
-	}
-	expectedCombinedStack1 := []StackFrame{
-		{Name: readFunc, File: file, Line: 32},
-		{Name: readFunc, File: file, Line: 40},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 322},
-	}
-	expectedCombinedStack2 := []StackFrame{
-		{Name: readFunc, File: file, Line: 32},
-		{Name: parseFunc, File: file, Line: 45},
-		{Name: processFunc, File: file, Line: 55},
-		{Name: tfname, File: file, Line: 322},
-	}
-
 	var wg sync.WaitGroup
 	for i := range 10 {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 
+			callLine := currentLine() + 1
 			err := ProcessFile("example.json", false, false)
+			expectedCombinedStack0 := []StackFrame{
+				{Name: readFunc, File: file, Line: 39},
+				{Name: readFunc, File: file, Line: 47},
+				{Name: parseFunc, File: file, Line: 52},
+				{Name: processFunc, File: file, Line: 62},
+				{Name: processFunc, File: file, Line: 64},
+				{Name: tfname, File: file, Line: callLine},
+			}
+			expectedCombinedStack1 := []StackFrame{
+				{Name: readFunc, File: file, Line: 39},
+				{Name: readFunc, File: file, Line: 47},
+				{Name: parseFunc, File: file, Line: 52},
+				{Name: processFunc, File: file, Line: 62},
+				{Name: tfname, File: file, Line: callLine},
+			}
+			expectedCombinedStack2 := []StackFrame{
+				{Name: readFunc, File: file, Line: 39},
+				{Name: parseFunc, File: file, Line: 52},
+				{Name: processFunc, File: file, Line: 62},
+				{Name: tfname, File: file, Line: callLine},
+			}
+
 			uerr := newUnpacker(err, true).Unpack()
 			validateStack(t, expectedCombinedStack0, uerr[0].Err.(*Err).Stack())
 			validateStack(t, expectedCombinedStack1, uerr[1].Err.(*Err).Stack())

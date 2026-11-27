@@ -2,6 +2,7 @@ package bruh
 
 import (
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
@@ -26,25 +27,49 @@ func AppendMessage(b []byte, err error) []byte {
 	return b
 }
 
-// MessageLastN returns the combined error message of the last n errors in the
-// chain. If n is greater than the number of errors in the chain, the message of
-// all errors is returned.
-func MessageLastN(err error, n int) string {
-	if err == nil || n <= 0 {
-		return ""
-	}
-	lastN := make([]error, n)
-	lastNIdx := 0
+// MessageSummary returns the messages of the first head and last tail errors in
+// the chain, joined by ": ". If errors in between are skipped, ellipsis is
+// inserted in their place. An empty ellipsis inserts nothing. Errors with an
+// empty message are not counted.
+//
+//	err := bruh.Wrap(bruh.Wrap(io.ErrUnexpectedEOF, "decoding data"), "reading config")
+//	bruh.MessageSummary(err, 1, 1, "...") // "reading config: ...: unexpected EOF"
+func MessageSummary(err error, head, tail int, ellipsis string) string {
+	chainDepth := 1
 	for uerr := err; uerr != nil; uerr = Unwrap(uerr) {
-		lastN[lastNIdx] = uerr
-		lastNIdx = (lastNIdx + 1) % n
+		chainDepth++
 	}
-	for i := range n {
-		if lastErr := lastN[(lastNIdx+i)%n]; lastErr != nil {
-			return lastErr.Error()
+	msgs := make([]string, 0, chainDepth)
+	for uerr := err; uerr != nil; uerr = Unwrap(uerr) {
+		if msg := ownMessage(uerr); msg != "" {
+			msgs = append(msgs, msg)
 		}
 	}
-	return ""
+	head = max(head, 0)
+	tail = max(tail, 0)
+	if head+tail >= len(msgs) {
+		return Message(err)
+	}
+	parts := append([]string{}, msgs[:head]...)
+	if ellipsis != "" {
+		parts = append(parts, ellipsis)
+	}
+	parts = append(parts, msgs[len(msgs)-tail:]...)
+	return strings.Join(parts, ": ")
+}
+
+// ownMessage returns the message of err without the text of its wrapped error.
+func ownMessage(err error) string {
+	if m, ok := err.(messager); ok {
+		return m.Message()
+	}
+	msg := err.Error()
+	if next := Unwrap(err); next != nil {
+		if nextMsg := next.Error(); strings.HasSuffix(msg, nextMsg) {
+			msg = strings.TrimSuffix(msg[:len(msg)-len(nextMsg)], ": ")
+		}
+	}
+	return msg
 }
 
 // String returns a formatted string representation of the provided error.

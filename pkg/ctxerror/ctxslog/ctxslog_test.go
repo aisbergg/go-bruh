@@ -1,6 +1,7 @@
 package ctxslog_test
 
 import (
+	"fmt"
 	"log/slog"
 	"reflect"
 	"testing"
@@ -135,7 +136,7 @@ func TestAsAttributes(t *testing.T) {
 		// Check for expected attributes
 		for key, val := range expectedAttrs {
 			got, ok := actualAttrs[key]
-			assert.Truef(t, ok, "expected attribute %s not found", key)
+			assert.True(t, ok, fmt.Sprintf("expected attribute %s not found", key))
 			assert.Equal(t, got, val)
 		}
 	})

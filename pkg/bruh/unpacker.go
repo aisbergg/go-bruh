@@ -1,6 +1,7 @@
 package bruh
 
 import (
+	"slices"
 	"strings"
 	"sync"
 )
@@ -365,8 +366,8 @@ func (upkErr UnpackedError) CombinedStack() Stack {
 		numFrames += len(upkErr[i].PartialStack)
 	}
 	combinedStack := make(Stack, 0, numFrames)
-	for i := len(upkErr) - 1; i >= 0; i-- {
-		combinedStack = append(combinedStack, upkErr[i].PartialStack...)
+	for _, u := range slices.Backward(upkErr) {
+		combinedStack = append(combinedStack, u.PartialStack...)
 	}
 	return combinedStack
 }

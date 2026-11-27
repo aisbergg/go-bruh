@@ -1,6 +1,8 @@
 package bruh
 
 import (
+	"slices"
+
 	"github.com/aisbergg/go-bruh/pkg/bruh/fmthelper"
 )
 
@@ -86,12 +88,12 @@ func formatPythonTraceback(b []byte, unpacker *Unpacker, includeSource bool) []b
 		}
 	}
 
-	for i := len(upkErr) - 1; i >= 0; i-- {
-		upkElm := upkErr[i]
+	for i, upkElm := range slices.Backward(upkErr) {
+
 		if len(upkElm.PartialStack) > 0 {
 			builder.WriteString("Traceback (most recent call last):")
-			for j := len(upkElm.PartialStack) - 1; j >= 0; j-- {
-				s := upkElm.PartialStack[j]
+			for j, s := range slices.Backward(upkElm.PartialStack) {
+
 				builder.WriteString("\n  File \"")
 				builder.WriteString(s.File)
 				builder.WriteString("\", line ")

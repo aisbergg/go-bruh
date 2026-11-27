@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"slices"
 	"strconv"
 
 	"github.com/aisbergg/go-bruh/pkg/bruh"
@@ -292,8 +293,8 @@ func (me *Err) As(target any) bool {
 			}
 		}
 	case UnwrapLast:
-		for i := len(me.errors) - 1; i >= 0; i-- {
-			if errors.As(me.errors[i], target) {
+		for _, v := range slices.Backward(me.errors) {
+			if errors.As(v, target) {
 				return true
 			}
 		}
@@ -321,8 +322,8 @@ func (me *Err) Is(target error) bool {
 			}
 		}
 	case UnwrapLast:
-		for i := len(me.errors) - 1; i >= 0; i-- {
-			if errors.Is(me.errors[i], target) {
+		for _, v := range slices.Backward(me.errors) {
+			if errors.Is(v, target) {
 				return true
 			}
 		}
